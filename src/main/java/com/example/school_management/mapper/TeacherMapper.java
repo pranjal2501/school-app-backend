@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -69,9 +70,19 @@ public class TeacherMapper {
         dto.setResignationLetterurl(teacher.getResignationLetterurl());
         dto.setResumeurl(teacher.getResumeurl());
 
-        if (teacher.getSubject() != null) {
-            dto.setSubjectId(teacher.getSubject().getId());
-            dto.setSubjectName(teacher.getSubject().getSubjectName());
+        // Map subjects list to IDs and names
+        List<Subject> subjects = teacher.getSubjects();
+        if (subjects != null && !subjects.isEmpty()) {
+            dto.setSubjectIds(
+                    subjects.stream()
+                            .map(Subject::getId)
+                            .collect(Collectors.toList())
+            );
+            dto.setSubjectNames(
+                    subjects.stream()
+                            .map(Subject::getSubjectName)
+                            .collect(Collectors.toList())
+            );
         }
 
         if (teacher.getSpecialization() != null) {
@@ -92,7 +103,6 @@ public class TeacherMapper {
                 .map(this::toResponseDto)
                 .collect(Collectors.toList());
     }
-
 
     private void applyDtoToEntity(TeacherRequestDto dto, Teacher teacher) {
         teacher.setFirstName(dto.getFirstName());
@@ -120,15 +130,24 @@ public class TeacherMapper {
         teacher.setResignationLetterurl(dto.getResignationLetterurl());
         teacher.setResumeurl(dto.getResumeurl());
 
-        Subject subject = subjectRepository.findById(dto.getSubjectId())
-                .orElseThrow(() -> new RuntimeException(
-                        "Subject not found with id: " + dto.getSubjectId()));
-        teacher.setSubject(subject);
+        // Handle multiple subject IDs
+        if (dto.getSubjectIds() != null && !dto.getSubjectIds().isEmpty()) {
+            List<Subject> subjects = subjectRepository.findAllById(dto.getSubjectIds());
+            if (subjects.size() != dto.getSubjectIds().size()) {
+                throw new RuntimeException("One or more subjects not found");
+            }
+            teacher.setSubjects(subjects);
+        } else {
+            teacher.setSubjects(new ArrayList<>());
+        }
 
-//        Subject specialization = subjectRepository.findById(dto.getSpecializationId())
-//                .orElseThrow(() -> new RuntimeException(
-//                        "Subject not found with id: " + dto.getSpecializationId()));
-//        teacher.setSpecialization(dto.getSpecialization());
+        // Specialization remains ManyToOne (single subject)
+        if (dto.getSpecializationId() != null) {
+            Subject specialization = subjectRepository.findById(dto.getSpecializationId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Subject not found with id: " + dto.getSpecializationId()));
+            teacher.setSpecialization(specialization);
+        }
 
         if (dto.getAssignedClassId() != null) {
             Class assignedClass = classRepository.findById(dto.getAssignedClassId())

@@ -11,7 +11,9 @@ import com.example.school_management.service.SubjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,8 +22,7 @@ public class SubjectServiceImpl implements SubjectService {
     private final SubjectRepository subjectRepository;
     private final TeacherRepo teacherRepository;
 
-    private Subject mapToEntity(SubjectRequestDto request)
-    {
+    private Subject mapToEntity(SubjectRequestDto request) {
         Subject subject = new Subject();
         subject.setSubjectName(request.getSubjectName());
         subject.setSubjectCode(request.getSubjectCode());
@@ -36,12 +37,15 @@ public class SubjectServiceImpl implements SubjectService {
         subject.setPassingMarks(request.getPassingMarks());
         subject.setStandard(request.getStandard());
 
-
-        if (request.getSubjectTeacherId() != null) {
-            Teacher teacher = teacherRepository.findById(request.getSubjectTeacherId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "Teacher not found with id: " + request.getSubjectTeacherId()));
-            subject.setSubjectTeacher(teacher);
+        // Handle multiple teacher IDs
+        if (request.getSubjectTeacherIds() != null && !request.getSubjectTeacherIds().isEmpty()) {
+            List<Teacher> teachers = teacherRepository.findAllById(request.getSubjectTeacherIds());
+            if (teachers.size() != request.getSubjectTeacherIds().size()) {
+                throw new RuntimeException("One or more teachers not found");
+            }
+            subject.setSubjectTeachers(teachers);
+        } else {
+            subject.setSubjectTeachers(new ArrayList<>());
         }
 
         if (request.getSubjectType() == SubjectType.COMPULSORY) {
@@ -69,11 +73,19 @@ public class SubjectServiceImpl implements SubjectService {
         response.setPassingMarks(subject.getPassingMarks());
         response.setStandard(subject.getStandard());
 
-        if (subject.getSubjectTeacher() != null) {
-            response.setSubjectTeacherId(subject.getSubjectTeacher().getId());
-            response.setSubjectTeacherName(
-                    subject.getSubjectTeacher().getFirstName()
-                            + " " + subject.getSubjectTeacher().getLastName());
+        // Map list of teachers to IDs and names
+        List<Teacher> teachers = subject.getSubjectTeachers();
+        if (teachers != null && !teachers.isEmpty()) {
+            response.setSubjectTeacherIds(
+                    teachers.stream()
+                            .map(Teacher::getId)
+                            .collect(Collectors.toList())
+            );
+            response.setSubjectTeacherNames(
+                    teachers.stream()
+                            .map(t -> t.getFirstName() + " " + t.getLastName())
+                            .collect(Collectors.toList())
+            );
         }
         return response;
     }
@@ -82,8 +94,7 @@ public class SubjectServiceImpl implements SubjectService {
     public SubjectResponseDto createSubject(SubjectRequestDto request) {
         if (request.getSubjectType() == SubjectType.OPTIONAL
                 && request.getStandard() == null) {
-            throw new IllegalArgumentException(
-                    "Standard is required for OPTIONAL subjects");
+            throw new IllegalArgumentException("Standard is required for OPTIONAL subjects");
         }
         if (subjectRepository.existsBySubjectCode(request.getSubjectCode())) {
             throw new IllegalArgumentException(
@@ -117,8 +128,7 @@ public class SubjectServiceImpl implements SubjectService {
 
         if (request.getSubjectType() == SubjectType.OPTIONAL
                 && request.getStandard() == null) {
-            throw new IllegalArgumentException(
-                    "Standard is required for OPTIONAL subjects");
+            throw new IllegalArgumentException("Standard is required for OPTIONAL subjects");
         }
 
         Subject updated = mapToEntity(request);
@@ -130,8 +140,7 @@ public class SubjectServiceImpl implements SubjectService {
     @Override
     public void deleteSubject(Integer subjectCode) {
         if (!subjectRepository.existsBySubjectCode(subjectCode)) {
-            throw new RuntimeException(
-                    "Subject not found with code: " + subjectCode);
+            throw new RuntimeException("Subject not found with code: " + subjectCode);
         }
         Subject subject = subjectRepository.findBySubjectCode(subjectCode).get();
         subjectRepository.deleteById(subject.getId());

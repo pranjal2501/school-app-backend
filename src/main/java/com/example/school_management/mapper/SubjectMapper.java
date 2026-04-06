@@ -9,6 +9,7 @@ import com.example.school_management.repo.TeacherRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,12 +45,21 @@ public class SubjectMapper {
         response.setTotalMarks(subject.getTotalMarks());
         response.setPassingMarks(subject.getPassingMarks());
 
-        if (subject.getSubjectTeacher() != null) {
-            response.setSubjectTeacherId(subject.getSubjectTeacher().getId());
-            response.setSubjectTeacherName(
-                    subject.getSubjectTeacher().getFirstName()
-                            + " " + subject.getSubjectTeacher().getLastName());
+        // Map list of teachers to list of IDs and concatenated names
+        List<Teacher> teachers = subject.getSubjectTeachers();
+        if (teachers != null && !teachers.isEmpty()) {
+            response.setSubjectTeacherIds(
+                    teachers.stream()
+                            .map(Teacher::getId)
+                            .collect(Collectors.toList())
+            );
+            response.setSubjectTeacherNames(
+                    teachers.stream()
+                            .map(t -> t.getFirstName() + " " + t.getLastName())
+                            .collect(Collectors.toList())
+            );
         }
+
         return response;
     }
 
@@ -75,13 +85,15 @@ public class SubjectMapper {
         subject.setStandard(
                 dto.getSubjectType() == SubjectType.COMPULSORY ? null : dto.getStandard());
 
-        if (dto.getSubjectTeacherId() != null) {
-            Teacher teacher = teacherRepository.findById(dto.getSubjectTeacherId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "Teacher not found with id: " + dto.getSubjectTeacherId()));
-            subject.setSubjectTeacher(teacher);
+        // Handle multiple teacher IDs from DTO
+        if (dto.getSubjectTeacherIds() != null && !dto.getSubjectTeacherIds().isEmpty()) {
+            List<Teacher> teachers = teacherRepository.findAllById(dto.getSubjectTeacherIds());
+            if (teachers.size() != dto.getSubjectTeacherIds().size()) {
+                throw new RuntimeException("One or more teachers not found");
+            }
+            subject.setSubjectTeachers(teachers);
         } else {
-            subject.setSubjectTeacher(null);
+            subject.setSubjectTeachers(new ArrayList<>());
         }
     }
 }

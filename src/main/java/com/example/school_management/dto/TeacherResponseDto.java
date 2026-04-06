@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class TeacherResponseDto {
@@ -43,8 +44,8 @@ public class TeacherResponseDto {
     private String resignationLetterurl;
     private String resumeurl;
 
-    private Long subjectId;
-    private String subjectName;
+    private List<Long> subjectIds;
+    private List<String> subjectNames;
 
     private Long specializationId;
     private String specializationName;

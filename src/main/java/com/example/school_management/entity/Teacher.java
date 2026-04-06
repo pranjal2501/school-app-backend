@@ -27,12 +27,14 @@ public class Teacher extends Employee {
     @OneToOne(mappedBy = "classTeacher")
     private Class assignedClass;
 
-    @ManyToOne
-    @JoinColumn(name = "subject_id")
-    private Subject subject;
-
     @Builder.Default
-    @OneToMany(mappedBy = "subjectTeacher")
+    @ManyToMany
+    @JoinTable(
+            name = "teacher_subjects",
+            joinColumns = @JoinColumn(name = "teacher_id"),
+            inverseJoinColumns = @JoinColumn(name = "subject_id")
+    )
+
     private List<Subject> subjects = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.EAGER)

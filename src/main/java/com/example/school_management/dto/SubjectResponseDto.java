@@ -4,6 +4,8 @@ import com.example.school_management.enums.Standard;
 import com.example.school_management.enums.SubjectType;
 import lombok.*;
 
+import java.util.List;
+
 
 @Getter
 @Setter
@@ -17,8 +19,8 @@ public class SubjectResponseDto {
     private Standard standard;
     private Integer weeklyHours;
     private SubjectType subjectType;
-    private Long subjectTeacherId;
-    private String subjectTeacherName;
+    private List<Long> subjectTeacherIds;
+    private List<String> subjectTeacherNames;
     private Integer theoryMarks;
     private Integer internalMarks;
     private Integer practicalMarks;

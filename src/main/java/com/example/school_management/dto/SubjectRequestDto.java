@@ -9,6 +9,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,7 +32,7 @@ public class SubjectRequestDto {
     @NotNull(message = ValidationMessages.SUBJECT_TYPE_REQUIRED)
     private SubjectType subjectType;
 
-    private Long subjectTeacherId;
+    private List<Long> subjectTeacherIds;
 
     @Min(value = 0, message = ValidationMessages.THEORY_MARKS_MIN)
     private Integer theoryMarks;

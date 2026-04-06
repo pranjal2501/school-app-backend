@@ -4,14 +4,17 @@ import com.example.school_management.constants.ValidationMessages;
 import com.example.school_management.enums.DegreeType;
 import com.example.school_management.enums.Gender;
 import com.example.school_management.enums.Role;
-import com.example.school_management.enums.Specialization;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class TeacherRequestDto {
+
+    @NotNull(message = "Role is required")
+    private Role role;
 
     @NotBlank(message = ValidationMessages.FIRST_NAME_REQUIRED)
     @Size(max = 50)
@@ -90,10 +93,12 @@ public class TeacherRequestDto {
     @Size(max = 100)
     private String previousSchool;
 
-    private Long subjectId;
+    @NotNull(message = ValidationMessages.SUBJECT_REQUIRED)
+    private List<Long> subjectIds;
 
     @NotNull(message = ValidationMessages.SPECIALIZATION_REQUIRED)
-    private Specialization specialization;
+    private Long specializationId;
+
     private Long assignedClassId;
 
     @Size(max = 200)
