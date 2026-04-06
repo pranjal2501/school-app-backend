@@ -27,7 +27,6 @@ public class Subject {
     @Column(name = "subject_code", unique = true)
     private Integer subjectCode;
 
-    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "standard", nullable = true, length = 20)
     private Standard standard;

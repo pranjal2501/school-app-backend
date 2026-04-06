@@ -107,7 +107,6 @@ public class TeacherServiceImpl implements TeacherService {
         teacher.setDegreeCertificateurl(request.getDegreeCertificateurl());
         teacher.setResignationLetterurl(request.getResignationLetterurl());
         teacher.setResumeurl(request.getResumeurl());
-        teacher.setRole(request.getRole());
         teacher = teacherMapper.toEntity(request);
         teacher.setRole(Role.TEACHER);
         teacher.setActive(true);

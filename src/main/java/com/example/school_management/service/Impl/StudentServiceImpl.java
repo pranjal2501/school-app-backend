@@ -26,10 +26,8 @@ public class StudentServiceImpl implements StudentService {
             throw new DuplicateResourceException(
                     "Student with Aadhar " + request.getAadharNo() + " already exists");
         }
-
         Student student = studentMapper.toEntity(request);
         student.setActive(true);
-
         return studentMapper.toResponseDto(studentRepository.save(student));
     }
 

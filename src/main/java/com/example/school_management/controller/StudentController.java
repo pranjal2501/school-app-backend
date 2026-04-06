@@ -19,15 +19,12 @@ import java.util.List;
 public class StudentController {
 
     private final StudentService studentService;
-
-
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StudentResponseDto>> admitStudent(
             @Valid @RequestBody StudentRequestDto request) {
 
         StudentResponseDto response = studentService.admitStudent(request);
-
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Student admitted successfully", response));
     }
@@ -95,7 +92,6 @@ public class StudentController {
         );
     }
 
-    // 🔐 ADMIN only
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> deleteStudent(@PathVariable Long id) {

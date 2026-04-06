@@ -33,6 +33,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/students/**").authenticated()
                         .requestMatchers("/finance/**").authenticated()
                         .requestMatchers("/api/v1/admins/**").authenticated()
+                        .requestMatchers("/api/enums/**").authenticated()
+
                         .anyRequest().authenticated()
                 )
 

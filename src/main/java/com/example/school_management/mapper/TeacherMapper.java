@@ -125,10 +125,10 @@ public class TeacherMapper {
                         "Subject not found with id: " + dto.getSubjectId()));
         teacher.setSubject(subject);
 
-        Subject specialization = subjectRepository.findById(dto.getSpecializationId())
-                .orElseThrow(() -> new RuntimeException(
-                        "Subject not found with id: " + dto.getSpecializationId()));
-        teacher.setSpecialization(specialization);
+//        Subject specialization = subjectRepository.findById(dto.getSpecializationId())
+//                .orElseThrow(() -> new RuntimeException(
+//                        "Subject not found with id: " + dto.getSpecializationId()));
+//        teacher.setSpecialization(dto.getSpecialization());
 
         if (dto.getAssignedClassId() != null) {
             Class assignedClass = classRepository.findById(dto.getAssignedClassId())

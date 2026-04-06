@@ -34,6 +34,7 @@ public class SubjectServiceImpl implements SubjectService {
         subject.setOralMarks(request.getOralMarks());
         subject.setTotalMarks(request.getTotalMarks());
         subject.setPassingMarks(request.getPassingMarks());
+        subject.setStandard(request.getStandard());
 
 
         if (request.getSubjectTeacherId() != null) {
@@ -66,6 +67,7 @@ public class SubjectServiceImpl implements SubjectService {
         response.setOralMarks(subject.getOralMarks());
         response.setTotalMarks(subject.getTotalMarks());
         response.setPassingMarks(subject.getPassingMarks());
+        response.setStandard(subject.getStandard());
 
         if (subject.getSubjectTeacher() != null) {
             response.setSubjectTeacherId(subject.getSubjectTeacher().getId());

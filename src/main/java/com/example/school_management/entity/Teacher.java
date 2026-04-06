@@ -31,7 +31,6 @@ public class Teacher extends Employee {
     @JoinColumn(name = "subject_id")
     private Subject subject;
 
-
     @Builder.Default
     @OneToMany(mappedBy = "subjectTeacher")
     private List<Subject> subjects = new ArrayList<>();

@@ -22,9 +22,7 @@ public class AssignmentController {
     @PostMapping
     public ResponseEntity<ApiResponse<AssignmentResponseDto>> createAssignment(
             @Valid @RequestBody AssignmentRequestDto requestDto) {
-
         AssignmentResponseDto response = assignmentService.createAssignment(requestDto);
-
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Assignment created successfully", response));
     }

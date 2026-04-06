@@ -20,6 +20,7 @@ public class SubjectRequestDto {
 
     private Integer subjectCode;
 
+    @NotNull(message = "Standard is required")
     private Standard standard;
 
     @NotNull(message = ValidationMessages.WEEKLY_HOURS_REQUIRED)

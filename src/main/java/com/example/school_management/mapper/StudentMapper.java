@@ -17,7 +17,6 @@ public class StudentMapper {
 
     private final PasswordEncoder passwordEncoder;
 
-    // StudentRequestDto → New Student entity (for create)
     public Student toEntity(StudentRequestDto dto) {
         Parent parent = buildParent(dto);
 
@@ -63,11 +62,10 @@ public class StudentMapper {
         student.setStandard(dto.getStandard());
         student.setDivision(dto.getDivision());
 
-        Parent parent = student.getParent() != null ? student.getParent() : new Parent();
-        applyParentFields(dto, parent);
+        Parent parent = dto.getParent() != null ? dto.getParent() : new Parent();
 
-        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
-            parent.setPassword(passwordEncoder.encode(dto.getPassword()));
+        if (dto.getParent().getPassword() != null && !dto.getParent().getPassword().isBlank()) {
+            parent.setPassword(passwordEncoder.encode(dto.getParent().getPassword()));
         }
 
         student.setParent(parent);
@@ -83,7 +81,7 @@ public class StudentMapper {
         student.setIncomeCertificateUrl(dto.getIncomeCertificateUrl());
     }
 
-    // Student entity → StudentResponseDto
+
     public StudentResponseDto toResponseDto(Student student) {
         StudentResponseDto dto = new StudentResponseDto();
 
@@ -102,36 +100,7 @@ public class StudentMapper {
         dto.setStandard(student.getStandard());
         dto.setDivision(student.getDivision());
 
-        if (student.getParent() != null) {
-            Parent parent = student.getParent();
-
-            dto.setFatherFirstName(parent.getFatherFirstName());
-            dto.setFatherMiddleName(parent.getFatherMiddleName());
-            dto.setFatherLastName(parent.getFatherLastName());
-            dto.setFatherOccupation(parent.getFatherOccupation());
-
-            dto.setMotherFirstName(parent.getMotherFirstName());
-            dto.setMotherMiddleName(parent.getMotherMiddleName());
-            dto.setMotherLastName(parent.getMotherLastName());
-            dto.setMotherOccupation(parent.getMotherOccupation());
-
-            dto.setGuardianFirstName(parent.getGuardianFirstName());
-            dto.setGuardianMiddleName(parent.getGuardianMiddleName());
-            dto.setGuardianLastName(parent.getGuardianLastName());
-            dto.setGuardianRelation(parent.getGuardianRelation());
-
-            dto.setMobilePrimary(parent.getMobilePrimary());
-            dto.setMobileAlternate(parent.getMobileAlternate());
-            dto.setEmail(parent.getEmail());
-            dto.setEmergencyContactName(parent.getEmergencyContactName());
-            dto.setEmergencyContactNumber(parent.getEmergencyContactNumber());
-
-            dto.setAddressLine1(parent.getAddressLine1());
-            dto.setAddressLine2(parent.getAddressLine2());
-            dto.setCity(parent.getCity());
-            dto.setState(parent.getState());
-            dto.setPincode(parent.getPincode());
-        }
+        dto.setParent(student.getParent());
 
         dto.setPreviousSchool(student.getPreviousSchool());
         dto.setPreviousPercentage(student.getPreviousPercentage());
@@ -148,42 +117,17 @@ public class StudentMapper {
     }
 
     private Parent buildParent(StudentRequestDto dto) {
-        if (dto.getPassword() == null || dto.getPassword().isBlank()) {
+        Parent parent = dto.getParent();
+
+        if (parent == null) {
+            throw new IllegalArgumentException("Parent is required");
+        }
+
+        if (parent.getPassword() == null || parent.getPassword().isBlank()) {
             throw new IllegalArgumentException("Password is required for Parent account");
         }
 
-        Parent parent = new Parent();
-        parent.setPassword(passwordEncoder.encode(dto.getPassword()));
-        applyParentFields(dto, parent);
+        parent.setPassword(passwordEncoder.encode(parent.getPassword()));
         return parent;
-    }
-
-    private void applyParentFields(StudentRequestDto dto, Parent parent) {
-        parent.setFatherFirstName(dto.getFatherFirstName());
-        parent.setFatherMiddleName(dto.getFatherMiddleName());
-        parent.setFatherLastName(dto.getFatherLastName());
-        parent.setFatherOccupation(dto.getFatherOccupation());
-
-        parent.setMotherFirstName(dto.getMotherFirstName());
-        parent.setMotherMiddleName(dto.getMotherMiddleName());
-        parent.setMotherLastName(dto.getMotherLastName());
-        parent.setMotherOccupation(dto.getMotherOccupation());
-
-        parent.setGuardianFirstName(dto.getGuardianFirstName());
-        parent.setGuardianMiddleName(dto.getGuardianMiddleName());
-        parent.setGuardianLastName(dto.getGuardianLastName());
-        parent.setGuardianRelation(dto.getGuardianRelation());
-
-        parent.setMobilePrimary(dto.getMobilePrimary());
-        parent.setMobileAlternate(dto.getMobileAlternate());
-        parent.setEmail(dto.getEmail());
-        parent.setEmergencyContactName(dto.getEmergencyContactName());
-        parent.setEmergencyContactNumber(dto.getEmergencyContactNumber());
-
-        parent.setAddressLine1(dto.getAddressLine1());
-        parent.setAddressLine2(dto.getAddressLine2());
-        parent.setCity(dto.getCity());
-        parent.setState(dto.getState());
-        parent.setPincode(dto.getPincode());
     }
 }

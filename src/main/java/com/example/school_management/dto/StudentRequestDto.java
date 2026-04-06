@@ -1,6 +1,7 @@
 package com.example.school_management.dto;
 
 import com.example.school_management.constants.ValidationMessages;
+import com.example.school_management.entity.Parent;
 import com.example.school_management.enums.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -50,57 +51,8 @@ public class StudentRequestDto {
     @NotNull(message = ValidationMessages.CATEGORY_REQUIRED)
     private Category category;
 
-    @NotBlank(message = ValidationMessages.FATHER_FIRST_NAME_REQUIRED)
-    private String fatherFirstName;
-    private String fatherMiddleName;
-
-    @NotBlank(message = ValidationMessages.FATHER_LAST_NAME_REQUIRED)
-    private String fatherLastName;
-    private String fatherOccupation;
-
-    @NotBlank(message = ValidationMessages.MOTHER_FIRST_NAME_REQUIRED)
-    private String motherFirstName;
-    private String motherMiddleName;
-
-    @NotBlank(message = ValidationMessages.MOTHER_LAST_NAME_REQUIRED)
-    private String motherLastName;
-    private String motherOccupation;
-
-    private String guardianFirstName;
-    private String guardianMiddleName;
-    private String guardianLastName;
-    private String guardianRelation;
-
-    @NotBlank(message = ValidationMessages.MOBILE_PRIMARY_REQUIRED)
-    @Pattern(regexp = "^[0-9]{10}$", message = ValidationMessages.MOBILE_PRIMARY_PATTERN)
-    private String mobilePrimary;
-
-    @Pattern(regexp = "^[0-9]{10}$", message = ValidationMessages.MOBILE_ALTERNATE_PATTERN)
-    private String mobileAlternate;
-
-    private String emergencyContactName;
-
-    @Pattern(regexp = "^[0-9]{10}$", message = ValidationMessages.EMERGENCY_CONTACT_NUMBER_PATTERN)
-    private String emergencyContactNumber;
-
-    @Email(message = ValidationMessages.EMAIL_INVALID)
-    private String email;
-
-    private String password;
-
-    @NotBlank(message = ValidationMessages.ADDRESS_LINE1_REQUIRED)
-    private String addressLine1;
-    private String addressLine2;
-
-    @NotBlank(message = ValidationMessages.CITY_REQUIRED)
-    private String city;
-
-    @NotBlank(message = ValidationMessages.STATE_REQUIRED)
-    private String state;
-
-    @NotBlank(message = ValidationMessages.PINCODE_REQUIRED)
-    @Pattern(regexp = "^[0-9]{6}$", message = ValidationMessages.PINCODE_PATTERN)
-    private String pincode;
+    @NotNull(message = "Parent is required")
+    private Parent parent;
 
     private String previousSchool;
 
@@ -109,13 +61,9 @@ public class StudentRequestDto {
     private Double previousPercentage;
 
     private String birthCertificateUrl;
-
     private String aadharPhotoUrl;
-
     private String previousMarksheetUrl;
-
     private String passportPhotoUrl;
-
     private String leavingCertificateUrl;
     private String casteCertificateUrl;
     private String incomeCertificateUrl;
