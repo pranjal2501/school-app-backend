@@ -33,7 +33,7 @@ public class AuthController {
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         UserDetails user;
         try {
-            user = service.loadUserByUsername(request.getIdentifier());
+            user = service.loadUserByUsername(request.getUsername());
         } catch (UsernameNotFoundException ex) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -53,7 +53,7 @@ public class AuthController {
 
         role = role.replace("ROLE_", "");
 
-        String token = jwtUtil.generateToken(request.getIdentifier(), role);
+        String token = jwtUtil.generateToken(request.getUsername(), role);
 
         return ResponseEntity.ok(
                 ApiResponse.ok("Login successful", Map.of(

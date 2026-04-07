@@ -41,7 +41,6 @@ public class CustomUserDetailsService implements UserDetailsService {
             return buildUser(identifier, emp.getPassword(), emp.getRole().name());
         }
 
-
         var parentOpt = parentRepository.findByEmail(identifier)
                 .or(() -> parentRepository.findByMobilePrimary(identifier));
         if (parentOpt.isPresent()) {

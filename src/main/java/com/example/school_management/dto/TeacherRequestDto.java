@@ -94,6 +94,7 @@ public class TeacherRequestDto {
 
     @NotNull(message = ValidationMessages.SPECIALIZATION_REQUIRED)
     private Specialization specialization;
+
     private Long assignedClassId;
 
     @Size(max = 200)
