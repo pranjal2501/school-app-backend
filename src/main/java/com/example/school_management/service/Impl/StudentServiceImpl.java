@@ -8,10 +8,13 @@ import com.example.school_management.exception.ResourceNotFoundException;
 import com.example.school_management.mapper.StudentMapper;
 import com.example.school_management.repo.StudentRepository;
 import com.example.school_management.service.StudentService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,47 @@ public class StudentServiceImpl implements StudentService {
         Student student = studentMapper.toEntity(request);
         student.setActive(true);
         return studentMapper.toResponseDto(studentRepository.save(student));
+    }
+
+    @Override
+    @Transactional // CRITICAL: Ensures all or nothing is saved
+    public List<StudentResponseDto> admitStudentsBulk(List<StudentRequestDto> requests) {
+
+        // 1. Extract all Aadhar numbers from the incoming request
+        List<String> incomingAadhars = requests.stream()
+                .map(StudentRequestDto::getAadharNo)
+                .collect(Collectors.toList());
+
+        // 2. Check for internal duplicates within the JSON payload itself
+        long distinctAadharCount = incomingAadhars.stream().distinct().count();
+        if (distinctAadharCount < requests.size()) {
+            throw new RuntimeException("Duplicate Aadhar numbers found within the request payload");
+        }
+
+        // 3. Check for duplicates against the database
+        List<Student> existingStudents = studentRepository.findByAadharNoIn(incomingAadhars);
+        if (!existingStudents.isEmpty()) {
+            String duplicateAadhars = existingStudents.stream()
+                    .map(Student::getAadharNo)
+                    .collect(Collectors.joining(", "));
+            throw new DuplicateResourceException(
+                    "Students already exist with Aadhar numbers: " + duplicateAadhars);
+        }
+
+        // 4. Map DTOs to Entities
+        List<Student> studentsToSave = requests.stream().map(request -> {
+            Student student = studentMapper.toEntity(request);
+            student.setActive(true);
+            return student;
+        }).collect(Collectors.toList());
+
+        // 5. Bulk Save
+        List<Student> savedStudents = studentRepository.saveAll(studentsToSave);
+
+        // 6. Map back to Response DTOs
+        return savedStudents.stream()
+                .map(studentMapper::toResponseDto)
+                .collect(Collectors.toList());
     }
 
     @Override

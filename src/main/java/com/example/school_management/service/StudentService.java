@@ -9,6 +9,8 @@ public interface StudentService {
 
     StudentResponseDto admitStudent(StudentRequestDto request);
 
+    List<StudentResponseDto> admitStudentsBulk(List<StudentRequestDto> requests);
+
     List<StudentResponseDto> getAllStudents();
 
     StudentResponseDto getStudentById(Long id);

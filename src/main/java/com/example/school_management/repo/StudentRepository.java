@@ -11,8 +11,11 @@ import java.util.Optional;
 public interface StudentRepository extends JpaRepository<Student, Long> {
 
     Optional<Student> findByRollNumber(Integer rollNumber);
+    boolean existsByAadharNoIn(List<String> aadharNos);
 
     Optional<Student> findByAadharNo(String aadharNo);
+
+    List<Student> findByAadharNoIn(List<String> aadharNos);
 
     boolean existsByAadharNo(String aadharNo);
 

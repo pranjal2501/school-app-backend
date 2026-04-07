@@ -36,6 +36,8 @@ public class AdminController {
                     .body(ApiResponse.error(e.getMessage()));
         }
     }
+
+
     @GetMapping("/all")
     public ResponseEntity<?> getAllAdmins() {
         try {

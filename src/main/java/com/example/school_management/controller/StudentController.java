@@ -29,6 +29,16 @@ public class StudentController {
                 .body(ApiResponse.ok("Student admitted successfully", response));
     }
 
+    @PostMapping("/bulk")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<StudentResponseDto>>> admitStudentsBulk(
+            @Valid @RequestBody List<StudentRequestDto> requests) {
+
+        List<StudentResponseDto> response = studentService.admitStudentsBulk(requests);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok("Bulk students admitted successfully", response));
+    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
