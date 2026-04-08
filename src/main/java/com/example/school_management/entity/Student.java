@@ -10,6 +10,7 @@ import lombok.experimental.SuperBuilder;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "students")
@@ -18,6 +19,14 @@ import java.util.List;
 @SuperBuilder
 @NoArgsConstructor
 public class Student extends BaseEntity {
+
+    @Column(name = "registration_Id", unique = true, nullable = false, updatable = false)
+    private String regId;
+
+    @PrePersist
+    private void generateRegId() {
+        this.regId = "REG-STUD" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+    }
 
     @NotBlank(message = ValidationMessages.FIRST_NAME_REQUIRED)
     @Size(max = 50, message = ValidationMessages.FIRST_NAME_MAX)
@@ -68,19 +77,19 @@ public class Student extends BaseEntity {
     @Column(name = "category", length = 30, nullable = false)
     private Category category;
 
-    @NotNull(message = ValidationMessages.STANDARD_REQUIRED)
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "standard", length = 10, nullable = false)
+    @Column(name = "standard", length = 10, nullable = true)
     private Standard standard;
 
-    @NotNull(message = ValidationMessages.DIVISION_REQUIRED)
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "division", length = 5, nullable = false)
+    @Column(name = "division", length = 5, nullable = true)
     private Division division;
 
-    @NotNull(message = ValidationMessages.ROLL_NUMBER_REQUIRED)
+
     @Min(value = 1, message = ValidationMessages.ROLL_NUMBER_MIN)
-    @Column(name = "roll_number", unique = true)
+    @Column(name = "roll_number", unique = true, nullable = true)
     private Integer rollNumber;
 
     @ManyToOne(cascade = CascadeType.ALL)

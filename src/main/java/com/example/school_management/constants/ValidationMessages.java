@@ -3,6 +3,8 @@ package com.example.school_management.constants;
 public class ValidationMessages {
 
 
+    public static final String REGISTRATION_ID_REQUIRED = "Registration Id is required";
+
     public static final String FIRST_NAME_REQUIRED = "First name is required";
     public static final String FIRST_NAME_MAX = "First name must not exceed 50 characters";
 

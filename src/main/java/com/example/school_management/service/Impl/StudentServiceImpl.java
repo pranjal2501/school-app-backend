@@ -1,5 +1,6 @@
 package com.example.school_management.service.Impl;
 
+import com.example.school_management.dto.StudentClassAssignmentRequestDto;
 import com.example.school_management.dto.StudentRequestDto;
 import com.example.school_management.dto.StudentResponseDto;
 import com.example.school_management.entity.Student;
@@ -115,6 +116,15 @@ public class StudentServiceImpl implements StudentService {
         studentRepository.deleteById(id);
     }
 
+    @Override
+    public StudentResponseDto assignClassAndDivision(Long id, StudentClassAssignmentRequestDto request) {
+        Student student=findById(id);
+        student.setStandard(request.getStandard());
+        student.setDivision(request.getDivision());
+        student.setRollNumber(request.getRollNumber());
+
+        return studentMapper.toResponseDto(studentRepository.save(student));
+    }
 
 
     private Student findById(Long id) {
