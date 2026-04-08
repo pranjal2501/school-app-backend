@@ -44,7 +44,7 @@ public class Class {
     @Column(name = "girls")
     private Integer girls;
 
-    @Column(name = "class_name", nullable = false)
+    @Column(name = "class_name")
     private String className;
 
     @OneToOne

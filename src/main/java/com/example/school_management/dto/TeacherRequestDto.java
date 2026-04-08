@@ -3,7 +3,6 @@ package com.example.school_management.dto;
 import com.example.school_management.constants.ValidationMessages;
 import com.example.school_management.enums.DegreeType;
 import com.example.school_management.enums.Gender;
-import com.example.school_management.enums.Role;
 import com.example.school_management.enums.Specialization;
 import jakarta.validation.constraints.*;
 import lombok.Data;

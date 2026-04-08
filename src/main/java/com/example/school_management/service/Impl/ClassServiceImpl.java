@@ -1,5 +1,6 @@
 package com.example.school_management.service.Impl;
 
+import com.example.school_management.dto.ClassRequestDto;
 import com.example.school_management.entity.Class;
 import com.example.school_management.repo.ClassRepository;
 import com.example.school_management.service.ClassService;
@@ -16,11 +17,17 @@ public class ClassServiceImpl implements ClassService {
 
 
     @Override
-    public Class createClass(Class classEntity) {
+    public Class createClass(ClassRequestDto request) {
 
-        String className = classEntity.getStandard() + "-" + classEntity.getDivision();
+        String className = request.getStandard() + "-" + request.getDivision();
+        request.setClassName(className);
+        Class classEntity = new Class();
         classEntity.setClassName(className);
-
+        classEntity.setGirls(request.getGirls());
+        classEntity.setBoys(request.getBoys());
+        classEntity.setTotalStudents(request.getTotalStudents());
+        classEntity.setDivision(request.getDivision());
+        classEntity.setStandard(request.getStandard());
         return classRepository.save(classEntity);
     }
 

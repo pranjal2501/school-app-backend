@@ -1,6 +1,7 @@
 package com.example.school_management.controller;
 
 import com.example.school_management.dto.ApiResponse;
+import com.example.school_management.dto.ClassRequestDto;
 import com.example.school_management.entity.Class;
 import com.example.school_management.service.ClassService;
 import jakarta.validation.Valid;
@@ -13,15 +14,16 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/classes")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class ClassController {
 
     private final ClassService classService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<Class>> createClass(
-            @Valid @RequestBody Class classEntity) {
+            @Valid @RequestBody ClassRequestDto request) {
 
-        Class response = classService.createClass(classEntity);
+        Class response = classService.createClass(request);
 
         return ResponseEntity.ok(
                 ApiResponse.ok("Class created successfully", response)
