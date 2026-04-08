@@ -28,7 +28,6 @@ public class StudentRequestDto {
     @NotNull(message = ValidationMessages.BLOOD_GROUP_REQUIRED)
     private BloodGroup bloodGroup;
 
-    @NotNull(message = ValidationMessages.ROLL_NUMBER_REQUIRED)
     @Min(value = 1, message = ValidationMessages.ROLL_NUMBER_MIN)
     private Integer rollNumber;
 
@@ -42,10 +41,8 @@ public class StudentRequestDto {
     @NotNull(message = ValidationMessages.RELIGION_REQUIRED)
     private Religion religion;
 
-    @NotNull(message = ValidationMessages.STANDARD_REQUIRED)
     private Standard standard;
 
-    @NotNull(message = ValidationMessages.DIVISION_REQUIRED)
     private Division division;
 
     @NotNull(message = ValidationMessages.CATEGORY_REQUIRED)

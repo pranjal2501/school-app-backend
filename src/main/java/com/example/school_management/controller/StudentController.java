@@ -1,6 +1,7 @@
 package com.example.school_management.controller;
 
 import com.example.school_management.dto.ApiResponse;
+import com.example.school_management.dto.StudentClassAssignmentRequestDto;
 import com.example.school_management.dto.StudentRequestDto;
 import com.example.school_management.dto.StudentResponseDto;
 import com.example.school_management.service.StudentService;
@@ -201,5 +202,14 @@ public class StudentController {
                 ApiResponse.ok("Division fetched successfully",
                         student.getDivision() != null ? student.getDivision().name() : null)
         );
+    }
+
+    @PatchMapping("/assign-class/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<StudentResponseDto>> assignClassAndDivision(@PathVariable Long id, @Valid @RequestBody StudentClassAssignmentRequestDto request)
+    {
+        StudentResponseDto student= studentService.assignClassAndDivision(id, request);
+
+        return ResponseEntity.ok(ApiResponse.ok("Class, Division, and Roll Number assigned successfully",student));
     }
 }

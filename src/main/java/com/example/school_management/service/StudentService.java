@@ -1,7 +1,9 @@
 package com.example.school_management.service;
 
+import com.example.school_management.dto.StudentClassAssignmentRequestDto;
 import com.example.school_management.dto.StudentRequestDto;
 import com.example.school_management.dto.StudentResponseDto;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -22,4 +24,6 @@ public interface StudentService {
     void toggleStudentStatus(Long id);
 
     void deleteStudent(Long id);
+
+    StudentResponseDto assignClassAndDivision(Long id, StudentClassAssignmentRequestDto request);
 }
