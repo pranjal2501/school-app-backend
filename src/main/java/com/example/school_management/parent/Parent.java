@@ -137,6 +137,10 @@ public class Parent {
     @Column(name = "aadhar_owner_type", length = 20)
     private AadharOwnerType aadharOwnerType;
 
+    @NotBlank(message = ValidationMessages.AADHAR_REQUIRED)
+    @Column(name = "aadhar_no", length = 12)
+    private String aadharNo;
+
     @JsonIgnore
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
     private List<Student> students = new ArrayList<>();

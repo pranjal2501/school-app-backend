@@ -1,16 +1,15 @@
 package com.example.school_management.student;
 
-import com.example.school_management.student.dto.StudentClassAssignmentRequestDto;
-import com.example.school_management.student.dto.StudentRequestDto;
-import com.example.school_management.student.dto.StudentResponseDto;
+import com.example.school_management.student.dto.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
 public interface StudentService {
 
-    StudentResponseDto admitStudent(StudentRequestDto request);
+    StudentResponseDto admitStudent(StudentFromAdminRequestDto request);
 
-    List<StudentResponseDto> admitStudentsBulk(List<StudentRequestDto> requests);
+    List<StudentResponseDto> admitStudentsBulk(List<StudentFromAdminRequestDto> requests);
 
     List<StudentResponseDto> getAllStudents();
 
@@ -25,4 +24,6 @@ public interface StudentService {
     void deleteStudent(Long id);
 
     StudentResponseDto assignClassAndDivision(Long id, StudentClassAssignmentRequestDto request);
+
+    StudentResponseDto updateStudentAfterAdmit(Long id, @Valid StudentRemainingInfoDto request);
 }
