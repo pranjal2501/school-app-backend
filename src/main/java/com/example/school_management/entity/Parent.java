@@ -84,7 +84,6 @@ public class Parent {
     @Column(name = "mobile_alternate", length = 10)
     private String mobileAlternate;
 
-
     @Size(max = 100)
     @Column(name = "emergency_contact_name", length = 100)
     private String emergencyContactName;
@@ -102,7 +101,6 @@ public class Parent {
     @Size(min = 6, message = ValidationMessages.PASSWORD_MIN)
     @Column(name = "password", nullable = false)
     private String password;
-
 
     @NotBlank(message = ValidationMessages.ADDRESS_LINE1_REQUIRED)
     @Size(max = 100)

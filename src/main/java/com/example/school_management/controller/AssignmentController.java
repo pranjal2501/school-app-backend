@@ -16,9 +16,7 @@ import java.util.List;
 @RequestMapping("/api/v1/assignments")
 @RequiredArgsConstructor
 public class AssignmentController {
-
     private final AssignmentService assignmentService;
-
     @PostMapping
     public ResponseEntity<ApiResponse<AssignmentResponseDto>> createAssignment(
             @Valid @RequestBody AssignmentRequestDto requestDto) {

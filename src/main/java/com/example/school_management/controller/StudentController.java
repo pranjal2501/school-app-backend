@@ -78,7 +78,6 @@ public class StudentController {
         );
     }
 
-
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StudentResponseDto>> updateStudent(
@@ -91,7 +90,6 @@ public class StudentController {
                 ApiResponse.ok("Student updated successfully", updated)
         );
     }
-
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
