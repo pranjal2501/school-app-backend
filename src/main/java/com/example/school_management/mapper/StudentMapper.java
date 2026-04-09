@@ -32,8 +32,6 @@ public class StudentMapper {
                 .religion(dto.getReligion())
                 .category(dto.getCategory())
                 .rollNumber(dto.getRollNumber())
-                .standard(dto.getStandard())
-                .division(dto.getDivision())
                 .parent(parent)
                 .previousSchool(dto.getPreviousSchool())
                 .previousPercentage(dto.getPreviousPercentage())
@@ -59,8 +57,6 @@ public class StudentMapper {
         student.setReligion(dto.getReligion());
         student.setCategory(dto.getCategory());
         student.setRollNumber(dto.getRollNumber());
-        student.setStandard(dto.getStandard());
-        student.setDivision(dto.getDivision());
 
         Parent parent = dto.getParent() != null ? dto.getParent() : new Parent();
 
@@ -97,11 +93,7 @@ public class StudentMapper {
         dto.setNationality(student.getNationality());
         dto.setReligion(student.getReligion());
         dto.setCategory(student.getCategory());
-        dto.setStandard(student.getStandard());
-        dto.setDivision(student.getDivision());
-
         dto.setParent(student.getParent());
-
         dto.setPreviousSchool(student.getPreviousSchool());
         dto.setPreviousPercentage(student.getPreviousPercentage());
         dto.setActive(student.isActive());

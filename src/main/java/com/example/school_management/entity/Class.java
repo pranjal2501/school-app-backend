@@ -50,4 +50,10 @@ public class Class {
     @OneToOne
     @JoinColumn(name = "class_teacher_id")
     private Teacher classTeacher;
+
+    @Min(0)
+    private Integer currentBoys;
+
+    @Min(0)
+    private Integer currentGirls;
 }

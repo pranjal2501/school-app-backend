@@ -1,6 +1,7 @@
 package com.example.school_management.service.Impl;
 
 import com.example.school_management.entity.Class;
+import com.example.school_management.exception.DuplicateResourceException;
 import com.example.school_management.repo.ClassRepository;
 import com.example.school_management.service.ClassService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,12 @@ public class ClassServiceImpl implements ClassService {
         String className = classEntity.getStandard() + "-" + classEntity.getDivision();
         classEntity.setClassName(className);
 
+        classEntity.setCurrentBoys(classEntity.getBoys());
+        classEntity.setCurrentGirls(classEntity.getGirls());
+
+        if (classRepository.existsByClassName(className)) {
+            throw new DuplicateResourceException("Class Already exists");
+        }
         return classRepository.save(classEntity);
     }
 
