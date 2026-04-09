@@ -48,7 +48,8 @@ public class StudentRequestDto {
     @NotNull(message = ValidationMessages.CATEGORY_REQUIRED)
     private Category category;
 
-    @NotNull(message = "Parent is required")
+    private Long parentId;
+
     private Parent parent;
 
     private String previousSchool;

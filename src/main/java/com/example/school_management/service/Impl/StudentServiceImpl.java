@@ -4,6 +4,7 @@ import com.example.school_management.dto.StudentClassAssignmentRequestDto;
 import com.example.school_management.dto.StudentRequestDto;
 import com.example.school_management.dto.StudentResponseDto;
 import com.example.school_management.entity.Class;
+import com.example.school_management.entity.Parent;
 import com.example.school_management.entity.Student;
 import com.example.school_management.enums.Gender;
 import com.example.school_management.exception.DuplicateResourceException;
@@ -11,6 +12,7 @@ import com.example.school_management.exception.OutOfCapacityException;
 import com.example.school_management.exception.ResourceNotFoundException;
 import com.example.school_management.mapper.StudentMapper;
 import com.example.school_management.repo.ClassRepository;
+import com.example.school_management.repo.ParentRepository;
 import com.example.school_management.repo.StudentRepository;
 import com.example.school_management.service.StudentService;
 import jakarta.transaction.Transactional;
@@ -28,14 +30,31 @@ public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
     private final ClassRepository classRepository;
     private final StudentMapper studentMapper;
+    private final ParentRepository parentRepository;
 
     @Override
     public StudentResponseDto admitStudent(StudentRequestDto request) {
+
+        Parent parent;
+
         if (studentRepository.existsByAadharNo(request.getAadharNo())) {
             throw new DuplicateResourceException(
                     "Student with Aadhar " + request.getAadharNo() + " already exists");
         }
+
+        if(request.getParent()==null && request.getParentId()==null)
+        {throw new IllegalArgumentException("Either parentId or parent must be provided");}
+
+        if(request.getParentId()!=null)
+        {
+            parent= parentRepository.findById(request.getParentId()).orElseThrow(() -> new RuntimeException("Parent not found"));
+        }else
+        {   parent= request.getParent();    }
+
         Student student = studentMapper.toEntity(request);
+
+        student.setParent(parent);
+
         student.setActive(true);
         return studentMapper.toResponseDto(studentRepository.save(student));
     }

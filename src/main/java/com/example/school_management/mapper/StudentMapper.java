@@ -18,7 +18,6 @@ public class StudentMapper {
     private final PasswordEncoder passwordEncoder;
 
     public Student toEntity(StudentRequestDto dto) {
-        Parent parent = buildParent(dto);
 
         return Student.builder()
                 .firstName(dto.getFirstName())
@@ -32,7 +31,6 @@ public class StudentMapper {
                 .religion(dto.getReligion())
                 .category(dto.getCategory())
                 .rollNumber(dto.getRollNumber())
-                .parent(parent)
                 .previousSchool(dto.getPreviousSchool())
                 .previousPercentage(dto.getPreviousPercentage())
                 .birthCertificateUrl(dto.getBirthCertificateUrl())
