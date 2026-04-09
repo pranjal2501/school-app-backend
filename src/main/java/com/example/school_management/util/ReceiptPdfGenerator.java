@@ -1,9 +1,9 @@
 package com.example.school_management.util;
 
-import com.example.school_management.entity.FeeItem;
-import com.example.school_management.entity.Fees;
-import com.example.school_management.entity.Payment;
-import com.example.school_management.entity.Student;
+import com.example.school_management.fees.entity.FeeItem;
+import com.example.school_management.fees.entity.Fees;
+import com.example.school_management.payment.Payment;
+import com.example.school_management.student.Student;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfWriter;
 
