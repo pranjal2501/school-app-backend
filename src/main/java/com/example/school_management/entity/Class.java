@@ -48,4 +48,10 @@ public class Class {
     @OneToOne
     @JoinColumn(name = "class_teacher_id", referencedColumnName = "id", unique = true)
     private Teacher classTeacher;
+
+    @Min(0)
+    private Integer currentBoys;
+
+    @Min(0)
+    private Integer currentGirls;
 }

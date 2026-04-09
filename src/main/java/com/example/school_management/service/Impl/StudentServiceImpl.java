@@ -3,10 +3,14 @@ package com.example.school_management.service.Impl;
 import com.example.school_management.dto.StudentClassAssignmentRequestDto;
 import com.example.school_management.dto.StudentRequestDto;
 import com.example.school_management.dto.StudentResponseDto;
+import com.example.school_management.entity.Class;
 import com.example.school_management.entity.Student;
+import com.example.school_management.enums.Gender;
 import com.example.school_management.exception.DuplicateResourceException;
+import com.example.school_management.exception.OutOfCapacityException;
 import com.example.school_management.exception.ResourceNotFoundException;
 import com.example.school_management.mapper.StudentMapper;
+import com.example.school_management.repo.ClassRepository;
 import com.example.school_management.repo.StudentRepository;
 import com.example.school_management.service.StudentService;
 import jakarta.transaction.Transactional;
@@ -22,6 +26,7 @@ import java.util.stream.Collectors;
 public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
+    private final ClassRepository classRepository;
     private final StudentMapper studentMapper;
 
     @Override
@@ -119,9 +124,41 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public StudentResponseDto assignClassAndDivision(Long id, StudentClassAssignmentRequestDto request) {
         Student student=findById(id);
-        student.setStandard(request.getStandard());
-        student.setDivision(request.getDivision());
+
+        String className = request.getStandard() + "-" + request.getDivision();
+
+        Class assignedClass = classRepository.findByClassName(className).orElseThrow(()->new ResourceNotFoundException("Class "+className+" don't exist"));
+        Class previousClass = student.getAssignedClass();
+
+        Gender gender= student.getGender();
+
+        if(gender.equals(Gender.MALE))
+        {
+            if(assignedClass.getCurrentBoys()==0)
+            {throw new OutOfCapacityException("Boys capacity in class "+className+" already fulfilled");}
+        }
+        else if (gender.equals(Gender.FEMALE)) {
+            if(assignedClass.getCurrentGirls()==0)
+            {throw new OutOfCapacityException("Girls capacity in class "+className+" already fulfilled");}
+        }
+
+        if (previousClass != null) {
+            if (gender.equals(Gender.MALE)) {
+                previousClass.setCurrentBoys(previousClass.getCurrentBoys() + 1);
+            } else if (gender.equals(Gender.FEMALE)) {
+                previousClass.setCurrentGirls(previousClass.getCurrentGirls() + 1);
+            }
+            classRepository.save(previousClass);
+        }
+
+        if(gender.equals(Gender.MALE)) {
+            assignedClass.setCurrentBoys(assignedClass.getCurrentBoys() - 1);
+        } else if (gender.equals(Gender.FEMALE)) {
+            assignedClass.setCurrentGirls(assignedClass.getCurrentGirls() - 1);
+        }
+
         student.setRollNumber(request.getRollNumber());
+        student.setAssignedClass(assignedClass);
 
         return studentMapper.toResponseDto(studentRepository.save(student));
     }

@@ -7,13 +7,14 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "students")
+@Table(name = "students", uniqueConstraints = @UniqueConstraint(columnNames = {"class_id", "roll_number"}))
 @Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
@@ -77,19 +78,12 @@ public class Student extends BaseEntity {
     @Column(name = "category", length = 30, nullable = false)
     private Category category;
 
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "standard", length = 10, nullable = true)
-    private Standard standard;
-
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "division", length = 5, nullable = true)
-    private Division division;
-
+    @ManyToOne
+    @JoinColumn(name = "class_id")
+    private Class assignedClass;
 
     @Min(value = 1, message = ValidationMessages.ROLL_NUMBER_MIN)
-    @Column(name = "roll_number", unique = true, nullable = true)
+    @Column(name = "roll_number", unique = false, nullable = true)
     private Integer rollNumber;
 
     @ManyToOne(cascade = CascadeType.ALL)
