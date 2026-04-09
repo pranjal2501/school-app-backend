@@ -5,6 +5,7 @@ import com.example.school_management.dto.TeacherResponseDto;
 import com.example.school_management.entity.Class;
 import com.example.school_management.entity.Subject;
 import com.example.school_management.entity.Teacher;
+import com.example.school_management.enums.Role;
 import com.example.school_management.repo.ClassRepository;
 import com.example.school_management.repo.SubjectRepository;
 import lombok.RequiredArgsConstructor;
@@ -61,13 +62,13 @@ public class TeacherMapper {
         dto.setJoiningDate(teacher.getJoiningDate());
         dto.setYearsOfExperience(teacher.getYearsOfExperience());
         dto.setActive(teacher.isActive());
-        dto.setRole(teacher.getRole());
         dto.setPreviousSchool(teacher.getPreviousSchool());
         dto.setAadharPhotourl(teacher.getAadharPhotourl());
         dto.setPanPhotourl(teacher.getPanPhotourl());
         dto.setDegreeCertificateurl(teacher.getDegreeCertificateurl());
         dto.setResignationLetterurl(teacher.getResignationLetterurl());
         dto.setResumeurl(teacher.getResumeurl());
+        dto.setRole(Role.TEACHER);
 
         if (teacher.getSubject() != null) {
             dto.setSubjectId(teacher.getSubject().getId());
@@ -119,6 +120,7 @@ public class TeacherMapper {
         teacher.setDegreeCertificateurl(dto.getDegreeCertificateurl());
         teacher.setResignationLetterurl(dto.getResignationLetterurl());
         teacher.setResumeurl(dto.getResumeurl());
+        teacher.setRole(Role.TEACHER);
 
         Subject subject = subjectRepository.findById(dto.getSubjectId())
                 .orElseThrow(() -> new RuntimeException(

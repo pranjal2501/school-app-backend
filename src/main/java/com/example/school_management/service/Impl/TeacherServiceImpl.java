@@ -22,7 +22,6 @@ public class TeacherServiceImpl implements TeacherService {
     private final TeacherMapper teacherMapper;
     private final BCryptPasswordEncoder passwordEncoder;
 
-
     private TeacherResponseDto toDto(Teacher teacher) {
         TeacherResponseDto dto = new TeacherResponseDto();
         dto.setId(teacher.getId());
@@ -47,7 +46,6 @@ public class TeacherServiceImpl implements TeacherService {
         dto.setJoiningDate(teacher.getJoiningDate());
         dto.setYearsOfExperience(teacher.getYearsOfExperience());
         dto.setActive(teacher.isActive());
-        dto.setRole(teacher.getRole());
         dto.setPreviousSchool(teacher.getPreviousSchool());
         dto.setAadharPhotourl(teacher.getAadharPhotourl());
         dto.setPanPhotourl(teacher.getPanPhotourl());
@@ -107,10 +105,8 @@ public class TeacherServiceImpl implements TeacherService {
         teacher.setDegreeCertificateurl(request.getDegreeCertificateurl());
         teacher.setResignationLetterurl(request.getResignationLetterurl());
         teacher.setResumeurl(request.getResumeurl());
-        teacher = teacherMapper.toEntity(request);
         teacher.setRole(Role.TEACHER);
         teacher.setActive(true);
-
         return teacherMapper.toResponseDto(teacherRepo.save(teacher));
     }
 

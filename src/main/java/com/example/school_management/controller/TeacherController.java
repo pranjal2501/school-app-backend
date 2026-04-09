@@ -20,6 +20,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/teachers")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
+
 public class TeacherController {
 
     private final TeacherService teacherService;

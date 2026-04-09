@@ -128,6 +128,6 @@ public abstract class Employee extends BaseEntity {
     private Integer yearsOfExperience;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
+    @Column(name = "role")
     private Role role;
 }

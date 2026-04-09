@@ -95,7 +95,6 @@ public class FinanceOfficerMapper {
         dto.setResignationLetterurl(officer.getResignationLetterurl());
         dto.setResumeurl(officer.getResumeurl());
         dto.setActive(officer.isActive());
-        dto.setRole(officer.getRole());
         return dto;
     }
 

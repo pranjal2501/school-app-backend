@@ -1,12 +1,13 @@
 package com.example.school_management.service;
 
+import com.example.school_management.dto.ClassRequestDto;
 import com.example.school_management.entity.Class;
 
 import java.util.List;
 
 public interface ClassService {
 
-    Class createClass(Class classEntity);
+    Class createClass(ClassRequestDto request);
 
     List<Class> getAllClasses();
 
