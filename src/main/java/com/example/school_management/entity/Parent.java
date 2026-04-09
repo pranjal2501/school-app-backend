@@ -93,7 +93,6 @@ public class Parent {
     @Column(name = "emergency_contact_number", length = 10)
     private String emergencyContactNumber;
 
-
     @Email(message = ValidationMessages.EMAIL_INVALID)
     @Size(max = 100)
     @Column(name = "email", length = 100, unique = true)

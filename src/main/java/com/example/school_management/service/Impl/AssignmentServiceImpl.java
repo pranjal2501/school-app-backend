@@ -14,7 +14,7 @@ import com.example.school_management.mapper.AssignmentMapper;
 import com.example.school_management.repo.AssignmentRepository;
 import com.example.school_management.repo.ClassRepository;
 import com.example.school_management.repo.SubjectRepository;
-import com.example.school_management.repo.TeacherRepo;
+import com.example.school_management.repo.TeacherRepository;
 import com.example.school_management.service.AssignmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ import java.util.List;
 public class AssignmentServiceImpl implements AssignmentService {
 
     private final AssignmentRepository assignmentRepository;
-    private final TeacherRepo teacherRepository;
+    private final TeacherRepository teacherRepository;
     private final ClassRepository classRepository;
     private final SubjectRepository subjectRepository;
     private final AssignmentMapper assignmentMapper;

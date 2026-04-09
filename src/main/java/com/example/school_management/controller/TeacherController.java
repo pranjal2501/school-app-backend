@@ -1,9 +1,6 @@
 package com.example.school_management.controller;
 
-import com.example.school_management.dto.ApiResponse;
-import com.example.school_management.dto.SubjectResponseDto;
-import com.example.school_management.dto.TeacherRequestDto;
-import com.example.school_management.dto.TeacherResponseDto;
+import com.example.school_management.dto.*;
 import com.example.school_management.entity.Class;
 import com.example.school_management.service.ClassService;
 import com.example.school_management.service.SubjectService;
@@ -146,7 +143,7 @@ public class TeacherController {
 
     @GetMapping("/classes")
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
-    public ResponseEntity<ApiResponse<List<Class>>> getAllClasses() {
+    public ResponseEntity<ApiResponse<List<ClassResponseDto>>> getAllClasses() {
         return ResponseEntity.ok(
                 ApiResponse.ok("Fetched all classes", classService.getAllClasses())
         );
@@ -163,4 +160,6 @@ public class TeacherController {
             return ResponseEntity.status(404).body(ApiResponse.error(e.getMessage()));
         }
     }
+
+
 }

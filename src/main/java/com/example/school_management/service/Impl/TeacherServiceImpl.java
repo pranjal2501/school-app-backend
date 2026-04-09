@@ -5,7 +5,7 @@ import com.example.school_management.dto.TeacherRequestDto;
 import com.example.school_management.dto.TeacherResponseDto;
 import com.example.school_management.entity.Teacher;
 import com.example.school_management.enums.Role;
-import com.example.school_management.repo.TeacherRepo;
+import com.example.school_management.repo.TeacherRepository;
 import com.example.school_management.service.TeacherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TeacherServiceImpl implements TeacherService {
 
-    private final TeacherRepo teacherRepo;
+    private final TeacherRepository teacherRepo;
     private final TeacherMapper teacherMapper;
     private final BCryptPasswordEncoder passwordEncoder;
 

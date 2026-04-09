@@ -6,7 +6,7 @@ import com.example.school_management.entity.Subject;
 import com.example.school_management.entity.Teacher;
 import com.example.school_management.enums.SubjectType;
 import com.example.school_management.repo.SubjectRepository;
-import com.example.school_management.repo.TeacherRepo;
+import com.example.school_management.repo.TeacherRepository;
 import com.example.school_management.service.SubjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ import java.util.List;
 public class SubjectServiceImpl implements SubjectService {
 
     private final SubjectRepository subjectRepository;
-    private final TeacherRepo teacherRepository;
+    private final TeacherRepository teacherRepository;
 
     private Subject mapToEntity(SubjectRequestDto request)
     {

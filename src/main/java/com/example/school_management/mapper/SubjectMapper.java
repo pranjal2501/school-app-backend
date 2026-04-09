@@ -5,7 +5,7 @@ import com.example.school_management.dto.SubjectResponseDto;
 import com.example.school_management.entity.Subject;
 import com.example.school_management.entity.Teacher;
 import com.example.school_management.enums.SubjectType;
-import com.example.school_management.repo.TeacherRepo;
+import com.example.school_management.repo.TeacherRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SubjectMapper {
 
-    private final TeacherRepo teacherRepository;
+    private final TeacherRepository teacherRepository;
 
     public Subject toEntity(SubjectRequestDto dto) {
         Subject subject = new Subject();

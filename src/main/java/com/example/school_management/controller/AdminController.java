@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admins")
 @PreAuthorize("hasRole('ADMIN')")
-@RequiredArgsConstructor // Automatically generates a constructor for all 'final' fields
+@RequiredArgsConstructor
 public class AdminController {
 
     private final AdminService adminService;

@@ -11,7 +11,7 @@ import com.example.school_management.enums.Priority;
 import com.example.school_management.mapper.ComplaintMapper;
 import com.example.school_management.repo.ComplaintRepository;
 import com.example.school_management.repo.StudentRepository;
-import com.example.school_management.repo.TeacherRepo;
+import com.example.school_management.repo.TeacherRepository;
 import com.example.school_management.service.ComplaintService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     private final ComplaintRepository complaintRepository;
     private final StudentRepository studentRepository;
-    private final TeacherRepo teacherRepository;
+    private final TeacherRepository teacherRepository;
     private final ComplaintMapper complaintMapper;
 
     @Override

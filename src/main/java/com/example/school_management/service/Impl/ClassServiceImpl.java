@@ -1,26 +1,52 @@
 package com.example.school_management.service.Impl;
 
 import com.example.school_management.dto.ClassRequestDto;
+import com.example.school_management.dto.ClassResponseDto;
 import com.example.school_management.entity.Class;
+import com.example.school_management.entity.Teacher;
+import com.example.school_management.exception.DuplicateResourceException;
+import com.example.school_management.exception.ResourceNotFoundException;
+import com.example.school_management.exception.UnauthorizedAccessException;
+import com.example.school_management.mapper.ClassMapper;
 import com.example.school_management.repo.ClassRepository;
+import com.example.school_management.repo.TeacherRepository;
 import com.example.school_management.service.ClassService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ClassServiceImpl implements ClassService {
 
     private final ClassRepository classRepository;
+    private final TeacherRepository teacherRepository;
+    private final ClassMapper classMapper;
 
+    private void verifyAdminIdentity() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedAccessException("Authentication required to perform this action");
+        }
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin) {
+            throw new UnauthorizedAccessException("Identity Verification Failed: Only administrators can execute this operation");
+        }
+    }
 
     @Override
-    public Class createClass(ClassRequestDto request) {
+    @Transactional
+    public ClassResponseDto createClass(ClassRequestDto request) {
+        verifyAdminIdentity();
 
         String className = request.getStandard() + "-" + request.getDivision();
-        request.setClassName(className);
+
         Class classEntity = new Class();
         classEntity.setClassName(className);
         classEntity.setGirls(request.getGirls());
@@ -28,38 +54,77 @@ public class ClassServiceImpl implements ClassService {
         classEntity.setTotalStudents(request.getTotalStudents());
         classEntity.setDivision(request.getDivision());
         classEntity.setStandard(request.getStandard());
-        return classRepository.save(classEntity);
+
+        return classMapper.toResponseDto(classRepository.save(classEntity));
     }
 
     @Override
-    public List<Class> getAllClasses() {
-        return classRepository.findAll();
+    public List<ClassResponseDto> getAllClasses() {
+        verifyAdminIdentity();
+        return classMapper.toResponseDtoList(classRepository.findAll());
     }
 
     @Override
-    public Class getClassById(Long id) {
-        return classRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Class not found with id: " + id));
+    public ClassResponseDto getClassById(Long id) {
+        verifyAdminIdentity();
+        Class classEntity = classRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Class", "id", id));
+        return classMapper.toResponseDto(classEntity);
     }
+
     @Override
-    public Class updateClass(Long id, Class classEntity) {
+    @Transactional
+    public ClassResponseDto updateClass(Long id, ClassRequestDto request) {
+        verifyAdminIdentity();
 
-        Class existing = getClassById(id);
+        Class existing = classRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Class", "id", id));
 
-        existing.setStandard(classEntity.getStandard());
-        existing.setDivision(classEntity.getDivision());
-        existing.setTotalStudents(classEntity.getTotalStudents());
-        existing.setBoys(classEntity.getBoys());
-        existing.setGirls(classEntity.getGirls());
+        existing.setStandard(request.getStandard());
+        existing.setDivision(request.getDivision());
+        existing.setTotalStudents(request.getTotalStudents());
+        existing.setBoys(request.getBoys());
+        existing.setGirls(request.getGirls());
 
         String className = existing.getStandard() + "-" + existing.getDivision();
         existing.setClassName(className);
 
-        return classRepository.save(existing);
+        return classMapper.toResponseDto(classRepository.save(existing));
     }
 
     @Override
+    @Transactional
     public void deleteClass(Long id) {
+        verifyAdminIdentity();
+        if (!classRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Class", "id", id);
+        }
         classRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public ClassResponseDto assignClassTeacher(Long classId, Long teacherId) {
+        verifyAdminIdentity();
+
+        Class classEntity = classRepository.findById(classId)
+                .orElseThrow(() -> new ResourceNotFoundException("Class", "id", classId));
+
+        Teacher teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", teacherId));
+
+        Optional<Class> existingAssignment = classRepository.findByClassTeacher(teacher);
+
+        if (existingAssignment.isPresent()) {
+            if (existingAssignment.get().getId().equals(classId)) {
+                throw new DuplicateResourceException("This teacher is already assigned to this specific class.");
+            }
+            throw new IllegalArgumentException(
+                    "Teacher is already assigned as Class Teacher to " + existingAssignment.get().getClassName()
+            );
+        }
+
+        classEntity.setClassTeacher(teacher);
+        return classMapper.toResponseDto(classRepository.save(classEntity));
     }
 }
