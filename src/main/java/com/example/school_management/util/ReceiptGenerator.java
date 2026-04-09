@@ -1,6 +1,6 @@
 package com.example.school_management.util;
 
-import com.example.school_management.enums.ModeOfPayment;
+import com.example.school_management.common.enums.ModeOfPayment;
 
 import java.util.UUID;
 
