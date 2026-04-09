@@ -8,6 +8,7 @@ import com.example.school_management.common.exception.OutOfCapacityException;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.schoolClass.ClassRepository;
 import com.example.school_management.parent.ParentRepository;
+import com.example.school_management.service.EmailService;
 import com.example.school_management.student.dto.*;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -56,6 +57,13 @@ public class StudentServiceImpl implements StudentService {
         student.setParent(parent);
 
         student.setActive(true);
+
+        EmailService.sendAdmissionEmail(
+                parent.getEmail(),
+                student.getFirstName() + " " + student.getLastName(),
+                parent.getEmail(),
+                parent.getPassword()
+        );
         return studentMapper.toResponseDto(studentRepository.save(student));
     }
 
