@@ -7,7 +7,6 @@ public enum AddressProofDocument {
     PASSPORT("Passport"),
     VOTER_ID_CARD("Voter ID Card"),
     DRIVING_LICENSE("Driving License"),
-    RATION_CARD("Ration Card"),
     DOMICILE_CERTIFICATE("Domicile Certificate"),
 
     // Utility Bills (Usually required to be within the last 3 months)

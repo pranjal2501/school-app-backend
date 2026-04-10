@@ -33,7 +33,6 @@ public class CustomUserDetailsService implements UserDetailsService {
             return buildUser(admin.getUsername(), admin.getPassword(), "ADMIN");
         }
 
-
         var empOpt = employeeRepository.findByEmail(identifier)
                 .or(() -> employeeRepository.findByMobile(identifier));
         if (empOpt.isPresent()) {

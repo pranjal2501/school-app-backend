@@ -3,18 +3,21 @@ package com.example.school_management.teacher.dto;
 import com.example.school_management.common.enums.DegreeType;
 import com.example.school_management.common.enums.Gender;
 import com.example.school_management.common.enums.Role;
+import com.example.school_management.common.enums.Specialization;
 import lombok.Data;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class TeacherResponseDto {
-
     private Long id;
     private Instant createdAt;
     private Instant updatedAt;
 
+    // Basic Info
     private String firstName;
     private String middleName;
     private String lastName;
@@ -22,33 +25,36 @@ public class TeacherResponseDto {
     private String mobile;
     private Gender gender;
     private LocalDate dob;
+    private LocalDate joiningDate;
+    private String aadharNo;
+    private String panNo;
+
+    // Address
     private String addressLine1;
     private String addressLine2;
     private String city;
     private String state;
     private String pincode;
-    private String aadharNo;
-    private String panNo;
+
+    // Education & URLs
     private DegreeType degreeType;
     private String customDegreeName;
-    private LocalDate joiningDate;
-    private Integer yearsOfExperience;
-    private boolean isActive;
-    private Role role;
-    private String previousSchool;
-
     private String aadharPhotourl;
     private String panPhotourl;
     private String degreeCertificateurl;
     private String resignationLetterurl;
     private String resumeurl;
 
-    private Long subjectId;
-    private String subjectName;
+    // Experience
+    private Integer yearsOfExperienceInCurrentSchool;
+    private String previousSchool;
+    private Integer yearsOfExperienceInPreviousSchool;
 
-    private Long specializationId;
-    private String specializationName;
+    // Collections (Updated for Many-to-Many)
+    private List<String> subjects;
+    private List<Specialization> specializations;
 
-    private Long assignedClassId;
-    private String assignedClassName;
+    // System Status
+    private Role role;
+    private boolean active;
 }

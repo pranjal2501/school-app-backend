@@ -1,157 +1,138 @@
 package com.example.school_management.teacher;
 
 import com.example.school_management.common.enums.Role;
-import com.example.school_management.teacher.dto.TeacherRequestDto;
+import com.example.school_management.common.exception.DuplicateResourceException;
+import com.example.school_management.common.exception.ResourceNotFoundException;
+import com.example.school_management.common.exception.UnauthorizedAccessException;
+import com.example.school_management.mail.EmailService;
+import com.example.school_management.subject.Subject;
+import com.example.school_management.subject.SubjectRepository;
+import com.example.school_management.teacher.dto.TeacherFromAdminRequestDto;
+import com.example.school_management.teacher.dto.TeacherRemainingInfoDto;
 import com.example.school_management.teacher.dto.TeacherResponseDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class TeacherServiceImpl implements TeacherService {
 
-    private final TeacherRepository teacherRepo;
+    private final TeacherRepository teacherRepository;
     private final TeacherMapper teacherMapper;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
+    private final SubjectRepository subjectRepository;
+    private final EmailService emailService;
 
-    private TeacherResponseDto toDto(Teacher teacher) {
-        TeacherResponseDto dto = new TeacherResponseDto();
-        dto.setId(teacher.getId());
-        dto.setCreatedAt(teacher.getCreatedAt());
-        dto.setUpdatedAt(teacher.getUpdatedAt());
-        dto.setFirstName(teacher.getFirstName());
-        dto.setMiddleName(teacher.getMiddleName());
-        dto.setLastName(teacher.getLastName());
-        dto.setEmail(teacher.getEmail());
-        dto.setMobile(teacher.getMobile());
-        dto.setGender(teacher.getGender());
-        dto.setDob(teacher.getDob());
-        dto.setAddressLine1(teacher.getAddressLine1());
-        dto.setAddressLine2(teacher.getAddressLine2());
-        dto.setCity(teacher.getCity());
-        dto.setState(teacher.getState());
-        dto.setPincode(teacher.getPincode());
-        dto.setAadharNo(teacher.getAadharNo());
-        dto.setPanNo(teacher.getPanNo());
-        dto.setDegreeType(teacher.getDegreeType());
-        dto.setCustomDegreeName(teacher.getCustomDegreeName());
-        dto.setJoiningDate(teacher.getJoiningDate());
-        dto.setYearsOfExperience(teacher.getYearsOfExperience());
-        dto.setActive(teacher.isActive());
-        dto.setPreviousSchool(teacher.getPreviousSchool());
-        dto.setAadharPhotourl(teacher.getAadharPhotourl());
-        dto.setPanPhotourl(teacher.getPanPhotourl());
-        dto.setDegreeCertificateurl(teacher.getDegreeCertificateurl());
-        dto.setResignationLetterurl(teacher.getResignationLetterurl());
-        dto.setResumeurl(teacher.getResumeurl());
+    private void verifyAdminIdentity() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (teacher.getSubject() != null) {
-            dto.setSubjectId(teacher.getSubject().getId());
-            dto.setSubjectName(teacher.getSubject().getSubjectName());
-        }
-        if (teacher.getSpecialization() != null) {
-            dto.setSpecializationId(teacher.getSpecialization().getId());
-            dto.setSpecializationName(teacher.getSpecialization().getSubjectName());
-        }
-        if (teacher.getAssignedClass() != null) {
-            dto.setAssignedClassId(teacher.getAssignedClass().getId());
-            dto.setAssignedClassName(teacher.getAssignedClass().getClassName());
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedAccessException("Authentication required to perform this action");
         }
 
-        return dto;
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin) {
+            throw new UnauthorizedAccessException("Identity Verification Failed: Only administrators can execute this operation");
+        }
     }
+
+    private void verifyAdminOrOwnerIdentity(Teacher targetTeacher) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedAccessException("Authentication required to perform this action");
+        }
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+
+        // Check if the logged-in user's email matches the target teacher's email
+        boolean isOwner = authentication.getName().equalsIgnoreCase(targetTeacher.getEmail());
+
+        if (!isAdmin && !isOwner) {
+            throw new UnauthorizedAccessException("Access Denied: You do not have permission to modify this profile.");
+        }
+    }
+
     @Override
-    public TeacherResponseDto createTeacher(TeacherRequestDto request) {
+    @Transactional
+    public TeacherResponseDto updateTeacherAfterOnboard(Long teacherId, TeacherRemainingInfoDto request) {
+        Teacher teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", teacherId));
+        verifyAdminOrOwnerIdentity(teacher);
 
-        if (teacherRepo.existsByEmail(request.getEmail())) {
-            throw new DataIntegrityViolationException("Email already exists");
+        teacherMapper.updateTeacherFromRemainingInfoDto(request, teacher);
+        if (request.getSubjectIds() != null && !request.getSubjectIds().isEmpty()) {
+            List<Subject> subjects = subjectRepository.findAllById(request.getSubjectIds());
+            if (subjects.size() != request.getSubjectIds().size()) {
+                throw new ResourceNotFoundException("One or more Subject IDs are invalid.");
+            }
+            teacher.setSubjects(subjects);
+        } else if (request.getSubjectIds() != null) {
+            teacher.getSubjects().clear();
         }
 
-        if (teacherRepo.existsByMobile(request.getMobile())) {
-            throw new DataIntegrityViolationException("Mobile already exists");
+        Teacher updatedTeacher = teacherRepository.save(teacher);
+        return teacherMapper.toResponseDto(updatedTeacher);
+    }
+
+    @Override
+    @Transactional
+    public TeacherResponseDto onboardTeacher(TeacherFromAdminRequestDto request) {
+        verifyAdminIdentity();
+
+        if (teacherRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("Teacher", "email", request.getEmail());
+        }
+        if (teacherRepository.existsByMobile(request.getMobile())) {
+            throw new DuplicateResourceException("Teacher", "mobile", request.getMobile());
+        }
+        if (teacherRepository.existsByAadharNo(request.getAadharNo())) {
+            throw new DuplicateResourceException("Teacher", "aadharNo", request.getAadharNo());
+        }
+        if (teacherRepository.existsByPanNo(request.getPanNo())) {
+            throw new DuplicateResourceException("Teacher", "panNo", request.getPanNo());
         }
 
-        Teacher teacher = new Teacher();
-        teacher.setFirstName(request.getFirstName());
-        teacher.setMiddleName(request.getMiddleName());
-        teacher.setLastName(request.getLastName());
-        teacher.setEmail(request.getEmail());
-        teacher.setMobile(request.getMobile());
-        teacher.setPassword(passwordEncoder.encode(request.getPassword()));
-        teacher.setGender(request.getGender());
-        teacher.setDob(request.getDob());
-        teacher.setAddressLine1(request.getAddressLine1());
-        teacher.setAddressLine2(request.getAddressLine2());
-        teacher.setCity(request.getCity());
-        teacher.setState(request.getState());
-        teacher.setPincode(request.getPincode());
-        teacher.setAadharNo(request.getAadharNo());
-        teacher.setPanNo(request.getPanNo());
-        teacher.setDegreeType(request.getDegreeType());
-        teacher.setCustomDegreeName(request.getCustomDegreeName());
-        teacher.setJoiningDate(request.getJoiningDate());
-        teacher.setYearsOfExperience(request.getYearsOfExperience());
-        teacher.setPreviousSchool(request.getPreviousSchool());
-        teacher.setAadharPhotourl(request.getAadharPhotourl());
-        teacher.setPanPhotourl(request.getPanPhotourl());
-        teacher.setDegreeCertificateurl(request.getDegreeCertificateurl());
-        teacher.setResignationLetterurl(request.getResignationLetterurl());
-        teacher.setResumeurl(request.getResumeurl());
+        Teacher teacher = teacherMapper.toEntity(request);
         teacher.setRole(Role.TEACHER);
         teacher.setActive(true);
-        return teacherMapper.toResponseDto(teacherRepo.save(teacher));
+        String namePart = getSafeSubstring(teacher.getLastName(), 3).toUpperCase(Locale.ROOT);
+        String mobilePart = getSafeSubstring(teacher.getMobile(), 3);
+        String aadharPart = getSafeSubstring(teacher.getAadharNo(), 3);
+        String rawPassword = namePart + mobilePart + aadharPart;
+        teacher.setPassword(passwordEncoder.encode(rawPassword));
+
+        Teacher savedTeacher = teacherRepository.save(teacher);
+
+        emailService.sendTeacherOnboardingEmail(
+                savedTeacher.getEmail(),
+                savedTeacher.getFirstName() + " " + savedTeacher.getLastName(),
+                rawPassword
+        );
+
+        return teacherMapper.toResponseDto(savedTeacher);
     }
-
-
-    @Override
-    public TeacherResponseDto getTeacherById(Long id) {
-        Teacher teacher = teacherRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Teacher not found with id: " + id));
-
-        return teacherMapper.toResponseDto(teacher);
-    }
-
 
     @Override
     public List<TeacherResponseDto> getAllTeachers() {
-        return teacherMapper.toResponseDtoList(teacherRepo.findAll());
+        verifyAdminIdentity();
+        return teacherRepository.findAll().stream()
+                .map(teacherMapper::toResponseDto)
+                .collect(Collectors.toList());
     }
 
-
-    @Override
-    public TeacherResponseDto updateTeacher(Long id, TeacherRequestDto request) {
-
-        Teacher existing = teacherRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Teacher not found with id: " + id));
-
-        if (request.getEmail() != null &&
-                !existing.getEmail().equals(request.getEmail()) &&
-                teacherRepo.existsByEmail(request.getEmail())) {
-            throw new DataIntegrityViolationException("Email already exists");
-        }
-
-        if (request.getMobile() != null &&
-                !existing.getMobile().equals(request.getMobile()) &&
-                teacherRepo.existsByMobile(request.getMobile())) {
-            throw new DataIntegrityViolationException("Mobile already exists");
-        }
-
-
-        teacherMapper.updateEntity(request, existing);
-
-        return teacherMapper.toResponseDto(teacherRepo.save(existing));
-    }
-
-
-    @Override
-    public void deleteTeacher(Long id) {
-        if (!teacherRepo.existsById(id)) {
-            throw new RuntimeException("Teacher not found with id: " + id);
-        }
-        teacherRepo.deleteById(id);
+    private String getSafeSubstring(String value, int length) {
+        if (value == null) return "";
+        return value.length() < length ? value : value.substring(0, length);
     }
 }

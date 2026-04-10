@@ -1,141 +1,136 @@
 package com.example.school_management.teacher;
 
-import com.example.school_management.schoolClass.Class;
 import com.example.school_management.subject.Subject;
-import com.example.school_management.common.enums.Role;
-import com.example.school_management.schoolClass.ClassRepository;
-import com.example.school_management.subject.SubjectRepository;
-import com.example.school_management.teacher.dto.TeacherRequestDto;
+import com.example.school_management.teacher.dto.TeacherFromAdminRequestDto;
+import com.example.school_management.teacher.dto.TeacherRemainingInfoDto;
 import com.example.school_management.teacher.dto.TeacherResponseDto;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public class TeacherMapper {
 
-    private final SubjectRepository subjectRepository;
-    private final ClassRepository classRepository;
-    private final PasswordEncoder passwordEncoder;
+    /**
+     * Maps incoming DTO to Teacher Entity.
+     * Only handles raw data transfer; business logic remains in the service.
+     */
+    public Teacher toEntity(TeacherFromAdminRequestDto request) {
+        if (request == null) {
+            return null;
+        }
 
-    public Teacher toEntity(TeacherRequestDto dto) {
         Teacher teacher = new Teacher();
-        applyDtoToEntity(dto, teacher);
-        teacher.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+        // Employee Base Fields
+        teacher.setFirstName(request.getFirstName());
+        teacher.setMiddleName(request.getMiddleName());
+        teacher.setLastName(request.getLastName());
+        teacher.setEmail(request.getEmail());
+        teacher.setMobile(request.getMobile());
+        teacher.setGender(request.getGender());
+        teacher.setDob(request.getDob());
+
+        // Teacher Specific Fields
+        teacher.setJoiningDate(request.getJoiningDate());
+        teacher.setYearsOfExperienceInCurrentSchool(request.getYearsOfExperienceInCurrentSchool());
+        teacher.setAadharNo(request.getAadharNo());
+        teacher.setPanNo(request.getPanNo());
+
         return teacher;
     }
 
-    public void updateEntity(TeacherRequestDto dto, Teacher teacher) {
-        applyDtoToEntity(dto, teacher);
-        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
-            teacher.setPassword(passwordEncoder.encode(dto.getPassword()));
-        }
-    }
-
     public TeacherResponseDto toResponseDto(Teacher teacher) {
-        TeacherResponseDto dto = new TeacherResponseDto();
-
-        dto.setId(teacher.getId());
-        dto.setCreatedAt(teacher.getCreatedAt());
-        dto.setUpdatedAt(teacher.getUpdatedAt());
-        dto.setFirstName(teacher.getFirstName());
-        dto.setMiddleName(teacher.getMiddleName());
-        dto.setLastName(teacher.getLastName());
-        dto.setEmail(teacher.getEmail());
-        dto.setMobile(teacher.getMobile());
-        dto.setGender(teacher.getGender());
-        dto.setDob(teacher.getDob());
-        dto.setAddressLine1(teacher.getAddressLine1());
-        dto.setAddressLine2(teacher.getAddressLine2());
-        dto.setCity(teacher.getCity());
-        dto.setState(teacher.getState());
-        dto.setPincode(teacher.getPincode());
-        dto.setAadharNo(teacher.getAadharNo());
-        dto.setPanNo(teacher.getPanNo());
-        dto.setDegreeType(teacher.getDegreeType());
-        dto.setCustomDegreeName(teacher.getCustomDegreeName());
-        dto.setJoiningDate(teacher.getJoiningDate());
-        dto.setYearsOfExperience(teacher.getYearsOfExperience());
-        dto.setActive(teacher.isActive());
-        dto.setPreviousSchool(teacher.getPreviousSchool());
-        dto.setAadharPhotourl(teacher.getAadharPhotourl());
-        dto.setPanPhotourl(teacher.getPanPhotourl());
-        dto.setDegreeCertificateurl(teacher.getDegreeCertificateurl());
-        dto.setResignationLetterurl(teacher.getResignationLetterurl());
-        dto.setResumeurl(teacher.getResumeurl());
-        dto.setRole(Role.TEACHER);
-
-        if (teacher.getSubject() != null) {
-            dto.setSubjectId(teacher.getSubject().getId());
-            dto.setSubjectName(teacher.getSubject().getSubjectName());
+        if (teacher == null) {
+            return null;
         }
 
-        if (teacher.getSpecialization() != null) {
-            dto.setSpecializationId(teacher.getSpecialization().getId());
-            dto.setSpecializationName(teacher.getSpecialization().getSubjectName());
+        TeacherResponseDto response = new TeacherResponseDto();
+
+        // Base / Onboarding Fields
+        response.setId(teacher.getId());
+        response.setCreatedAt(teacher.getCreatedAt());
+        response.setUpdatedAt(teacher.getUpdatedAt());
+        response.setFirstName(teacher.getFirstName());
+        response.setMiddleName(teacher.getMiddleName());
+        response.setLastName(teacher.getLastName());
+        response.setEmail(teacher.getEmail());
+        response.setMobile(teacher.getMobile());
+        response.setGender(teacher.getGender());
+        response.setDob(teacher.getDob());
+        response.setJoiningDate(teacher.getJoiningDate());
+        response.setAadharNo(teacher.getAadharNo());
+        response.setPanNo(teacher.getPanNo());
+        response.setActive(teacher.isActive());
+        response.setRole(teacher.getRole());
+
+        // Address Fields
+        response.setAddressLine1(teacher.getAddressLine1());
+        response.setAddressLine2(teacher.getAddressLine2());
+        response.setCity(teacher.getCity());
+        response.setState(teacher.getState());
+        response.setPincode(teacher.getPincode());
+
+        // Education & Experience
+        response.setDegreeType(teacher.getDegreeType());
+        response.setCustomDegreeName(teacher.getCustomDegreeName());
+        response.setYearsOfExperienceInCurrentSchool(teacher.getYearsOfExperienceInCurrentSchool());
+        response.setPreviousSchool(teacher.getPreviousSchool());
+        response.setYearsOfExperienceInPreviousSchool(teacher.getYearsOfExperienceInPreviousSchool());
+
+        // URLs
+        response.setAadharPhotourl(teacher.getAadharPhotourl());
+        response.setPanPhotourl(teacher.getPanPhotourl());
+        response.setDegreeCertificateurl(teacher.getDegreeCertificateurl());
+        response.setResignationLetterurl(teacher.getResignationLetterurl());
+        response.setResumeurl(teacher.getResumeurl());
+
+        // Map Many-to-Many Subjects to a simple List of Strings for the DTO
+        if (teacher.getSubjects() != null && !teacher.getSubjects().isEmpty()) {
+            response.setSubjects(teacher.getSubjects().stream()
+                    .map(Subject::getSubjectName)
+                    .collect(Collectors.toList()));
         }
 
-        if (teacher.getAssignedClass() != null) {
-            dto.setAssignedClassId(teacher.getAssignedClass().getId());
-            dto.setAssignedClassName(teacher.getAssignedClass().getClassName());
-        }
+        // Map Specializations
+        response.setSpecializations(teacher.getSpecializations());
 
-        return dto;
+        return response;
     }
 
-    public List<TeacherResponseDto> toResponseDtoList(List<Teacher> teachers) {
-        return teachers.stream()
-                .map(this::toResponseDto)
-                .collect(Collectors.toList());
-    }
+    public void updateTeacherFromRemainingInfoDto(TeacherRemainingInfoDto dto, Teacher teacher) {
+        if (dto == null || teacher == null) {
+            return;
+        }
 
+        // Address Fields
+        if (dto.getAddressLine1() != null) teacher.setAddressLine1(dto.getAddressLine1());
+        if (dto.getAddressLine2() != null) teacher.setAddressLine2(dto.getAddressLine2());
+        if (dto.getCity() != null) teacher.setCity(dto.getCity());
+        if (dto.getState() != null) teacher.setState(dto.getState());
+        if (dto.getPincode() != null) teacher.setPincode(dto.getPincode());
 
-    private void applyDtoToEntity(TeacherRequestDto dto, Teacher teacher) {
-        teacher.setFirstName(dto.getFirstName());
-        teacher.setMiddleName(dto.getMiddleName());
-        teacher.setLastName(dto.getLastName());
-        teacher.setEmail(dto.getEmail());
-        teacher.setMobile(dto.getMobile());
-        teacher.setGender(dto.getGender());
-        teacher.setDob(dto.getDob());
-        teacher.setAddressLine1(dto.getAddressLine1());
-        teacher.setAddressLine2(dto.getAddressLine2());
-        teacher.setCity(dto.getCity());
-        teacher.setState(dto.getState());
-        teacher.setPincode(dto.getPincode());
-        teacher.setAadharNo(dto.getAadharNo());
-        teacher.setPanNo(dto.getPanNo());
-        teacher.setDegreeType(dto.getDegreeType());
-        teacher.setCustomDegreeName(dto.getCustomDegreeName());
-        teacher.setJoiningDate(dto.getJoiningDate());
-        teacher.setYearsOfExperience(dto.getYearsOfExperience());
-        teacher.setPreviousSchool(dto.getPreviousSchool());
-        teacher.setAadharPhotourl(dto.getAadharPhotourl());
-        teacher.setPanPhotourl(dto.getPanPhotourl());
-        teacher.setDegreeCertificateurl(dto.getDegreeCertificateurl());
-        teacher.setResignationLetterurl(dto.getResignationLetterurl());
-        teacher.setResumeurl(dto.getResumeurl());
-        teacher.setRole(Role.TEACHER);
+        // Education Fields
+        if (dto.getDegreeType() != null) teacher.setDegreeType(dto.getDegreeType());
+        if (dto.getCustomDegreeName() != null) teacher.setCustomDegreeName(dto.getCustomDegreeName());
 
-        Subject subject = subjectRepository.findById(dto.getSubjectId())
-                .orElseThrow(() -> new RuntimeException(
-                        "Subject not found with id: " + dto.getSubjectId()));
-        teacher.setSubject(subject);
+        // Document URLs
+        if (dto.getAadharPhotourl() != null) teacher.setAadharPhotourl(dto.getAadharPhotourl());
+        if (dto.getPanPhotourl() != null) teacher.setPanPhotourl(dto.getPanPhotourl());
+        if (dto.getDegreeCertificateurl() != null) teacher.setDegreeCertificateurl(dto.getDegreeCertificateurl());
+        if (dto.getResignationLetterurl() != null) teacher.setResignationLetterurl(dto.getResignationLetterurl());
+        if (dto.getResumeurl() != null) teacher.setResumeurl(dto.getResumeurl());
 
-//        Subject specialization = subjectRepository.findById(dto.getSpecializationId())
-//                .orElseThrow(() -> new RuntimeException(
-//                        "Subject not found with id: " + dto.getSpecializationId()));
-//        teacher.setSpecialization(dto.getSpecialization());
+        // Experience
+        if (dto.getPreviousSchool() != null)
+            teacher.setPreviousSchool(dto.getPreviousSchool());
 
-        if (dto.getAssignedClassId() != null) {
-            Class assignedClass = classRepository.findById(dto.getAssignedClassId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "Class not found with id: " + dto.getAssignedClassId()));
-            teacher.setAssignedClass(assignedClass);
+        if (dto.getYearsOfExperienceInPreviousSchool() != null)
+            teacher.setYearsOfExperienceInPreviousSchool(dto.getYearsOfExperienceInPreviousSchool());
+
+        // Specializations (Enums can be mapped directly)
+        if (dto.getSpecializations() != null) {
+            teacher.setSpecializations(dto.getSpecializations());
         }
     }
 }

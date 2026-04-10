@@ -27,7 +27,7 @@ public abstract class Employee extends BaseEntity {
     private String firstName;
 
     @Size(max = 50)
-    @Column(name = "middle_name", length = 50)
+    @Column(name = "middle_name", length = 50,nullable = false)
     private String middleName;
 
     @NotBlank
@@ -42,7 +42,7 @@ public abstract class Employee extends BaseEntity {
     private String email;
 
     @NotBlank
-    @Column(name = "password", length = 100, nullable = false)
+    @Column(name = "password", length = 100)
     private String password;
 
     @NotBlank
@@ -58,7 +58,7 @@ public abstract class Employee extends BaseEntity {
     private LocalDate dob;
 
     @Size(max = 100)
-    @Column(name = "address_line1", length = 100, nullable = false)
+    @Column(name = "address_line1", length = 100)
     private String addressLine1;
 
     @Size(max = 100)
@@ -74,13 +74,12 @@ public abstract class Employee extends BaseEntity {
     private String state;
 
     @Pattern(regexp = "^[0-9]{6}$", message = "Pincode must be 6 digits")
-    @Column(name = "pincode", length = 6, nullable = false)
+    @Column(name = "pincode", length = 6)
     private String pincode;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "degree_type", length = 50, nullable = false)
+    @Column(name = "degree_type", length = 50)
     private DegreeType degreeType;
-
 
     @Column(name = "custom_degree_name", length = 150)
     private String customDegreeName;
@@ -125,8 +124,8 @@ public abstract class Employee extends BaseEntity {
 
     @PositiveOrZero
     @Max(50)
-    @Column(name = "years_of_experience")
-    private Integer yearsOfExperience;
+    @Column(name = "years_of_experience_in_current_school")
+    private Integer yearsOfExperienceInCurrentSchool;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role")

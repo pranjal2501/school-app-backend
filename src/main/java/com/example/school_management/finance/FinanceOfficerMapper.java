@@ -29,7 +29,7 @@ public class FinanceOfficerMapper {
                 .joiningDate(dto.getJoiningDate())
                 .aadharNo(dto.getAadharNo())
                 .panNo(dto.getPanNo())
-                .yearsOfExperience(dto.getYearsOfExperience())
+//                .yearsOfExperience(dto.getYearsOfExperience())
                 .previousOrg(dto.getPreviousOrg())
                 .aadharPhotourl(dto.getAadharPhotourl())
                 .panPhotourl(dto.getPanPhotourl())
@@ -57,7 +57,7 @@ public class FinanceOfficerMapper {
         officer.setJoiningDate(dto.getJoiningDate());
         officer.setAadharNo(dto.getAadharNo());
         officer.setPanNo(dto.getPanNo());
-        officer.setYearsOfExperience(dto.getYearsOfExperience());
+//        officer.setYearsOfExperience(dto.getYearsOfExperience());
         officer.setPreviousOrg(dto.getPreviousOrg());
         officer.setAadharPhotourl(dto.getAadharPhotourl());
         officer.setPanPhotourl(dto.getPanPhotourl());
@@ -86,7 +86,7 @@ public class FinanceOfficerMapper {
         dto.setJoiningDate(officer.getJoiningDate());
         dto.setAadharNo(officer.getAadharNo());
         dto.setPanNo(officer.getPanNo());
-        dto.setYearsOfExperience(officer.getYearsOfExperience());
+//        dto.setYearsOfExperience(officer.getYearsOfExperience());
         dto.setPreviousOrg(officer.getPreviousOrg());
         dto.setAadharPhotourl(officer.getAadharPhotourl());
         dto.setPanPhotourl(officer.getPanPhotourl());
