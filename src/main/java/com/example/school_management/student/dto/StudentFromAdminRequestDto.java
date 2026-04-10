@@ -1,6 +1,7 @@
 package com.example.school_management.student.dto;
 
 import com.example.school_management.common.ValidationMessages;
+import com.example.school_management.common.enums.Gender;
 import com.example.school_management.common.enums.Standard;
 import com.example.school_management.parent.Parent;
 import jakarta.validation.constraints.NotBlank;
@@ -21,6 +22,9 @@ public class StudentFromAdminRequestDto {
 
     @NotBlank(message = ValidationMessages.LAST_NAME_REQUIRED)
     private String lastName;
+
+    @NotNull(message = ValidationMessages.GENDER_REQUIRED)
+    private Gender gender;
 
     @NotNull(message = ValidationMessages.DOB_REQUIRED)
     @Past(message = ValidationMessages.DOB_PAST)

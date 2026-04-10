@@ -61,4 +61,13 @@ public class ClassController {
         ClassResponseDto response = classService.assignClassTeacher(classId, teacherId);
         return ResponseEntity.ok(ApiResponse.ok("Class teacher assigned successfully", response));
     }
+
+    @PatchMapping("/assign-roll-number/{classId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<String>>> assignRollNumberToStudents(@PathVariable Long classId)
+    {
+        List<String> details=classService.assignRollNumberToStudents(classId);
+
+        return ResponseEntity.ok(ApiResponse.ok("Roll number for class "+classId+" assigned successfully", details));
+    }
 }

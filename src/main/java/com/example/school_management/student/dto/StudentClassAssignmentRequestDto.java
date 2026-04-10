@@ -10,10 +10,6 @@ import lombok.Data;
 @Data
 public class StudentClassAssignmentRequestDto {
 
-    @NotNull(message = ValidationMessages.ROLL_NUMBER_REQUIRED)
-    @Min(value = 1, message = ValidationMessages.ROLL_NUMBER_MIN)
-    private Integer rollNumber;
-
     @NotNull(message = ValidationMessages.STANDARD_REQUIRED)
     private Standard standard;
 
