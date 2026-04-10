@@ -1,6 +1,8 @@
 package com.example.school_management.student;
 
 import com.example.school_management.parent.Parent;
+import com.example.school_management.student.dto.StudentFromAdminRequestDto;
+import com.example.school_management.student.dto.StudentRemainingInfoDto;
 import com.example.school_management.student.dto.StudentRequestDto;
 import com.example.school_management.student.dto.StudentResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -119,4 +121,33 @@ public class StudentMapper {
         parent.setPassword(passwordEncoder.encode(parent.getPassword()));
         return parent;
     }
+
+    public Student toEntity(StudentFromAdminRequestDto dto) {
+
+        return Student.builder()
+                .firstName(dto.getFirstName())
+                .middleName(dto.getMiddleName())
+                .lastName(dto.getLastName())
+                .dob(dto.getDob())
+                .aadharNo(dto.getAadharNo())
+                .build();
+    }
+
+    public void updateEntityAfterAdmit(Student student, StudentRemainingInfoDto dto) {
+        student.setGender(dto.getGender());
+        student.setBloodGroup(dto.getBloodGroup());
+        student.setNationality(dto.getNationality());
+        student.setReligion(dto.getReligion());
+        student.setCategory(dto.getCategory());
+        student.setPreviousSchool(dto.getPreviousSchool());
+        student.setPreviousPercentage(dto.getPreviousPercentage());
+        student.setBirthCertificateUrl(dto.getBirthCertificateUrl());
+        student.setAadharPhotoUrl(dto.getAadharPhotoUrl());
+        student.setPreviousMarksheetUrl(dto.getPreviousMarksheetUrl());
+        student.setPassportPhotoUrl(dto.getPassportPhotoUrl());
+        student.setLeavingCertificateUrl(dto.getLeavingCertificateUrl());
+        student.setCasteCertificateUrl(dto.getCasteCertificateUrl());
+        student.setIncomeCertificateUrl(dto.getIncomeCertificateUrl());
+    }
+
 }

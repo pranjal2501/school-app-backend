@@ -50,39 +50,34 @@ public class Student extends BaseEntity {
     @Column(name = "last_name", length = 50, nullable = false)
     private String lastName;
 
-    @NotNull(message = ValidationMessages.GENDER_REQUIRED)
     @Enumerated(EnumType.STRING)
-    @Column(name = "gender", length = 10, nullable = false)
+    @Column(name = "gender", length = 10, nullable = true, updatable = false)
     private Gender gender;
 
     @NotNull(message = ValidationMessages.DOB_REQUIRED)
     @Past(message = ValidationMessages.DOB_PAST)
-    @Column(name = "dob", nullable = false)
+    @Column(name = "dob", nullable = false, updatable = false)
     private LocalDate dob;
 
-    @NotNull(message = ValidationMessages.BLOOD_GROUP_REQUIRED)
     @Enumerated(EnumType.STRING)
-    @Column(name = "blood_group", length = 15, nullable = false)
+    @Column(name = "blood_group", length = 15, nullable = true, updatable = false)
     private BloodGroup bloodGroup;
 
     @NotBlank(message = ValidationMessages.AADHAR_REQUIRED)
     @Pattern(regexp = "^[0-9]{12}$", message = ValidationMessages.AADHAR_PATTERN)
-    @Column(name = "aadhar_no", length = 12, nullable = false, unique = true)
+    @Column(name = "aadhar_no", length = 12, nullable = false, unique = true, updatable = false)
     private String aadharNo;
 
-    @NotBlank(message = ValidationMessages.NATIONALITY_REQUIRED)
     @Size(max = 50, message = ValidationMessages.NATIONALITY_MAX)
-    @Column(name = "nationality", length = 50, nullable = false)
+    @Column(name = "nationality", length = 50, nullable = true)
     private String nationality;
 
-    @NotNull(message = ValidationMessages.RELIGION_REQUIRED)
     @Enumerated(EnumType.STRING)
-    @Column(name = "religion", length = 30, nullable = false)
+    @Column(name = "religion", length = 30, nullable = true)
     private Religion religion;
 
-    @NotNull(message = ValidationMessages.CATEGORY_REQUIRED)
     @Enumerated(EnumType.STRING)
-    @Column(name = "category", length = 30, nullable = false)
+    @Column(name = "category", length = 30, nullable = true)
     private Category category;
 
     @ManyToOne
@@ -107,11 +102,11 @@ public class Student extends BaseEntity {
     private Double previousPercentage;
 
     @Size(max = 200)
-    @Column(name = "birth_certificate_url", length = 200)
+    @Column(name = "birth_certificate_url", length = 200, updatable = false)
     private String birthCertificateUrl;
 
     @Size(max = 200)
-    @Column(name = "aadhar_photo_url", length = 200)
+    @Column(name = "aadhar_photo_url", length = 200, updatable = false)
     private String aadharPhotoUrl;
 
     @Size(max = 200)
@@ -119,7 +114,7 @@ public class Student extends BaseEntity {
     private String previousMarksheetUrl;
 
     @Size(max = 200)
-    @Column(name = "passport_photo_url", length = 200)
+    @Column(name = "passport_photo_url", length = 200, updatable = false)
     private String passportPhotoUrl;
 
     @Size(max = 200)

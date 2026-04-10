@@ -1,9 +1,7 @@
 package com.example.school_management.student;
 
 import com.example.school_management.common.ApiResponse;
-import com.example.school_management.student.dto.StudentClassAssignmentRequestDto;
-import com.example.school_management.student.dto.StudentRequestDto;
-import com.example.school_management.student.dto.StudentResponseDto;
+import com.example.school_management.student.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,7 +21,7 @@ public class StudentController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StudentResponseDto>> admitStudent(
-            @Valid @RequestBody StudentRequestDto request) {
+            @Valid @RequestBody StudentFromAdminRequestDto request) {
 
         StudentResponseDto response = studentService.admitStudent(request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -33,7 +31,7 @@ public class StudentController {
     @PostMapping("/bulk")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<StudentResponseDto>>> admitStudentsBulk(
-            @Valid @RequestBody List<StudentRequestDto> requests) {
+            @Valid @RequestBody List<StudentFromAdminRequestDto> requests) {
 
         List<StudentResponseDto> response = studentService.admitStudentsBulk(requests);
 
@@ -89,6 +87,21 @@ public class StudentController {
                 ApiResponse.ok("Student updated successfully", updated)
         );
     }
+
+    //Update the student from parents login
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','PARENT')")
+    public ResponseEntity<ApiResponse<StudentResponseDto>> updateStudentAfterAdmit(
+            @PathVariable Long id,
+            @Valid @RequestBody StudentRemainingInfoDto request) {
+
+        StudentResponseDto updated = studentService.updateStudentAfterAdmit(id, request);
+
+        return ResponseEntity.ok(
+                ApiResponse.ok("Student updated successfully", updated)
+        );
+    }
+
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")

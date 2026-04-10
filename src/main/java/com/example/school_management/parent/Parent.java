@@ -1,6 +1,7 @@
 package com.example.school_management.parent;
 
 import com.example.school_management.common.ValidationMessages;
+import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.student.Student;
 import com.example.school_management.common.enums.AadharOwnerType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -135,7 +136,14 @@ public class Parent {
     @Column(name = "aadhar_owner_type", length = 20)
     private AadharOwnerType aadharOwnerType;
 
+    @NotBlank(message = ValidationMessages.AADHAR_REQUIRED)
+    @Column(name = "aadhar_no", length = 12)
+    private String aadharNo;
+
     @JsonIgnore
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
     private List<Student> students = new ArrayList<>();
+
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+    private List<UserNotification> notifications = new ArrayList<>();
 }

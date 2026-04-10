@@ -1,19 +1,32 @@
 package com.example.school_management.parent;
 
+import com.example.school_management.common.ApiResponse;
+import com.example.school_management.student.Student;
+import com.example.school_management.student.dto.StudentResponseDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/parents")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@PreAuthorize("hasRole('PARENT')")
 public class ParentController {
 
+    ParentService parentService;
 //    Dashboard
 //    GET /api/v1/parents/dashboard/{studentId} — attendance %, avg score, pending assignments, fees due, recent activity
+//    @GetMapping("/dashboard/{student_id}")
+//    public ResponseEntity<ApiResponse<String>> parentDashboard(@PathVariable Long id) {
+//
+//        StudentResponseDto student=parentService.getStudentProfileById(id);
+//
+//        return ResponseEntity.ok(
+//                ApiResponse.ok("Dashboard fetched", "Admin Dashboard")
+//        );
+//    }
 //
 //    Child Details
 //    GET /api/v1/parents/children — list all children with class, roll, performance tag (Good/Excellent)
@@ -35,5 +48,8 @@ public class ParentController {
 //
 //    Profile
 //    GET /api/v1/parents/profile — parent profile details
+    @GetMapping("profile")
+    public void getProfile()
+    {}
 
 }
