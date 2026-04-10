@@ -2,6 +2,7 @@ package com.example.school_management.teacher;
 
 import com.example.school_management.complaint.Complaint;
 import com.example.school_management.employee.Employee;
+import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.schoolClass.Class;
 import com.example.school_management.subject.Subject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -47,4 +48,7 @@ public class Teacher extends Employee {
     @Builder.Default
     @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Complaint> complaints = new ArrayList<>();
+
+    @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY)
+    private List<UserNotification> notifications = new ArrayList<>();
 }

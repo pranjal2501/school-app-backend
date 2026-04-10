@@ -1,6 +1,7 @@
 package com.example.school_management.parent;
 
 import com.example.school_management.common.ValidationMessages;
+import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.student.Student;
 import com.example.school_management.common.enums.AadharOwnerType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -144,4 +145,7 @@ public class Parent {
     @JsonIgnore
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
     private List<Student> students = new ArrayList<>();
+
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+    private List<UserNotification> notifications = new ArrayList<>();
 }
