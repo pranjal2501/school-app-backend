@@ -13,6 +13,8 @@ public class ClassResponseDto {
     private Integer boys;
     private Integer girls;
     private String className;
+    private Integer currentBoys;
+    private Integer currentGirls;
 
     // Extracted safely from the Teacher entity
     private Long classTeacherId;

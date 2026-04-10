@@ -12,4 +12,6 @@ public interface ClassService {
     ClassResponseDto updateClass(Long id, ClassRequestDto request);
     void deleteClass(Long id);
     ClassResponseDto assignClassTeacher(Long classId, Long teacherId);
+
+    List<String> assignRollNumberToStudents(Long classId);
 }

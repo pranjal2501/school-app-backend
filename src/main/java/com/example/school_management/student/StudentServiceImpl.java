@@ -177,30 +177,29 @@ public class StudentServiceImpl implements StudentService {
 
         if(gender.equals(Gender.MALE))
         {
-            if(assignedClass.getCurrentBoys()==0)
+            if(assignedClass.getCurrentBoys()==assignedClass.getBoys())
             {throw new OutOfCapacityException("Boys capacity in class "+className+" already fulfilled");}
         }
         else if (gender.equals(Gender.FEMALE)) {
-            if(assignedClass.getCurrentGirls()==0)
+            if(assignedClass.getCurrentGirls()== assignedClass.getGirls())
             {throw new OutOfCapacityException("Girls capacity in class "+className+" already fulfilled");}
         }
 
         if (previousClass != null) {
             if (gender.equals(Gender.MALE)) {
-                previousClass.setCurrentBoys(previousClass.getCurrentBoys() + 1);
+                previousClass.setCurrentBoys(previousClass.getCurrentBoys() - 1);
             } else if (gender.equals(Gender.FEMALE)) {
-                previousClass.setCurrentGirls(previousClass.getCurrentGirls() + 1);
+                previousClass.setCurrentGirls(previousClass.getCurrentGirls() - 1);
             }
             classRepository.save(previousClass);
         }
 
         if(gender.equals(Gender.MALE)) {
-            assignedClass.setCurrentBoys(assignedClass.getCurrentBoys() - 1);
+            assignedClass.setCurrentBoys(assignedClass.getCurrentBoys() + 1);
         } else if (gender.equals(Gender.FEMALE)) {
-            assignedClass.setCurrentGirls(assignedClass.getCurrentGirls() - 1);
+            assignedClass.setCurrentGirls(assignedClass.getCurrentGirls() + 1);
         }
 
-        student.setRollNumber(request.getRollNumber());
         student.setAssignedClass(assignedClass);
 
         return studentMapper.toResponseDto(studentRepository.save(student));

@@ -128,8 +128,10 @@ public class StudentMapper {
                 .firstName(dto.getFirstName())
                 .middleName(dto.getMiddleName())
                 .lastName(dto.getLastName())
+                .gender(dto.getGender())
                 .dob(dto.getDob())
                 .aadharNo(dto.getAadharNo())
+                .standard(dto.getStandard())
                 .build();
     }
 

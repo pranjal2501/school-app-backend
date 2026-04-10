@@ -1,9 +1,6 @@
 package com.example.school_management.student;
 
-import com.example.school_management.common.enums.BloodGroup;
-import com.example.school_management.common.enums.Category;
-import com.example.school_management.common.enums.Gender;
-import com.example.school_management.common.enums.Religion;
+import com.example.school_management.common.enums.*;
 import com.example.school_management.complaint.Complaint;
 import com.example.school_management.common.ValidationMessages;
 import com.example.school_management.common.BaseEntity;
@@ -51,7 +48,7 @@ public class Student extends BaseEntity {
     private String lastName;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "gender", length = 10, nullable = true, updatable = false)
+    @Column(name = "gender", length = 10, nullable = false, updatable = false)
     private Gender gender;
 
     @NotNull(message = ValidationMessages.DOB_REQUIRED)
@@ -83,6 +80,10 @@ public class Student extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "class_id")
     private Class assignedClass;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private Standard standard;
 
     @Min(value = 1, message = ValidationMessages.ROLL_NUMBER_MIN)
     @Column(name = "roll_number", unique = false, nullable = true)

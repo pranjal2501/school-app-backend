@@ -1,7 +1,9 @@
 package com.example.school_management.schoolClass;
 
+import com.example.school_management.common.enums.Gender;
 import com.example.school_management.schoolClass.dto.ClassRequestDto;
 import com.example.school_management.schoolClass.dto.ClassResponseDto;
+import com.example.school_management.student.Student;
 import com.example.school_management.teacher.Teacher;
 import com.example.school_management.common.exception.DuplicateResourceException;
 import com.example.school_management.common.exception.ResourceNotFoundException;
@@ -13,6 +15,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +51,8 @@ public class ClassServiceImpl implements ClassService {
         classEntity.setClassName(className);
         classEntity.setGirls(request.getGirls());
         classEntity.setBoys(request.getBoys());
+        classEntity.setCurrentBoys(0);
+        classEntity.setCurrentGirls(0);
         classEntity.setTotalStudents(request.getTotalStudents());
         classEntity.setDivision(request.getDivision());
         classEntity.setStandard(request.getStandard());
@@ -122,5 +128,28 @@ public class ClassServiceImpl implements ClassService {
 
         classEntity.setClassTeacher(teacher);
         return classMapper.toResponseDto(classRepository.save(classEntity));
+    }
+
+    @Override
+    @Transactional
+    public List<String> assignRollNumberToStudents(Long classId)
+    {
+        Class current_class=classRepository.findById(classId).orElseThrow(() -> new ResourceNotFoundException("Class not found"));;
+        List<Student> studentList=current_class.getStudents()
+            .stream()
+            .filter(Student::isActive)
+            .sorted(Comparator
+                    .comparing((Student s) -> s.getGender() == Gender.MALE ? 0 : 1)  // boys first
+                    .thenComparing(Student::getFirstName)                              // then A-Z by first name
+                    .thenComparing(Student::getLastName))                              // tie-break by last name
+            .toList();
+
+        List<String> response= new ArrayList<>();
+        for (int i = 0; i < studentList.size(); i++) {
+            studentList.get(i).setRollNumber(i + 1);
+            response.add(studentList.get(i).getFirstName()+" is assigned with "+ i+1);
+        }
+
+        return response;
     }
 }
