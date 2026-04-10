@@ -8,16 +8,16 @@ import com.example.school_management.common.exception.OutOfCapacityException;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.schoolClass.ClassRepository;
 import com.example.school_management.parent.ParentRepository;
-import com.example.school_management.service.EmailService;
+import com.example.school_management.mail.EmailService;
 import com.example.school_management.student.dto.*;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -27,11 +27,13 @@ public class StudentServiceImpl implements StudentService {
     private final ClassRepository classRepository;
     private final StudentMapper studentMapper;
     private final ParentRepository parentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public StudentResponseDto admitStudent(StudentFromAdminRequestDto request) {
 
         Parent parent;
+        String autoPassword=null;
 
         if (studentRepository.existsByAadharNo(request.getAadharNo())) {
             throw new DuplicateResourceException(
@@ -44,27 +46,35 @@ public class StudentServiceImpl implements StudentService {
         if(request.getParentId()!=null)
         {
             parent= parentRepository.findById(request.getParentId()).orElseThrow(() -> new RuntimeException("Parent not found"));
+            String tempPassword=parent.getFatherLastName().substring(0,3).toUpperCase(Locale.ROOT)+parent.getMobilePrimary().substring(0,3)+parent.getAadharNo().substring(0,3);
+
+            if(passwordEncoder.matches(tempPassword, parent.getPassword()))
+            {
+                autoPassword=tempPassword;
+            }
+
         }else
         {   parent= request.getParent();
-            String autoPassword=parent.getFatherLastName().substring(0,3)+parent.getMobilePrimary().substring(0,3)+parent.getAadharNo().substring(0,3);
+            autoPassword=parent.getFatherLastName().substring(0,3).toUpperCase(Locale.ROOT)+parent.getMobilePrimary().substring(0,3)+parent.getAadharNo().substring(0,3);
 
-            parent.setPassword(autoPassword);
+            parent.setPassword(passwordEncoder.encode(autoPassword));
             parent = parentRepository.save(parent);
         }
 
         Student student = studentMapper.toEntity(request);
 
         student.setParent(parent);
-
         student.setActive(true);
+
+        student=studentRepository.save(student);
 
         EmailService.sendAdmissionEmail(
                 parent.getEmail(),
                 student.getFirstName() + " " + student.getLastName(),
                 parent.getEmail(),
-                parent.getPassword()
+                autoPassword
         );
-        return studentMapper.toResponseDto(studentRepository.save(student));
+        return studentMapper.toResponseDto(student);
     }
 
     @Override
@@ -80,36 +90,6 @@ public class StudentServiceImpl implements StudentService {
     @Transactional // CRITICAL: Ensures all or nothing is saved
     public List<StudentResponseDto> admitStudentsBulk(List<StudentFromAdminRequestDto> requests) {
 
-//        // 1. Extract all Aadhar numbers from the incoming request
-//        List<String> incomingAadhars = requests.stream()
-//                .map(StudentFromAdminRequestDto::getAadharNo)
-//                .collect(Collectors.toList());
-//
-//        // 2. Check for internal duplicates within the JSON payload itself
-//        long distinctAadharCount = incomingAadhars.stream().distinct().count();
-//        if (distinctAadharCount < requests.size()) {
-//            throw new RuntimeException("Duplicate Aadhar numbers found within the request payload");
-//        }
-//
-//        // 3. Check for duplicates against the database
-//        List<Student> existingStudents = studentRepository.findByAadharNoIn(incomingAadhars);
-//        if (!existingStudents.isEmpty()) {
-//            String duplicateAadhars = existingStudents.stream()
-//                    .map(Student::getAadharNo)
-//                    .collect(Collectors.joining(", "));
-//            throw new DuplicateResourceException(
-//                    "Students already exist with Aadhar numbers: " + duplicateAadhars);
-//        }
-//
-//        // 4. Map DTOs to Entities
-//        List<Student> studentsToSave = requests.stream().map(request -> {
-//            Student student = studentMapper.toEntity(request);
-//            student.setActive(true);
-//            return student;
-//        }).collect(Collectors.toList());
-//
-//        // 5. Bulk Save
-//        List<Student> savedStudents = studentRepository.saveAll(studentsToSave);
          List<StudentResponseDto> savedStudents = new ArrayList<>();
 
         for(StudentFromAdminRequestDto s : requests)
@@ -123,11 +103,6 @@ public class StudentServiceImpl implements StudentService {
 
         }
         return savedStudents;
-
-        // 6. Map back to Response DTOs
-//        return savedStudents.stream()
-//                .map(studentMapper::toResponseDto)
-//                .collect(Collectors.toList());
     }
 
     @Override
