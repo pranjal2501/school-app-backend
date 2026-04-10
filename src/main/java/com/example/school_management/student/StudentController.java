@@ -1,6 +1,8 @@
 package com.example.school_management.student;
 
 import com.example.school_management.common.ApiResponse;
+import com.example.school_management.common.enums.Division;
+import com.example.school_management.common.enums.Standard;
 import com.example.school_management.student.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import java.util.List;
 public class StudentController {
 
     private final StudentService studentService;
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StudentResponseDto>> admitStudent(
@@ -49,7 +52,6 @@ public class StudentController {
                 ApiResponse.ok("Students fetched successfully", students)
         );
     }
-
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
@@ -222,5 +224,16 @@ public class StudentController {
         StudentResponseDto student= studentService.assignClassAndDivision(id, request);
 
         return ResponseEntity.ok(ApiResponse.ok("Class, Division, and Roll Number assigned successfully",student));
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<List<StudentDropdownDto>>> searchStudents(
+            @RequestParam Standard standard,
+            @RequestParam Division division,
+            @RequestParam String query) {
+        List<StudentDropdownDto> response = studentService.searchStudents(standard, division, query);
+
+        return ResponseEntity.ok(ApiResponse.ok("Students fetched successfully", response));
     }
 }

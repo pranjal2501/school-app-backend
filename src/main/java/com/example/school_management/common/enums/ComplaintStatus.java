@@ -4,7 +4,6 @@ import com.example.school_management.complaint.Complaint;
 
 public enum ComplaintStatus {
     PENDING,
-    IN_PROGRESS,
     RESOLVED,
     UNRESOLVED;
 
@@ -18,12 +17,8 @@ public enum ComplaintStatus {
         boolean isValid = false;
         String allowedNextSteps = switch (this) {
             case PENDING -> {
-                isValid = (nextStatus == IN_PROGRESS || nextStatus == UNRESOLVED);
-                yield "IN_PROGRESS, UNRESOLVED";
-            }
-            case IN_PROGRESS -> {
-                isValid = (nextStatus == RESOLVED || nextStatus == UNRESOLVED);
-                yield "RESOLVED, UNRESOLVED";
+                isValid = (nextStatus == UNRESOLVED || nextStatus == RESOLVED);
+                yield "UNRESOLVED, RESOLVED";
             }
             case RESOLVED, UNRESOLVED -> {
                 yield "None (This is a terminal state)";
@@ -46,8 +41,7 @@ public enum ComplaintStatus {
                         "Resolution comment is mandatory to mark complaint as RESOLVED."
                 );
             }
-            if (complaint.getResolvedBy() == null
-                    || complaint.getResolvedBy().trim().isEmpty()) {
+            if (complaint.getResolvedBy() == null) {
                 throw new RuntimeException(
                         "ResolvedBy field is mandatory to mark complaint as RESOLVED."
                 );

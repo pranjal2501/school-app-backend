@@ -135,6 +135,6 @@ public class Student extends BaseEntity {
 
     @JsonIgnore
     @Builder.Default
-    @OneToMany(mappedBy = "student", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "targetStudent", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Complaint> complaints = new ArrayList<>();
 }

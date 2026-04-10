@@ -1,19 +1,20 @@
 package com.example.school_management.complaint;
 
-import com.example.school_management.complaint.dto.ComplaintRequestDto;
-import com.example.school_management.complaint.dto.ComplaintResponseDto;
-import com.example.school_management.student.Student;
-import com.example.school_management.teacher.Teacher;
-import com.example.school_management.common.enums.ComplaintCategory;
+import com.example.school_management.admin.Admin;
+import com.example.school_management.admin.AdminRepository;
 import com.example.school_management.common.enums.ComplaintStatus;
-import com.example.school_management.common.enums.Priority;
+import com.example.school_management.common.exception.ResourceNotFoundException;
+import com.example.school_management.common.exception.UnauthorizedAccessException;
+import com.example.school_management.complaint.Complaint;
+import com.example.school_management.complaint.dto.*;
+import com.example.school_management.employee.Employee;
+import com.example.school_management.employee.EmployeeRepository;
+import com.example.school_management.student.Student;
 import com.example.school_management.student.StudentRepository;
-import com.example.school_management.teacher.TeacherRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.List;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,88 +22,86 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     private final ComplaintRepository complaintRepository;
     private final StudentRepository studentRepository;
-    private final TeacherRepository teacherRepository;
+    private final EmployeeRepository employeeRepository;
     private final ComplaintMapper complaintMapper;
+    private final AdminRepository adminRepository;
 
+    // @Transactional ensures that if ANY step fails, the entire database operation rolls back.
+    // Isolation.READ_COMMITTED prevents reading "dirty" uncommitted data from other concurrent transactions.
     @Override
-    public ComplaintResponseDto createComplaint(ComplaintRequestDto request) {
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public ComplaintResponseDto raiseComplaint(ComplaintRequestDto request, String userIdentifier, boolean isAdmin) {
 
-        Student student = request.getStudentId() != null
-                ? studentRepository.findById(request.getStudentId())
-                .orElseThrow(() -> new RuntimeException("Student not found"))
-                : null;
+        // 1. Strict Validation: Target student
+        Student targetStudent = studentRepository.findById(request.getTargetStudentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", request.getTargetStudentId()));
 
-        Teacher teacher = request.getTeacherId() != null
-                ? teacherRepository.findById(request.getTeacherId())
-                .orElseThrow(() -> new RuntimeException("Teacher not found"))
-                : null;
+        // 2. Mapping
+        Complaint complaint = complaintMapper.toEntity(request);
+        complaint.setTargetStudent(targetStudent);
 
-        return complaintMapper.toResponseDto(
-                complaintRepository.save(complaintMapper.toEntity(request, student, teacher)));
-    }
+        // 3. Smart Raiser Resolution
+        if (isAdmin) {
+            Admin adminRaiser = adminRepository.findByUsername(userIdentifier)
+                    .orElseThrow(() -> new UnauthorizedAccessException("Admin session is invalid."));
+            complaint.setReportedByAdmin(adminRaiser);
+        } else {
+            Employee empRaiser = employeeRepository.findByIdentifier(userIdentifier)
+                    .orElseThrow(() -> new UnauthorizedAccessException("Teacher session is invalid."));
+            complaint.setReportedByEmployee(empRaiser);
+        }
 
-    @Override
-    public List<ComplaintResponseDto> getAllComplaints() {
-        return complaintMapper.toResponseDtoList(complaintRepository.findAll());
-    }
-
-    @Override
-    public ComplaintResponseDto getComplaintById(Long id) {
-        return complaintMapper.toResponseDto(findComplaintById(id));
-    }
-
-    @Override
-    public List<ComplaintResponseDto> getComplaintsByStudent(Long studentId) {
-        return complaintMapper.toResponseDtoList(complaintRepository.findByStudentId(studentId));
-    }
-
-    @Override
-    public List<ComplaintResponseDto> getComplaintsByTeacher(Long teacherId) {
-        return complaintMapper.toResponseDtoList(complaintRepository.findByTeacherId(teacherId));
-    }
-
-    @Override
-    public List<ComplaintResponseDto> getComplaintsByStatus(ComplaintStatus status) {
-        return complaintMapper.toResponseDtoList(complaintRepository.findByStatus(status));
-    }
-
-    @Override
-    public List<ComplaintResponseDto> getComplaintsByPriority(Priority priority) {
-        return complaintMapper.toResponseDtoList(complaintRepository.findByPriority(priority));
-    }
-
-    @Override
-    public List<ComplaintResponseDto> getComplaintsByCategory(ComplaintCategory category) {
-        return complaintMapper.toResponseDtoList(complaintRepository.findByCategory(category));
-    }
-
-    @Override
-    public ComplaintResponseDto updateStatus(Long id, ComplaintStatus status) {
-        Complaint complaint = findComplaintById(id);
-        complaint.setStatus(status);
+        // 4. Save and Return
         return complaintMapper.toResponseDto(complaintRepository.save(complaint));
     }
 
     @Override
-    public ComplaintResponseDto resolveComplaint(Long id, String resolutionComment, String resolvedBy) {
-        Complaint complaint = findComplaintById(id);
-        complaint.setStatus(ComplaintStatus.RESOLVED);
-        complaint.setResolutionComment(resolutionComment);
-        complaint.setResolvedBy(resolvedBy);
-        complaint.setResolvedAt(Instant.now());
+    @Transactional
+    public ComplaintResponseDto updateComplaintStatus(String ticketNumber, ComplaintStatusUpdateDto request, String userIdentifier, boolean isAdmin) {
+
+        Complaint complaint = complaintRepository.findByTicketNumber(ticketNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint", "ticketNumber", ticketNumber));
+
+        // 1. Clean, Domain-Driven Ownership Check
+        Employee reporter = complaint.getReportedByEmployee();
+        boolean isOwner = reporter != null && reporter.isIdentifiedBy(userIdentifier);
+
+        // Strict Access Check: Only Admins OR the specific Teacher who raised it can update it
+        if (!isAdmin && !isOwner) {
+            throw new UnauthorizedAccessException("You do not have permission to modify this complaint.");
+        }
+
+        // Strict State Machine Logic: Prevent illegal status transitions
+        // If resolving, record exactly who resolved it
+        if (request.getNewStatus() == ComplaintStatus.RESOLVED) {
+            if (isAdmin) {
+                Admin adminResolver = adminRepository.findByUsername(userIdentifier)
+                        .orElseThrow(() -> new UnauthorizedAccessException("Admin identity could not be verified."));
+                complaint.setReportedByAdmin(adminResolver);
+            } else {
+                Employee employeeResolver = employeeRepository.findByIdentifier(userIdentifier)
+                        .orElseThrow(() -> new UnauthorizedAccessException("Teacher identity could not be verified."));
+                complaint.setResolvedBy(employeeResolver);
+            }
+        }
+
+        if (request.getNewStatus() == ComplaintStatus.RESOLVED && request.getResolutionComment() == null) {
+            throw new IllegalArgumentException("A resolution comment is strictly required when resolving a complaint.");
+        }
+
+        // Apply changes
+        complaint.setStatus(request.getNewStatus());
+        if (request.getResolutionComment() != null) {
+            complaint.setResolutionComment(request.getResolutionComment());
+        }
+
+        // If resolving, record who resolved it
+        if (request.getNewStatus() == ComplaintStatus.RESOLVED) {
+            Employee resolver = employeeRepository.findByIdentifier(userIdentifier)
+                    .orElseThrow(() -> new UnauthorizedAccessException("Resolver identity could not be verified."));
+            complaint.setResolvedBy(resolver);
+        }
+
         return complaintMapper.toResponseDto(complaintRepository.save(complaint));
-    }
-
-    @Override
-    public void deleteComplaint(Long id) {
-        if (!complaintRepository.existsById(id))
-            throw new RuntimeException("Complaint not found");
-        complaintRepository.deleteById(id);
-    }
-
-
-    private Complaint findComplaintById(Long id) {
-        return complaintRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Complaint not found"));
     }
 }

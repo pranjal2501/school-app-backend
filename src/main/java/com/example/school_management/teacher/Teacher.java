@@ -61,10 +61,10 @@ public class Teacher extends Employee {
     @Builder.Default
     private List<Specialization> specializations = new ArrayList<>();
 
-    @JsonIgnore
-    @Builder.Default
-    @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Complaint> complaints = new ArrayList<>();
+//    @JsonIgnore
+//    @Builder.Default
+//    @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+//    private List<Complaint> complaints = new ArrayList<>();
 
     @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY)
     private List<UserNotification> notifications = new ArrayList<>();

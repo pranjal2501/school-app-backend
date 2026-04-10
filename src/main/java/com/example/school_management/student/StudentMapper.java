@@ -150,4 +150,24 @@ public class StudentMapper {
         student.setIncomeCertificateUrl(dto.getIncomeCertificateUrl());
     }
 
+    public StudentDropdownDto toDropdownDto(Student student) {
+        if (student == null) {
+            return null;
+        }
+
+        StudentDropdownDto dto = new StudentDropdownDto();
+        dto.setId(student.getId());
+
+        // Combine first and last name for easy frontend display
+        String fullName = student.getFirstName();
+        if (student.getLastName() != null) {
+            fullName += " " + student.getLastName();
+        }
+        dto.setFullName(fullName);
+
+        dto.setRollNumber(String.valueOf(student.getRollNumber()));
+
+        return dto;
+    }
+
 }

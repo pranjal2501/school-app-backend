@@ -1,152 +1,61 @@
 package com.example.school_management.complaint;
 
+import com.example.school_management.common.ApiResponse;
 import com.example.school_management.complaint.dto.ComplaintRequestDto;
 import com.example.school_management.complaint.dto.ComplaintResponseDto;
-import com.example.school_management.common.ApiResponse;
-import com.example.school_management.common.enums.ComplaintCategory;
-import com.example.school_management.common.enums.ComplaintStatus;
-import com.example.school_management.common.enums.Priority;
+import com.example.school_management.complaint.dto.ComplaintStatusUpdateDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/complaints")
 @RequiredArgsConstructor
 public class ComplaintController {
-
+/**
+    Extract the 'Who' in the Controller. Enforce the 'What they can do' in the Service.
+    Keep Spring Security imports out of your Service layer whenever humanly possible.
+*/
     private final ComplaintService complaintService;
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<ComplaintResponseDto>> createComplaint(
-            @Valid @RequestBody ComplaintRequestDto request) {
-
-        ComplaintResponseDto response = complaintService.createComplaint(request);
-
+    /**
+     * @AuthenticationPrincipal injects the currently authenticated UserDetails object directly.
+     * This avoids tightly coupling our Service layer to Spring Security Contexts.
+     */
+    @PostMapping("/raise")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<ComplaintResponseDto>> raiseComplaint(
+            @Valid @RequestBody ComplaintRequestDto request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        System.out.println("Token Username Extracted: '" + userDetails.getUsername() + "'");
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        ComplaintResponseDto response = complaintService.raiseComplaint(request, userDetails.getUsername(), isAdmin);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Complaint created successfully", response));
+                .body(ApiResponse.ok("Complaint registered successfully", response));
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> getAllComplaints() {
-
-        List<ComplaintResponseDto> response = complaintService.getAllComplaints();
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Complaints fetched successfully", response)
-        );
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ComplaintResponseDto>> getComplaintById(
-            @PathVariable Long id) {
-
-        ComplaintResponseDto response = complaintService.getComplaintById(id);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Complaint fetched successfully", response)
-        );
-    }
-
-    @GetMapping("/student/{studentId}")
-    public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> getByStudent(
-            @PathVariable Long studentId) {
-
-        List<ComplaintResponseDto> response =
-                complaintService.getComplaintsByStudent(studentId);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Student complaints fetched successfully", response)
-        );
-    }
-
-    @GetMapping("/teacher/{teacherId}")
-    public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> getByTeacher(
-            @PathVariable Long teacherId) {
-
-        List<ComplaintResponseDto> response =
-                complaintService.getComplaintsByTeacher(teacherId);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Teacher complaints fetched successfully", response)
-        );
-    }
-
-    @GetMapping("/status/{status}")
-    public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> getByStatus(
-            @PathVariable ComplaintStatus status) {
-
-        List<ComplaintResponseDto> response =
-                complaintService.getComplaintsByStatus(status);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Complaints by status fetched successfully", response)
-        );
-    }
-
-    @GetMapping("/priority/{priority}")
-    public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> getByPriority(
-            @PathVariable Priority priority) {
-
-        List<ComplaintResponseDto> response =
-                complaintService.getComplaintsByPriority(priority);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Complaints by priority fetched successfully", response)
-        );
-    }
-
-    @GetMapping("/category/{category}")
-    public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> getByCategory(
-            @PathVariable ComplaintCategory category) {
-
-        List<ComplaintResponseDto> response =
-                complaintService.getComplaintsByCategory(category);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Complaints by category fetched successfully", response)
-        );
-    }
-
-    @PatchMapping("/{id}/status")
+    /**
+     * @PatchMapping is the REST standard for PARTIAL updates (like changing just a status),
+     * whereas @PutMapping is meant for replacing an entire resource.
+     */
+    @PatchMapping("/{ticketNumber}/status")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ApiResponse<ComplaintResponseDto>> updateStatus(
-            @PathVariable Long id,
-            @RequestParam ComplaintStatus status) {
+            @PathVariable String ticketNumber,
+            @Valid @RequestBody ComplaintStatusUpdateDto request,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        ComplaintResponseDto response =
-                complaintService.updateStatus(id, status);
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        return ResponseEntity.ok(
-                ApiResponse.ok("Complaint status updated successfully", response)
-        );
-    }
+        ComplaintResponseDto response = complaintService.updateComplaintStatus(ticketNumber, request, userDetails.getUsername(), isAdmin);
 
-    @PatchMapping("/{id}/resolve")
-    public ResponseEntity<ApiResponse<ComplaintResponseDto>> resolveComplaint(
-            @PathVariable Long id,
-            @RequestParam String resolutionComment,
-            @RequestParam String resolvedBy) {
-
-        ComplaintResponseDto response =
-                complaintService.resolveComplaint(id, resolutionComment, resolvedBy);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Complaint resolved successfully", response)
-        );
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<String>> deleteComplaint(
-            @PathVariable Long id) {
-
-        complaintService.deleteComplaint(id);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Complaint deleted successfully", null)
-        );
+        return ResponseEntity.ok(ApiResponse.ok("Complaint status updated", response));
     }
 }

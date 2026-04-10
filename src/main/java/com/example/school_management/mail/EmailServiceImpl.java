@@ -5,6 +5,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -56,5 +57,31 @@ public class EmailServiceImpl implements EmailService {
                 + "<p style=\"color: #d9534f; font-size: 14px; font-weight: bold;\">Security Notice: Please log in and change your temporary password immediately.</p>"
                 + "<p style=\"color: #333; font-size: 16px;\">Best Regards,<br><strong>School Administration Team</strong></p>"
                 + "</div>";
+    }
+
+    public void sendAdmissionEmail(String toEmail,
+                                          String studentName,
+                                          String parentEmail,
+                                          String rawPassword) {
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("Student Admission Successful");
+
+        message.setText(
+                "Dear Parent,\n\n" +
+                        "Your child has been successfully admitted.\n\n" +
+
+                        "Student Name: " + studentName + "\n\n" +
+
+                        "Login Credentials:\n" +
+                        "Username: " + parentEmail + "\n" +
+                        "Password: " + rawPassword + "\n\n" +
+
+                        "You can Login to url" +
+                        "Regards,\nABC School"
+        );
+
+        mailSender.send(message);
     }
 }

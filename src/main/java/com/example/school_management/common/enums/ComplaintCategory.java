@@ -1,10 +1,12 @@
 package com.example.school_management.common.enums;
 
 public enum ComplaintCategory {
-    STUDENT,
-    TEACHER,
     ACADEMIC,
     DISCIPLINE,
-    BEHAVIOR,
+    HARASSMENT,
+    INFRASTRUCTURE,     // e.g., broken desks, fans
+    HOSTEL_OR_MESS,
+    TRANSPORT,          // e.g., bus issues
+    ADMINISTRATIVE,     // e.g., fee payment issues
     OTHER
 }

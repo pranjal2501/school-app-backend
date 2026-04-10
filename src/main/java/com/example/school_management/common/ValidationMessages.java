@@ -1,6 +1,6 @@
 package com.example.school_management.common;
 
-public class ValidationMessages {
+public final class ValidationMessages {
 
 
     public static final String REGISTRATION_ID_REQUIRED = "Registration Id is required";
@@ -29,8 +29,6 @@ public class ValidationMessages {
 
     public static final String AADHAR_REQUIRED = "Aadhar number is required";
     public static final String AADHAR_PATTERN = "Aadhar number must be exactly 12 digits";
-//    public static final String AADHAR_OWNER_REQUIRED      = "Please specify whose Aadhar this is (FATHER, MOTHER, or GUARDIAN)";
-//    public static final String AADHAR_PHOTO_REQUIRED      = "Aadhar photo is required";
 
     public static final String MOBILE_PRIMARY_REQUIRED = "Primary mobile is required";
     public static final String MOBILE_PRIMARY_PATTERN = "Primary mobile must be 10 digits";
@@ -100,15 +98,8 @@ public class ValidationMessages {
     public static final String JOINING_DATE_REQUIRED = "Joining date is required";
     public static final String PAN_REQUIRED = "PAN number is required";
     public static final String PAN_PATTERN = "Invalid PAN format";
-    public static final String AADHAAR_PHOTO_REQUIRED = "Aadhaar photo URL is required";  // already added — skip!
-    public static final String PAN_PHOTO_REQUIRED = "PAN photo URL is required";
-    public static final String DEGREE_CERTIFICATE_REQUIRED = "Degree certificate URL is required";
-    public static final String RESIGNATION_LETTER_REQUIRED = "Resignation letter URL is required";
-    public static final String RESUME_REQUIRED = "Resume URL is required";
     public static final String EXPERIENCE_REQUIRED = "Years of experience is required";
     public static final String EXPERIENCE_POSITIVE = "Years of experience must be zero or positive";
-    public static final String SUBJECT_REQUIRED = "Subject is required";
-    public static final String ASSIGNED_CLASS_REQUIRED = "Assigned class is required";
     public static final String PREVIOUS_SCHOOL_REQUIRED = "Previous school is required";
 
 
@@ -125,14 +116,6 @@ public class ValidationMessages {
     public static final String TOTAL_MARKS_MIN = "Total marks cannot be negative";
     public static final String PASSING_MARKS_REQUIRED = "Passing marks is required";
     public static final String PASSING_MARKS_MIN = "Passing marks cannot be negative";
-
-
-    public static final String COMPLAINT_TITLE_REQUIRED = "Title is required";
-    public static final String COMPLAINT_TITLE_MAX = "Title must not exceed 150 characters";
-    public static final String COMPLAINT_DESCRIPTION_REQUIRED = "Description is required";
-    public static final String COMPLAINT_DESCRIPTION_MAX = "Description must not exceed 1000 characters";
-    public static final String COMPLAINT_CATEGORY_REQUIRED = "Category is required";
-    public static final String COMPLAINT_MEDIA_MAX = "Media URL must not exceed 500 characters";
 
     public static final String ASSIGNMENT_TOTAL_MARKS_MIN = "Total marks must be zero or positive";
     public static final String ASSIGNMENT_PASSING_MARKS_MIN = "Passing marks must be zero or positive";
@@ -152,4 +135,13 @@ public class ValidationMessages {
     public static final String ASSIGNMENT_DESCRIPTION_MAX = "Assignment description must not exceed 2000 characters";
     public static final String SPECIALIZATION_REQUIRED = "Specialization is required";
     public static final String PREVIOUS_ORG_MAX = "Previous organization name must not exceed 100 characters";
+
+    public static final String STUDENT_ID_REQUIRED = "Target student ID is strictly required";
+    public static final String TITLE_REQUIRED = "Title cannot be empty";
+    public static final String TITLE_MAX_LENGTH = "Title exceeds maximum length of 150 characters";
+    public static final String DESCRIPTION_REQUIRED = "Description cannot be empty";
+    public static final String DESCRIPTION_MAX_LENGTH = "Description exceeds maximum length of 1000 characters";
+    public static final String PRIORITY_REQUIRED = "Priority is required";
+    public static final String STATUS_REQUIRED = "Status cannot be null";
+    public static final String RESOLUTION_COMMENT_MAX_LENGTH = "Resolution comment exceeds maximum length of 1000 characters";
 }

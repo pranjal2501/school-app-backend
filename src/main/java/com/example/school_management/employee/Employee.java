@@ -3,6 +3,7 @@ package com.example.school_management.employee;
 import com.example.school_management.common.BaseEntity;
 import com.example.school_management.common.enums.DegreeType;
 import com.example.school_management.common.enums.Gender;
+import com.example.school_management.complaint.Complaint;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -12,6 +13,8 @@ import lombok.experimental.SuperBuilder;
 
 import com.example.school_management.common.enums.Role;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -130,4 +133,17 @@ public abstract class Employee extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private Role role;
+
+    @OneToMany(mappedBy = "reportedByEmployee", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Complaint> complaints = new ArrayList<>();
+
+    /**
+     * Domain logic: Checks if a given string matches any of this employee's unique identifiers.
+     */
+    public boolean isIdentifiedBy(String identifier) {
+        if (identifier == null || identifier.trim().isEmpty()) {
+            return false;
+        }
+        return identifier.equalsIgnoreCase(this.email) || identifier.equals(this.mobile);
+    }
 }

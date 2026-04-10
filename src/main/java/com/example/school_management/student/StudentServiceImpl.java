@@ -1,5 +1,7 @@
 package com.example.school_management.student;
 
+import com.example.school_management.common.enums.Division;
+import com.example.school_management.common.enums.Standard;
 import com.example.school_management.schoolClass.Class;
 import com.example.school_management.parent.Parent;
 import com.example.school_management.common.enums.Gender;
@@ -10,14 +12,14 @@ import com.example.school_management.schoolClass.ClassRepository;
 import com.example.school_management.parent.ParentRepository;
 import com.example.school_management.mail.EmailService;
 import com.example.school_management.student.dto.*;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ public class StudentServiceImpl implements StudentService {
     private final StudentMapper studentMapper;
     private final ParentRepository parentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Override
     public StudentResponseDto admitStudent(StudentFromAdminRequestDto request) {
@@ -68,7 +71,7 @@ public class StudentServiceImpl implements StudentService {
 
         student=studentRepository.save(student);
 
-        EmailService.sendAdmissionEmail(
+        emailService.sendAdmissionEmail(
                 parent.getEmail(),
                 student.getFirstName() + " " + student.getLastName(),
                 parent.getEmail(),
@@ -87,7 +90,23 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    @Transactional // CRITICAL: Ensures all or nothing is saved
+    @Transactional(readOnly = true) // Crucial for performance on GET requests
+    public List<StudentDropdownDto> searchStudents(Standard standard, Division division, String query) {
+
+        // 1. Sanitize the input to prevent whitespace query errors
+        String safeQuery = (query != null && !query.trim().isEmpty()) ? query.trim() : "";
+
+        // 2. Fetch the raw entities from the database
+        List<Student> students = studentRepository.searchStudentsForComplaint(standard, division, safeQuery);
+
+        // 3. Strictly delegate to the Mapper to transform Entities -> lightweight DTOs
+        return students.stream()
+                .map(studentMapper::toDropdownDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
     public List<StudentResponseDto> admitStudentsBulk(List<StudentFromAdminRequestDto> requests) {
 
          List<StudentResponseDto> savedStudents = new ArrayList<>();

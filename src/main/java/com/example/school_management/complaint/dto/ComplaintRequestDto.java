@@ -2,33 +2,33 @@ package com.example.school_management.complaint.dto;
 
 import com.example.school_management.common.ValidationMessages;
 import com.example.school_management.common.enums.ComplaintCategory;
+import com.example.school_management.common.enums.ComplaintStatus;
 import com.example.school_management.common.enums.Priority;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-
 import java.util.List;
 
 @Data
 public class ComplaintRequestDto {
 
-    @NotBlank(message = ValidationMessages.COMPLAINT_TITLE_REQUIRED)
-    @Size(max = 150, message = ValidationMessages.COMPLAINT_TITLE_MAX)
+    @NotNull(message = ValidationMessages.STUDENT_ID_REQUIRED)
+    private Long targetStudentId;
+
+    @NotBlank(message = ValidationMessages.TITLE_REQUIRED)
+    @Size(max = 150, message = ValidationMessages.TITLE_MAX_LENGTH)
     private String title;
 
-    @NotBlank(message = ValidationMessages.COMPLAINT_DESCRIPTION_REQUIRED)
-    @Size(max = 1000, message = ValidationMessages.COMPLAINT_DESCRIPTION_MAX)
+    @NotBlank(message = ValidationMessages.DESCRIPTION_REQUIRED)
+    @Size(max = 1000, message = ValidationMessages.DESCRIPTION_MAX_LENGTH)
     private String description;
 
-    @NotNull(message = ValidationMessages.COMPLAINT_CATEGORY_REQUIRED)
+    @NotNull(message = ValidationMessages.CATEGORY_REQUIRED)
     private ComplaintCategory category;
 
+    @NotNull(message = ValidationMessages.PRIORITY_REQUIRED)
     private Priority priority;
 
-    @Size(max = 500, message = ValidationMessages.COMPLAINT_MEDIA_MAX)
-    private List<String> supportedMedia;
-
-    private Long studentId;
-    private Long teacherId;
+    private List<String> supportedMediaUrls;
 }
