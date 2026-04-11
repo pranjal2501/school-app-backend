@@ -127,9 +127,9 @@ public class Complaint extends BaseEntity {
             this.resolvedAt = Instant.now();
         }
 
-        // Ensure resolution comments/resolvers exist if marked resolved
-        if (this.status == ComplaintStatus.RESOLVED && this.resolvedBy == null) {
-            throw new IllegalStateException("A complaint must have a assigned 'resolvedBy' employee before marking as RESOLVED.");
+        // Fix: Ensure at least one resolver type is assigned if marked resolved
+        if (this.status == ComplaintStatus.RESOLVED && this.resolvedBy == null && this.resolvedByAdmin == null) {
+            throw new IllegalStateException("A complaint must have an assigned 'resolvedBy' employee or admin before marking as RESOLVED.");
         }
     }
 }

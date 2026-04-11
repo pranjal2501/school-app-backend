@@ -51,15 +51,12 @@ public class StudentServiceImpl implements StudentService {
             parent= parentRepository.findById(request.getParentId()).orElseThrow(() -> new RuntimeException("Parent not found"));
             String tempPassword=parent.getFatherLastName().substring(0,3).toUpperCase(Locale.ROOT)+parent.getMobilePrimary().substring(0,3)+parent.getAadharNo().substring(0,3);
 
-            if(passwordEncoder.matches(tempPassword, parent.getPassword()))
-            {
+            if(passwordEncoder.matches(tempPassword, parent.getPassword())){
                 autoPassword=tempPassword;
             }
-
-        }else
-        {   parent= request.getParent();
+        }else{
+            parent= request.getParent();
             autoPassword=parent.getFatherLastName().substring(0,3).toUpperCase(Locale.ROOT)+parent.getMobilePrimary().substring(0,3)+parent.getAadharNo().substring(0,3);
-
             parent.setPassword(passwordEncoder.encode(autoPassword));
             parent = parentRepository.save(parent);
         }

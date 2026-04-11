@@ -32,7 +32,6 @@ public class ComplaintController {
     public ResponseEntity<ApiResponse<ComplaintResponseDto>> raiseComplaint(
             @Valid @RequestBody ComplaintRequestDto request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        System.out.println("Token Username Extracted: '" + userDetails.getUsername() + "'");
         boolean isAdmin = userDetails.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         ComplaintResponseDto response = complaintService.raiseComplaint(request, userDetails.getUsername(), isAdmin);

@@ -11,6 +11,7 @@ import com.example.school_management.employee.Employee;
 import com.example.school_management.employee.EmployeeRepository;
 import com.example.school_management.student.Student;
 import com.example.school_management.student.StudentRepository;
+import com.example.school_management.teacher.Teacher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -62,46 +63,72 @@ public class ComplaintServiceImpl implements ComplaintService {
         Complaint complaint = complaintRepository.findByTicketNumber(ticketNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint", "ticketNumber", ticketNumber));
 
-        // 1. Clean, Domain-Driven Ownership Check
-        Employee reporter = complaint.getReportedByEmployee();
-        boolean isOwner = reporter != null && reporter.isIdentifiedBy(userIdentifier);
-
-        // Strict Access Check: Only Admins OR the specific Teacher who raised it can update it
-        if (!isAdmin && !isOwner) {
-            throw new UnauthorizedAccessException("You do not have permission to modify this complaint.");
+        // --- 1. STRICT DOMAIN AUTHORIZATION: Admins or Class Teacher Only ---
+        if (!isAdmin) {
+            boolean isClassTeacher = false;
+            if (complaint.getTargetStudent() != null && complaint.getTargetStudent().getAssignedClass() != null) {
+                Teacher classTeacher = complaint.getTargetStudent().getAssignedClass().getClassTeacher();
+                if (classTeacher != null && classTeacher.isIdentifiedBy(userIdentifier)) {
+                    isClassTeacher = true;
+                }
+            }
+            if (!isClassTeacher) {
+                throw new UnauthorizedAccessException("Access Denied: Only an Administrator or the student's Class Teacher can resolve this complaint.");
+            }
         }
 
-        // Strict State Machine Logic: Prevent illegal status transitions
-        // If resolving, record exactly who resolved it
-        if (request.getNewStatus() == ComplaintStatus.RESOLVED) {
-            if (isAdmin) {
-                Admin adminResolver = adminRepository.findByUsername(userIdentifier)
-                        .orElseThrow(() -> new UnauthorizedAccessException("Admin identity could not be verified."));
-                complaint.setReportedByAdmin(adminResolver);
-            } else {
-                Employee employeeResolver = employeeRepository.findByIdentifier(userIdentifier)
-                        .orElseThrow(() -> new UnauthorizedAccessException("Teacher identity could not be verified."));
-                complaint.setResolvedBy(employeeResolver);
-            }
+        // --- 2. STATE MACHINE LOGIC ---
+        if (complaint.getStatus() == ComplaintStatus.RESOLVED) {
+            throw new IllegalStateException("This complaint is already resolved and cannot be modified.");
         }
 
         if (request.getNewStatus() == ComplaintStatus.RESOLVED && request.getResolutionComment() == null) {
             throw new IllegalArgumentException("A resolution comment is strictly required when resolving a complaint.");
         }
 
-        // Apply changes
+        // --- 3. FETCH DEPENDENCIES FIRST (Prevents Auto-Flush Crashes) ---
+        Admin adminResolver = null;
+        Employee employeeResolver = null;
+
+        if (request.getNewStatus() == ComplaintStatus.RESOLVED) {
+            if (isAdmin) {
+                adminResolver = adminRepository.findByUsername(userIdentifier)
+                        .orElseThrow(() -> new UnauthorizedAccessException("Admin identity could not be verified."));
+            } else {
+                employeeResolver = employeeRepository.findByIdentifier(userIdentifier)
+                        .orElseThrow(() -> new UnauthorizedAccessException("Teacher identity could not be verified."));
+            }
+        }
+
+        // --- 4. APPLY ALL CHANGES TOGETHER ---
         complaint.setStatus(request.getNewStatus());
+
         if (request.getResolutionComment() != null) {
             complaint.setResolutionComment(request.getResolutionComment());
         }
 
-        // If resolving, record who resolved it
-        if (request.getNewStatus() == ComplaintStatus.RESOLVED) {
-            Employee resolver = employeeRepository.findByIdentifier(userIdentifier)
-                    .orElseThrow(() -> new UnauthorizedAccessException("Resolver identity could not be verified."));
-            complaint.setResolvedBy(resolver);
+        if (adminResolver != null) {
+            complaint.setResolvedByAdmin(adminResolver);
+        } else if (employeeResolver != null) {
+            complaint.setResolvedBy(employeeResolver);
         }
 
+        // --- 5. SAVE AND MAP ---
         return complaintMapper.toResponseDto(complaintRepository.save(complaint));
+    }
+
+    private static boolean isClassTeacher(String userIdentifier, Complaint complaint) {
+        boolean isClassTeacher = false;
+
+        // Defensively navigate the relationships to find the Class Teacher
+        if (complaint.getTargetStudent() != null && complaint.getTargetStudent().getAssignedClass() != null) {
+            Teacher classTeacher = complaint.getTargetStudent().getAssignedClass().getClassTeacher();
+
+            // Check if the current user is the class teacher
+            if (classTeacher != null && classTeacher.isIdentifiedBy(userIdentifier)) {
+                isClassTeacher = true;
+            }
+        }
+        return isClassTeacher;
     }
 }

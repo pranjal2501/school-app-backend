@@ -31,7 +31,7 @@ public class Parent {
     private String fatherFirstName;
 
     @Size(max = 50)
-    @Column(name = "father_middle_name", length = 50)
+    @Column(name = "father_middle_name", length = 50,nullable = false)
     private String fatherMiddleName;
 
     @NotBlank(message = ValidationMessages.FATHER_LAST_NAME_REQUIRED)
@@ -40,7 +40,7 @@ public class Parent {
     private String fatherLastName;
 
     @Size(max = 100)
-    @Column(name = "father_occupation", length = 100)
+    @Column(name = "father_occupation", length = 100,nullable = false)
     private String fatherOccupation;
 
     @NotBlank(message = ValidationMessages.MOTHER_FIRST_NAME_REQUIRED)
@@ -49,7 +49,7 @@ public class Parent {
     private String motherFirstName;
 
     @Size(max = 50)
-    @Column(name = "mother_middle_name", length = 50)
+    @Column(name = "mother_middle_name", length = 50, nullable = false)
     private String motherMiddleName;
 
     @NotBlank(message = ValidationMessages.MOTHER_LAST_NAME_REQUIRED)
@@ -58,7 +58,7 @@ public class Parent {
     private String motherLastName;
 
     @Size(max = 100)
-    @Column(name = "mother_occupation", length = 100)
+    @Column(name = "mother_occupation", length = 100, nullable = false)
     private String motherOccupation;
 
     @Size(max = 50)
