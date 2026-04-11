@@ -3,6 +3,7 @@ package com.example.school_management.schoolClass;
 import com.example.school_management.common.ApiResponse;
 import com.example.school_management.schoolClass.dto.ClassRequestDto;
 import com.example.school_management.schoolClass.dto.ClassResponseDto;
+import com.example.school_management.schoolClass.dto.StudentRollNoResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -69,5 +70,14 @@ public class ClassController {
         List<String> details=classService.assignRollNumberToStudents(classId);
 
         return ResponseEntity.ok(ApiResponse.ok("Roll number for class "+classId+" assigned successfully", details));
+    }
+
+    @GetMapping("/student-list/{classId}")
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
+    public ResponseEntity<ApiResponse<List<StudentRollNoResponseDto>>> getStudentListWithRollNum(@PathVariable Long classId)
+    {
+        List<StudentRollNoResponseDto> response = classService.getSTudentListWIthRollNum(classId);
+
+        return ResponseEntity.ok(ApiResponse.ok("Students list fetched successfully", response));
     }
 }
