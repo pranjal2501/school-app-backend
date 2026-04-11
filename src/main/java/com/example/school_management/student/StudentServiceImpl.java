@@ -5,6 +5,8 @@ import com.example.school_management.admin.AdminRepository;
 import com.example.school_management.common.enums.Division;
 import com.example.school_management.common.enums.Standard;
 import com.example.school_management.common.payload.StudentEmailData;
+import com.example.school_management.parent.ParentMapper;
+import com.example.school_management.parent.dto.ParentCreateRequestDto;
 import com.example.school_management.schoolClass.Class;
 import com.example.school_management.parent.Parent;
 import com.example.school_management.common.enums.Gender;
@@ -228,6 +230,7 @@ public class StudentServiceImpl implements StudentService {
     //SUPPORTING METHODS, NOT INTENDED TO BE USED FOR ENDPOINTS
 
     private Parent resolveParent(StudentFromAdminRequestDto request) {
+
         if (request.getParent() == null && request.getParentId() == null) {
             throw new IllegalArgumentException("Either parentId or parent must be provided");
         }
@@ -237,11 +240,12 @@ public class StudentServiceImpl implements StudentService {
                     .orElseThrow(() -> new RuntimeException("Parent not found"));
         }
 
-        Parent parent = request.getParent();
+        Parent parent = ParentMapper.toEntity(request.getParent());
+
         String password = generatePassword(parent);
         parent.setPassword(passwordEncoder.encode(password));
 
-        return parentRepository.save(parent);
+        return parentRepository.save(parent); // ✅ save ONCE
     }
 
     private String generatePassword(Parent parent) {
@@ -261,7 +265,7 @@ public class StudentServiceImpl implements StudentService {
             return tempPassword;
         }
 
-        return null; // or "Use existing password"
+        return "Use existing password";
     }
 
     private Student createStudent(StudentFromAdminRequestDto request, Parent parent, Admin admin) {

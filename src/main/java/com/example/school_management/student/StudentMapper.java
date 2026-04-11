@@ -1,6 +1,7 @@
 package com.example.school_management.student;
 
 import com.example.school_management.parent.Parent;
+import com.example.school_management.parent.ParentMapper;
 import com.example.school_management.student.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -89,7 +90,7 @@ public class StudentMapper {
         dto.setNationality(student.getNationality());
         dto.setReligion(student.getReligion());
         dto.setCategory(student.getCategory());
-        dto.setParent(student.getParent());
+        dto.setParent(ParentMapper.toResponseDto(student.getParent()));
         dto.setPreviousSchool(student.getPreviousSchool());
         dto.setPreviousPercentage(student.getPreviousPercentage());
         dto.setActive(student.isActive());

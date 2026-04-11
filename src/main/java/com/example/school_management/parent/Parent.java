@@ -104,28 +104,24 @@ public class Parent {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @NotBlank(message = ValidationMessages.ADDRESS_LINE1_REQUIRED)
     @Size(max = 100)
-    @Column(name = "address_line1", length = 100, nullable = false)
+    @Column(name = "address_line1", length = 100)
     private String addressLine1;
 
     @Size(max = 100)
     @Column(name = "address_line2", length = 100)
     private String addressLine2;
 
-    @NotBlank(message = ValidationMessages.CITY_REQUIRED)
     @Size(max = 50)
-    @Column(name = "city", length = 50, nullable = false)
+    @Column(name = "city", length = 50)
     private String city;
 
-    @NotBlank(message = ValidationMessages.STATE_REQUIRED)
     @Size(max = 50)
-    @Column(name = "state", length = 50, nullable = false)
+    @Column(name = "state", length = 50)
     private String state;
 
-    @NotBlank(message = ValidationMessages.PINCODE_REQUIRED)
     @Pattern(regexp = "^[0-9]{6}$", message = ValidationMessages.PINCODE_PATTERN)
-    @Column(name = "pincode", length = 6, nullable = false)
+    @Column(name = "pincode", length = 6)
     private String pincode;
 
     @Size(max = 200)
@@ -133,11 +129,11 @@ public class Parent {
     private String aadharPhotoUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "aadhar_owner_type", length = 20)
+    @Column(name = "aadhar_owner_type", length = 20, nullable = false)
     private AadharOwnerType aadharOwnerType;
 
     @NotBlank(message = ValidationMessages.AADHAR_REQUIRED)
-    @Column(name = "aadhar_no", length = 12)
+    @Column(name = "aadhar_no", length = 12, nullable = false)
     private String aadharNo;
 
     @JsonIgnore
