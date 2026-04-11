@@ -1,4 +1,4 @@
-package com.example.school_management.student;
+package com.example.school_management.student.dto;
 
 import lombok.Data;
 

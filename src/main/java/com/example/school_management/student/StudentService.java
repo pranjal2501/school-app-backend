@@ -9,19 +9,15 @@ import java.util.List;
 
 public interface StudentService {
 
-    StudentResponseDto admitStudent(StudentFromAdminRequestDto request);
+    StudentResponseDto admitStudent(StudentFromAdminRequestDto request, String adminName);
 
-    List<StudentResponseDto> admitStudentsBulk(List<StudentFromAdminRequestDto> requests);
+    List<StudentResponseDto> admitStudentsBulk(List<StudentFromAdminRequestDto> requests, String adminName);
 
     List<StudentResponseDto> getAllStudents();
 
     StudentResponseDto getStudentById(Long id);
 
-    StudentResponseDto getStudentByRollNumber(Integer rollNumber);
-
     StudentResponseDto updateStudent(Long id, StudentRequestDto request);
-
-    void toggleStudentStatus(Long id);
 
     void deleteStudent(Long id);
 

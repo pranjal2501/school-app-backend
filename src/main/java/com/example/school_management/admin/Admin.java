@@ -1,6 +1,7 @@
 package com.example.school_management.admin;
 
 import com.example.school_management.complaint.Complaint;
+import com.example.school_management.student.Student;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -36,4 +37,7 @@ public class Admin {
     @Builder.Default
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
+
+    @OneToMany(mappedBy = "addedBy", fetch = FetchType.LAZY)
+    List<Student> admittedStudents=new ArrayList<>();
 }

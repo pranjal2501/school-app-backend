@@ -1,5 +1,6 @@
 package com.example.school_management.mail;
 
+import com.example.school_management.common.payload.StudentEmailData;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -90,5 +93,23 @@ public class EmailServiceImpl implements EmailService {
                 + "<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\" />"
                 + "<p style=\"color: #555; font-size: 14px;\">Best Regards,<br><strong style=\"color: #2c3e50;\">School Administration Team</strong></p>"
                 + "</div>";
+    }
+
+    @Async
+    @Override
+    public void sendBulkAdmissionEmails(List<StudentEmailData> emailDataList) {
+
+        for (StudentEmailData data : emailDataList) {
+            try {
+                sendAdmissionEmail(
+                        data.getEmail(),
+                        data.getStudent().getFirstName() + " " + data.getStudent().getLastName(),
+                        data.getEmail(),
+                        data.getPassword()
+                );
+            } catch (Exception e) {
+                log.error("Failed to send email to: {} | Error: {}", data.getEmail(), e.getMessage());
+            }
+        }
     }
 }
