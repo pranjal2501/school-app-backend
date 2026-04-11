@@ -1,5 +1,6 @@
 package com.example.school_management.subject;
 
+import com.example.school_management.attendance.entity.StudentAttendance;
 import com.example.school_management.teacher.Teacher;
 import com.example.school_management.common.enums.Standard;
 import com.example.school_management.common.enums.SubjectType;
@@ -7,6 +8,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "subjects")
@@ -70,4 +73,7 @@ public class Subject {
     @Min(0)
     @Column(name = "passing_marks", nullable = false)
     private Integer passingMarks;
+
+    @OneToMany(mappedBy = "subject")
+    private List<StudentAttendance> studentAttendances;
 }
