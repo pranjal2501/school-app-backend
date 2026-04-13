@@ -1,11 +1,11 @@
 package com.example.school_management.security;
 
-import com.example.school_management.admin.Admin;
-import com.example.school_management.employee.Employee;
-import com.example.school_management.parent.Parent;
-import com.example.school_management.admin.AdminRepository;
-import com.example.school_management.employee.EmployeeRepository;
-import com.example.school_management.parent.ParentRepository;
+import com.example.school_management.admin.entity.Admin;
+import com.example.school_management.employee.entity.Employee;
+import com.example.school_management.parent.entity.Parent;
+import com.example.school_management.admin.repository.AdminRepository;
+import com.example.school_management.employee.repository.EmployeeRepository;
+import com.example.school_management.parent.repository.ParentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;

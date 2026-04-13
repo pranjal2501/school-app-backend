@@ -1,14 +1,13 @@
 package com.example.school_management.attendance.entity;
 
-import com.example.school_management.admin.Admin;
+import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.common.BaseEntity;
 import com.example.school_management.common.enums.Attendence.LeaveRequesterType;
 import com.example.school_management.common.enums.Attendence.LeaveStatus;
 import com.example.school_management.common.enums.Attendence.LeaveType;
-import com.example.school_management.student.Student;
-import com.example.school_management.teacher.Teacher;
+import com.example.school_management.student.entity.Student;
+import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

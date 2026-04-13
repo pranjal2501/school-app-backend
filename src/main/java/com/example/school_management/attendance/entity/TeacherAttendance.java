@@ -1,15 +1,14 @@
 package com.example.school_management.attendance.entity;
 
-import com.example.school_management.admin.Admin;
+import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.common.BaseEntity;
 import com.example.school_management.common.enums.Attendence.AttendanceStatus;
-import com.example.school_management.teacher.Teacher;
+import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 

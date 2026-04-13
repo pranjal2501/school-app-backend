@@ -3,8 +3,8 @@ package com.example.school_management.schoolClass.entity;
 
 import com.example.school_management.attendance.entity.StudentAttendance;
 import com.example.school_management.common.ValidationMessages;
-import com.example.school_management.student.Student;
-import com.example.school_management.teacher.Teacher;
+import com.example.school_management.student.entity.Student;
+import com.example.school_management.teacher.entity.Teacher;
 import com.example.school_management.common.enums.Division;
 import com.example.school_management.common.enums.Standard;
 import jakarta.persistence.*;

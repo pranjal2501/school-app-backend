@@ -1,6 +1,6 @@
 package com.example.school_management.common.enums;
 
-import com.example.school_management.complaint.Complaint;
+import com.example.school_management.complaint.entity.Complaint;
 
 public enum ComplaintStatus {
     PENDING,

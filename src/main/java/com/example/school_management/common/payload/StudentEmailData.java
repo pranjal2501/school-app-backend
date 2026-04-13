@@ -1,7 +1,7 @@
 package com.example.school_management.common.payload;
 
 
-import com.example.school_management.student.Student;
+import com.example.school_management.student.entity.Student;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

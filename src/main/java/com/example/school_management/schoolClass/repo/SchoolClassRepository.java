@@ -2,7 +2,7 @@ package com.example.school_management.schoolClass.repo;
 
 import com.example.school_management.common.enums.Standard;
 import com.example.school_management.schoolClass.entity.SchoolClass;
-import com.example.school_management.teacher.Teacher;
+import com.example.school_management.teacher.entity.Teacher;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -3,7 +3,6 @@ package com.example.school_management.student.dto;
 import com.example.school_management.common.ValidationMessages;
 import com.example.school_management.common.enums.Gender;
 import com.example.school_management.common.enums.Standard;
-import com.example.school_management.parent.Parent;
 import com.example.school_management.parent.dto.ParentCreateRequestDto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

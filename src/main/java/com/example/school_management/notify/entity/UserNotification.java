@@ -1,8 +1,7 @@
 package com.example.school_management.notify.entity;
 
-import com.example.school_management.notify.entity.Notification;
-import com.example.school_management.parent.Parent;
-import com.example.school_management.teacher.Teacher;
+import com.example.school_management.parent.entity.Parent;
+import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

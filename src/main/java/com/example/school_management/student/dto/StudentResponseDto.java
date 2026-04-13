@@ -1,7 +1,6 @@
 package com.example.school_management.student.dto;
 
 import com.example.school_management.common.enums.*;
-import com.example.school_management.parent.Parent;
 import com.example.school_management.parent.dto.ParentResponseDto;
 import lombok.Data;
 import java.time.LocalDate;

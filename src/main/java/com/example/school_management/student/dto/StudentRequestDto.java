@@ -2,7 +2,7 @@ package com.example.school_management.student.dto;
 
 import com.example.school_management.common.ValidationMessages;
 import com.example.school_management.common.enums.*;
-import com.example.school_management.parent.Parent;
+import com.example.school_management.parent.entity.Parent;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.time.LocalDate;

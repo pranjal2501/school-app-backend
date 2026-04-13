@@ -4,15 +4,14 @@ import com.example.school_management.common.BaseEntity;
 import com.example.school_management.common.enums.Attendence.AttendanceStatus;
 import com.example.school_management.common.enums.Attendence.AttendanceType;
 import com.example.school_management.schoolClass.entity.SchoolClass;
-import com.example.school_management.student.Student;
-import com.example.school_management.subject.Subject;
-import com.example.school_management.teacher.Teacher;
+import com.example.school_management.student.entity.Student;
+import com.example.school_management.subject.entity.Subject;
+import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Entity
 @AllArgsConstructor
