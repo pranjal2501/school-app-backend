@@ -9,9 +9,9 @@ import java.util.List;
 
 public interface StudentService {
 
-    StudentResponseDto admitStudent(StudentFromAdminRequestDto request, String adminName);
+    StudentResponseDto admitStudent(StudentFromAdminRequestDto request);
 
-    List<StudentResponseDto> admitStudentsBulk(List<StudentFromAdminRequestDto> requests, String adminName);
+    List<StudentResponseDto> admitStudentsBulk(List<StudentFromAdminRequestDto> requests);
 
     List<StudentResponseDto> getAllStudents();
 
