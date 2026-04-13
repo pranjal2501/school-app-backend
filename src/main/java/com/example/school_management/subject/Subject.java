@@ -8,12 +8,15 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "subjects")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Subject {
 
     @Id
@@ -24,12 +27,11 @@ public class Subject {
     @Column(name = "subject_name", nullable = false)
     private String subjectName;
 
-    @Column(name = "subject_code", unique = true)
-    private Integer subjectCode;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "standard", nullable = true, length = 20)
+    @Column(name = "standard")
     private Standard standard;
+
+    @Column(name = "subject_code", unique = true)
+    private String subjectCode;
 
     @Min(1)
     @Column(name = "weekly_hours", nullable = false)
@@ -38,10 +40,6 @@ public class Subject {
     @Enumerated(EnumType.STRING)
     @Column(name = "subject_type", nullable = false)
     private SubjectType subjectType;
-
-    @ManyToOne
-    @JoinColumn(name = "subject_teacher_id")
-    private Teacher subjectTeacher;
 
     @Min(0)
     @Column(name = "theory_marks")
@@ -70,4 +68,28 @@ public class Subject {
     @Min(0)
     @Column(name = "passing_marks", nullable = false)
     private Integer passingMarks;
+
+    @PrePersist
+    protected void generateSubjectCode() {
+        // Only generate if not already provided
+        if (this.subjectCode == null || this.subjectCode.trim().isEmpty()) {
+
+            // 1. Get first 3 letters of the subject (e.g., "Mathematics" -> "MAT", "IT" -> "IT")
+            String prefix = (this.subjectName != null && this.subjectName.length() >= 3)
+                    ? this.subjectName.substring(0, 3).toUpperCase()
+                    : this.subjectName != null ? this.subjectName.toUpperCase() : null;
+
+            // Sanitize: Remove spaces or special characters just in case
+            prefix = prefix != null ? prefix.replaceAll("[^A-Z0-9]", "") : null;
+
+            // 2. Get Standard Name (e.g., "STD_10")
+            Standard std = this.standard != null ? this.standard : Standard.STD_1;
+
+            // 3. Generate a 4-character unique alphanumeric string to prevent DB Unique Constraint crashes
+            String uniqueSuffix = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+
+            // 4. Combine them: e.g., "MAT-STD_10-F3A1"
+            this.subjectCode = String.format("%s-%s-%s", prefix, std, uniqueSuffix);
+        }
+    }
 }

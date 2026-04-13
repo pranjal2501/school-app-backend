@@ -2,7 +2,7 @@ package com.example.school_management.assignment;
 
 import com.example.school_management.assignment.dto.AssignmentRequestDto;
 import com.example.school_management.assignment.dto.AssignmentResponseDto;
-import com.example.school_management.schoolClass.Class;
+import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.subject.Subject;
 import com.example.school_management.teacher.Teacher;
 import com.example.school_management.common.enums.AssignmentStatus;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Component
 public class AssignmentMapper {
 
-    public Assignment toEntity(AssignmentRequestDto dto, Teacher teacher, Class assignedClass, Subject subject) {
+    public Assignment toEntity(AssignmentRequestDto dto, Teacher teacher, SchoolClass assignedClass, Subject subject) {
         Assignment assignment = new Assignment();
         applyDtoToEntity(dto, assignment, teacher, assignedClass, subject);
         assignment.setAssignedDate(LocalDateTime.now());
@@ -23,7 +23,7 @@ public class AssignmentMapper {
         return assignment;
     }
 
-    public void updateEntity(AssignmentRequestDto dto, Assignment assignment, Teacher teacher, Class assignedClass, Subject subject) {
+    public void updateEntity(AssignmentRequestDto dto, Assignment assignment, Teacher teacher, SchoolClass assignedClass, Subject subject) {
         applyDtoToEntity(dto, assignment, teacher, assignedClass, subject);
     }
 
@@ -69,7 +69,7 @@ public class AssignmentMapper {
 
 
     private void applyDtoToEntity(AssignmentRequestDto dto, Assignment assignment,
-                                  Teacher teacher, Class assignedClass, Subject subject) {
+                                  Teacher teacher, SchoolClass assignedClass, Subject subject) {
         assignment.setTitle(dto.getTitle());
         assignment.setDescription(dto.getDescription());
         assignment.setAssignmentType(dto.getAssignmentType());

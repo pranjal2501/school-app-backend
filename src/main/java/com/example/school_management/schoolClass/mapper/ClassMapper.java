@@ -1,6 +1,7 @@
-package com.example.school_management.schoolClass;
+package com.example.school_management.schoolClass.mapper;
 
 import com.example.school_management.schoolClass.dto.ClassResponseDto;
+import com.example.school_management.schoolClass.entity.SchoolClass;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -9,7 +10,7 @@ import java.util.stream.Collectors;
 @Component
 public class ClassMapper {
 
-    public ClassResponseDto toResponseDto(Class classEntity) {
+    public ClassResponseDto toResponseDto(SchoolClass classEntity) {
         if (classEntity == null) {
             return null;
         }
@@ -37,7 +38,7 @@ public class ClassMapper {
         return dto;
     }
 
-    public List<ClassResponseDto> toResponseDtoList(List<Class> classEntities) {
+    public List<ClassResponseDto> toResponseDtoList(List<SchoolClass> classEntities) {
         return classEntities.stream()
                 .map(this::toResponseDto)
                 .collect(Collectors.toList());

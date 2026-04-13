@@ -23,6 +23,4 @@ public class ClassRequestDto {
 
     @Min(0)
     private Integer girls;
-
-    private String className;
 }

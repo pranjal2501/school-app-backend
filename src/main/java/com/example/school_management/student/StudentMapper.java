@@ -1,10 +1,7 @@
 package com.example.school_management.student;
 
 import com.example.school_management.parent.Parent;
-import com.example.school_management.student.dto.StudentFromAdminRequestDto;
-import com.example.school_management.student.dto.StudentRemainingInfoDto;
-import com.example.school_management.student.dto.StudentRequestDto;
-import com.example.school_management.student.dto.StudentResponseDto;
+import com.example.school_management.student.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;

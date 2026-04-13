@@ -1,6 +1,7 @@
-package com.example.school_management.schoolClass;
+package com.example.school_management.schoolClass.controller;
 
 import com.example.school_management.common.ApiResponse;
+import com.example.school_management.schoolClass.service.ClassService;
 import com.example.school_management.schoolClass.dto.ClassRequestDto;
 import com.example.school_management.schoolClass.dto.ClassResponseDto;
 import jakarta.validation.Valid;

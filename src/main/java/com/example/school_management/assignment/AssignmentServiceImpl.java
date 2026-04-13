@@ -2,14 +2,14 @@ package com.example.school_management.assignment;
 
 import com.example.school_management.assignment.dto.AssignmentRequestDto;
 import com.example.school_management.assignment.dto.AssignmentResponseDto;
-import com.example.school_management.schoolClass.Class;
+import com.example.school_management.schoolClass.entity.SchoolClass;
+import com.example.school_management.schoolClass.repo.SchoolClassRepository;
 import com.example.school_management.subject.Subject;
 import com.example.school_management.teacher.Teacher;
 import com.example.school_management.common.enums.AssignmentMarkingType;
 import com.example.school_management.common.enums.AssignmentStatus;
 import com.example.school_management.common.enums.AssignmentType;
 import com.example.school_management.common.exception.ResourceNotFoundException;
-import com.example.school_management.schoolClass.ClassRepository;
 import com.example.school_management.subject.SubjectRepository;
 import com.example.school_management.teacher.TeacherRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class AssignmentServiceImpl implements AssignmentService {
 
     private final AssignmentRepository assignmentRepository;
     private final TeacherRepository teacherRepository;
-    private final ClassRepository classRepository;
+    private final SchoolClassRepository classRepository;
     private final SubjectRepository subjectRepository;
     private final AssignmentMapper assignmentMapper;
 
@@ -35,7 +35,7 @@ public class AssignmentServiceImpl implements AssignmentService {
     public AssignmentResponseDto createAssignment(AssignmentRequestDto dto) {
 
         Teacher teacher = findTeacher(dto.getTeacherId());
-        Class assignedClass = findClass(dto.getClassId());
+        SchoolClass assignedClass = findClass(dto.getClassId());
         Subject subject = findSubject(dto.getSubjectId());
 
         validateMarkingType(dto.getAssignmentType(), dto.getMarkingType());
@@ -67,7 +67,7 @@ public class AssignmentServiceImpl implements AssignmentService {
         }
 
         Teacher teacher = findTeacher(dto.getTeacherId());
-        Class assignedClass = findClass(dto.getClassId());
+        SchoolClass assignedClass = findClass(dto.getClassId());
         Subject subject = findSubject(dto.getSubjectId());
 
         validateMarkingType(dto.getAssignmentType(), dto.getMarkingType());
@@ -175,7 +175,7 @@ public class AssignmentServiceImpl implements AssignmentService {
                         "Teacher not found with id: " + id));
     }
 
-    private Class findClass(Long id) {
+    private SchoolClass findClass(Long id) {
         return classRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Class not found with id: " + id));

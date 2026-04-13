@@ -2,15 +2,15 @@ package com.example.school_management.student;
 
 import com.example.school_management.common.enums.Division;
 import com.example.school_management.common.enums.Standard;
-import com.example.school_management.schoolClass.Class;
 import com.example.school_management.parent.Parent;
 import com.example.school_management.common.enums.Gender;
 import com.example.school_management.common.exception.DuplicateResourceException;
 import com.example.school_management.common.exception.OutOfCapacityException;
 import com.example.school_management.common.exception.ResourceNotFoundException;
-import com.example.school_management.schoolClass.ClassRepository;
+import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.parent.ParentRepository;
 import com.example.school_management.mail.EmailService;
+import com.example.school_management.schoolClass.repo.SchoolClassRepository;
 import com.example.school_management.student.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
-    private final ClassRepository classRepository;
+    private final SchoolClassRepository classRepository;
     private final StudentMapper studentMapper;
     private final ParentRepository parentRepository;
     private final PasswordEncoder passwordEncoder;
@@ -167,13 +167,12 @@ public class StudentServiceImpl implements StudentService {
 
         String className = request.getStandard() + "-" + request.getDivision();
 
-        Class assignedClass = classRepository.findByClassName(className).orElseThrow(()->new ResourceNotFoundException("Class "+className+" don't exist"));
-        Class previousClass = student.getAssignedClass();
+        SchoolClass assignedClass = classRepository.findByClassName(className).orElseThrow(()->new ResourceNotFoundException("Class "+className+" don't exist"));
+        SchoolClass previousClass = student.getAssignedClass();
 
         Gender gender= student.getGender();
 
-        if(gender.equals(Gender.MALE))
-        {
+        if(gender.equals(Gender.MALE)){
             if(assignedClass.getCurrentBoys()==assignedClass.getBoys())
             {throw new OutOfCapacityException("Boys capacity in class "+className+" already fulfilled");}
         }

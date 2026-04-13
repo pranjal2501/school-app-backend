@@ -1,6 +1,6 @@
 package com.example.school_management.assignment;
 
-import com.example.school_management.schoolClass.Class;
+import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.subject.Subject;
 import com.example.school_management.teacher.Teacher;
 import com.example.school_management.common.enums.AssignmentMarkingType;
@@ -26,8 +26,6 @@ public class Assignment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-
 
     @NotBlank(message = ASSIGNMENT_TITLE_REQUIRED)
     @Size(max = 255, message = ASSIGNMENT_TITLE_MAX)
@@ -56,8 +54,6 @@ public class Assignment {
     @Column(name = "passing_marks")
     private Integer passingMarks;
 
-
-
     @Column(name = "assigned_date", nullable = false, updatable = false)
     private LocalDateTime assignedDate;
 
@@ -65,19 +61,15 @@ public class Assignment {
     @Column(name = "due_date", nullable = false)
     private LocalDateTime dueDate;
 
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private AssignmentStatus status;
-
-
 
     @Column(name = "allow_late_submission", nullable = false)
     private Boolean allowLateSubmission = false;
 
     @Column(name = "late_submission_due_date")
     private LocalDateTime lateSubmissionDueDate;
-
 
     @Size(max = 500, message = ALLOWED_FILE_TYPES_MAX)
     @Column(name = "allowed_file_types", length = 500)
@@ -86,7 +78,7 @@ public class Assignment {
     @NotNull(message = CLASS_REQUIRED)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id", nullable = false)
-    private Class assignedClass;
+    private SchoolClass assignedClass;
 
     @NotNull(message = TEACHER_REQUIRED)
     @ManyToOne(fetch = FetchType.LAZY)

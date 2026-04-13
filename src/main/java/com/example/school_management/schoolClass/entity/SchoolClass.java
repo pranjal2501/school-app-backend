@@ -1,4 +1,4 @@
-package com.example.school_management.schoolClass;
+package com.example.school_management.schoolClass.entity;
 //Only main class info, details of class like students and rollnum of each class is in Classroom.java
 
 import com.example.school_management.common.ValidationMessages;
@@ -20,7 +20,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Class {
+public class SchoolClass {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

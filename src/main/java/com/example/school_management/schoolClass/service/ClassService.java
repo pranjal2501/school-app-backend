@@ -1,4 +1,4 @@
-package com.example.school_management.schoolClass;
+package com.example.school_management.schoolClass.service;
 
 import com.example.school_management.schoolClass.dto.ClassRequestDto;
 import com.example.school_management.schoolClass.dto.ClassResponseDto;

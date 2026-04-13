@@ -36,6 +36,7 @@ public class Parent {
 
     @NotBlank(message = ValidationMessages.FATHER_LAST_NAME_REQUIRED)
     @Size(max = 50)
+    @Size(max = 50)
     @Column(name = "father_last_name", length = 50, nullable = false)
     private String fatherLastName;
 
@@ -104,28 +105,28 @@ public class Parent {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @NotBlank(message = ValidationMessages.ADDRESS_LINE1_REQUIRED)
+//    @NotBlank(message = ValidationMessages.ADDRESS_LINE1_REQUIRED)
     @Size(max = 100)
-    @Column(name = "address_line1", length = 100, nullable = false)
+    @Column(name = "address_line1", length = 100)
     private String addressLine1;
 
     @Size(max = 100)
     @Column(name = "address_line2", length = 100)
     private String addressLine2;
 
-    @NotBlank(message = ValidationMessages.CITY_REQUIRED)
+//    @NotBlank(message = ValidationMessages.CITY_REQUIRED)
     @Size(max = 50)
-    @Column(name = "city", length = 50, nullable = false)
+    @Column(name = "city", length = 50)
     private String city;
 
-    @NotBlank(message = ValidationMessages.STATE_REQUIRED)
+//    @NotBlank(message = ValidationMessages.STATE_REQUIRED)
     @Size(max = 50)
-    @Column(name = "state", length = 50, nullable = false)
+    @Column(name = "state", length = 50)
     private String state;
 
-    @NotBlank(message = ValidationMessages.PINCODE_REQUIRED)
+//    @NotBlank(message = ValidationMessages.PINCODE_REQUIRED)
     @Pattern(regexp = "^[0-9]{6}$", message = ValidationMessages.PINCODE_PATTERN)
-    @Column(name = "pincode", length = 6, nullable = false)
+    @Column(name = "pincode", length = 6)
     private String pincode;
 
     @Size(max = 200)

@@ -5,7 +5,7 @@ import com.example.school_management.complaint.Complaint;
 import com.example.school_management.common.ValidationMessages;
 import com.example.school_management.common.BaseEntity;
 import com.example.school_management.parent.Parent;
-import com.example.school_management.schoolClass.Class;
+import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -79,7 +79,7 @@ public class Student extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "class_id")
-    private Class assignedClass;
+    private SchoolClass assignedClass;
 
     @NotNull
     @Enumerated(EnumType.STRING)

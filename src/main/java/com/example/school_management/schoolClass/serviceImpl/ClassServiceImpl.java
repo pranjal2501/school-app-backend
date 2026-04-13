@@ -1,8 +1,12 @@
-package com.example.school_management.schoolClass;
+package com.example.school_management.schoolClass.serviceImpl;
 
 import com.example.school_management.common.enums.Gender;
 import com.example.school_management.schoolClass.dto.ClassRequestDto;
 import com.example.school_management.schoolClass.dto.ClassResponseDto;
+import com.example.school_management.schoolClass.entity.SchoolClass;
+import com.example.school_management.schoolClass.mapper.ClassMapper;
+import com.example.school_management.schoolClass.repo.SchoolClassRepository;
+import com.example.school_management.schoolClass.service.ClassService;
 import com.example.school_management.student.Student;
 import com.example.school_management.teacher.Teacher;
 import com.example.school_management.common.exception.DuplicateResourceException;
@@ -24,7 +28,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ClassServiceImpl implements ClassService {
 
-    private final ClassRepository classRepository;
+    private final SchoolClassRepository classRepository;
     private final TeacherRepository teacherRepository;
     private final ClassMapper classMapper;
 
@@ -47,7 +51,7 @@ public class ClassServiceImpl implements ClassService {
 
         String className = request.getStandard() + "-" + request.getDivision();
 
-        Class classEntity = new Class();
+        SchoolClass classEntity = new SchoolClass();
         classEntity.setClassName(className);
         classEntity.setGirls(request.getGirls());
         classEntity.setBoys(request.getBoys());
@@ -69,7 +73,7 @@ public class ClassServiceImpl implements ClassService {
     @Override
     public ClassResponseDto getClassById(Long id) {
         verifyAdminIdentity();
-        Class classEntity = classRepository.findById(id)
+        SchoolClass classEntity = classRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Class", "id", id));
         return classMapper.toResponseDto(classEntity);
     }
@@ -79,7 +83,7 @@ public class ClassServiceImpl implements ClassService {
     public ClassResponseDto updateClass(Long id, ClassRequestDto request) {
         verifyAdminIdentity();
 
-        Class existing = classRepository.findById(id)
+        SchoolClass existing = classRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Class", "id", id));
 
         existing.setStandard(request.getStandard());
@@ -109,13 +113,13 @@ public class ClassServiceImpl implements ClassService {
     public ClassResponseDto assignClassTeacher(Long classId, Long teacherId) {
         verifyAdminIdentity();
 
-        Class classEntity = classRepository.findById(classId)
+        SchoolClass classEntity = classRepository.findById(classId)
                 .orElseThrow(() -> new ResourceNotFoundException("Class", "id", classId));
 
         Teacher teacher = teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", teacherId));
 
-        Optional<Class> existingAssignment = classRepository.findByClassTeacher(teacher);
+        Optional<SchoolClass> existingAssignment = classRepository.findByClassTeacher(teacher);
 
         if (existingAssignment.isPresent()) {
             if (existingAssignment.get().getId().equals(classId)) {
@@ -134,7 +138,7 @@ public class ClassServiceImpl implements ClassService {
     @Transactional
     public List<String> assignRollNumberToStudents(Long classId)
     {
-        Class current_class=classRepository.findById(classId).orElseThrow(() -> new ResourceNotFoundException("Class not found"));;
+        SchoolClass current_class=classRepository.findById(classId).orElseThrow(() -> new ResourceNotFoundException("Class not found"));;
         List<Student> studentList=current_class.getStudents()
             .stream()
             .filter(Student::isActive)

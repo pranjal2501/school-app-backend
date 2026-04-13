@@ -29,7 +29,7 @@ public class Notification {
     private String description;         // full details — shown to teachers only
 
     @Column(nullable = false)
-    private String shortInfo;           // minimal info — shown to parents
+    private String shortInfo;          // minimal info — shown to parents
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

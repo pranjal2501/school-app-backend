@@ -1,12 +1,10 @@
 package com.example.school_management.teacher;
 
 import com.example.school_management.common.enums.Specialization;
-import com.example.school_management.complaint.Complaint;
 import com.example.school_management.employee.Employee;
 import com.example.school_management.notify.entity.UserNotification;
-import com.example.school_management.schoolClass.Class;
+import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.subject.Subject;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -38,7 +36,7 @@ public class Teacher extends Employee {
     private Integer yearsOfExperienceInPreviousSchool;
 
     @OneToOne(mappedBy = "classTeacher")
-    private Class assignedClass;
+    private SchoolClass assignedClass;
 
     // Many-To-Many relationship with Subjects
     @ManyToMany

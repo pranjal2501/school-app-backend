@@ -227,10 +227,8 @@ public class StudentController {
 
     @PatchMapping("/assign-class/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<StudentResponseDto>> assignClassAndDivision(@PathVariable Long id, @Valid @RequestBody StudentClassAssignmentRequestDto request)
-    {
+    public ResponseEntity<ApiResponse<StudentResponseDto>> assignClassAndDivision(@PathVariable Long id, @Valid @RequestBody StudentClassAssignmentRequestDto request){
         StudentResponseDto student= studentService.assignClassAndDivision(id, request);
-
         return ResponseEntity.ok(ApiResponse.ok("Class, Division, and Roll Number assigned successfully",student));
     }
 
