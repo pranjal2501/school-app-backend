@@ -1,7 +1,9 @@
 package com.example.school_management.student;
 
 import com.example.school_management.parent.Parent;
+import com.example.school_management.parent.dto.ParentResponseDto;
 import com.example.school_management.student.dto.*;
+import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -89,12 +91,48 @@ public class StudentMapper {
         dto.setNationality(student.getNationality());
         dto.setReligion(student.getReligion());
         dto.setCategory(student.getCategory());
-        dto.setParent(student.getParent());
+        // 1. Check if the parent actually exists to avoid NullPointerExceptions
+        if (student.getParent() != null) {
+
+            // 2. Extract the raw entity
+            ParentResponseDto parentDto = getParentResponseDto(student);
+
+            // 5. Finally, attach the formatted DTO to your StudentResponseDto
+            dto.setParent(parentDto);
+        }
         dto.setPreviousSchool(student.getPreviousSchool());
         dto.setPreviousPercentage(student.getPreviousPercentage());
         dto.setActive(student.isActive());
 
         return dto;
+    }
+
+    @Nonnull
+    private static ParentResponseDto getParentResponseDto(Student student) {
+        Parent p = student.getParent();
+
+        // 3. Create the new DTO
+        ParentResponseDto parentDto = new ParentResponseDto();
+
+        // 4. Manually map the fields you want to expose
+        parentDto.setId(p.getId());
+        parentDto.setFatherFirstName(p.getFatherFirstName());
+        parentDto.setFatherMiddleName(p.getFatherMiddleName());
+        parentDto.setFatherLastName(p.getFatherLastName());
+        parentDto.setFatherOccupation(p.getFatherOccupation());
+
+        parentDto.setMotherFirstName(p.getMotherFirstName());
+        parentDto.setMotherLastName(p.getMotherLastName());
+        parentDto.setMotherOccupation(p.getMotherOccupation());
+
+        parentDto.setGuardianFirstName(p.getGuardianFirstName());
+        parentDto.setGuardianMiddleName(p.getGuardianMiddleName());
+        parentDto.setGuardianLastName(p.getGuardianLastName());
+
+        parentDto.setMobilePrimary(p.getMobilePrimary());
+        parentDto.setEmail(p.getEmail());
+        parentDto.setAadharNo(p.getAadharNo());
+        return parentDto;
     }
 
     // List<Student> → List<StudentResponseDto>

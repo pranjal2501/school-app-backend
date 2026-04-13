@@ -2,6 +2,7 @@ package com.example.school_management.attendance.entity;
 
 import com.example.school_management.common.BaseEntity;
 import com.example.school_management.common.enums.Attendence.AttendanceType;
+import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "Attendance_Configurations",

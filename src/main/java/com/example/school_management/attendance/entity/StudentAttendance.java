@@ -3,7 +3,7 @@ package com.example.school_management.attendance.entity;
 import com.example.school_management.common.BaseEntity;
 import com.example.school_management.common.enums.Attendence.AttendanceStatus;
 import com.example.school_management.common.enums.Attendence.AttendanceType;
-import com.example.school_management.schoolClass.Class;
+import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.student.Student;
 import com.example.school_management.subject.Subject;
 import com.example.school_management.teacher.Teacher;
@@ -47,7 +47,7 @@ public class StudentAttendance extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "classId", nullable = false)
-    private Class classId;
+    private SchoolClass classId;
 
     @ManyToOne
     @JoinColumn(name = "subjectId", nullable = true)
