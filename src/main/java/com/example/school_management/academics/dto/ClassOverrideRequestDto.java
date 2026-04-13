@@ -8,5 +8,6 @@ import lombok.Data;
 public class ClassOverrideRequestDto {
     @NotNull
     private Long subjectId;
-    @NotNull private Long newTeacherId;
+    @NotNull
+    private Long newTeacherId;
 }

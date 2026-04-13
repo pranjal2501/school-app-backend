@@ -43,13 +43,16 @@ public class AcademicSetupService {
             // A. Save the Subject Definition
             Subject subject = Subject.builder()
                     .subjectName(dto.getSubjectName())
-                    .subjectCode(dto.getSubjectCode())
                     .standard(request.getStandard())
                     .subjectType(dto.getSubjectType())
                     .theoryMarks(dto.getTheoryMarks())
                     .practicalMarks(dto.getPracticalMarks())
                     .totalMarks(dto.getTotalMarks())
                     .passingMarks(dto.getPassingMarks())
+                    .internalMarks(dto.getInternalMarks())
+                    .projectMarks(dto.getProjectMarks())
+                    .oralMarks(dto.getOralMarks())
+                    .weeklyHours(dto.getWeeklyHours())
                     .build();
             subject = subjectRepository.save(subject);
 
@@ -67,7 +70,7 @@ public class AcademicSetupService {
 
                 mapping.setSchoolClass(schoolClass);
                 mapping.setSubject(subject);
-                mapping.setTeacher(defaultTeacher); // Assigned to Mr. Smith
+                mapping.setTeacher(defaultTeacher);
                 pivotRepository.save(mapping);
             }
         }
@@ -77,7 +80,7 @@ public class AcademicSetupService {
      * Fulfills Point #4: Allows Admin to change the teacher for a specific class (e.g., 10-B English -> Mr. Jonathan)
      */
     @Transactional
-    public void overrideClassTeacher(Long classId, ClassOverrideRequestDto request) {
+    public void overrideSubjectTeacher(Long classId, ClassOverrideRequestDto request) {
 
         ClassSubjectTeacher mapping = pivotRepository
                 .findBySchoolClassIdAndSubjectId(classId, request.getSubjectId())
@@ -120,7 +123,6 @@ public class AcademicSetupService {
         // 1. Save the new Subject definition
         Subject subject = Subject.builder()
                 .subjectName(request.getSubjectName())
-                .subjectCode(request.getSubjectCode())
                 .standard(schoolClass.getStandard()) // Inherit standard from the class
                 .subjectType(request.getSubjectType())
                 .theoryMarks(request.getTheoryMarks())

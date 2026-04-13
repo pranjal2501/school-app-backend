@@ -32,11 +32,11 @@ public class AcademicSetupController {
     // Handles Point #4
     @PatchMapping("/classes/{classId}/override")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> overrideClassTeacher(
+    public ResponseEntity<String> overrideSubjectTeacher(
             @PathVariable Long classId,
             @Valid @RequestBody ClassOverrideRequestDto request) {
 
-        academicSetupService.overrideClassTeacher(classId, request);
+        academicSetupService.overrideSubjectTeacher(classId, request);
         return ResponseEntity.ok("Teacher override applied successfully for class.");
     }
 

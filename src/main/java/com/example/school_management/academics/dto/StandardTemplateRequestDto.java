@@ -11,7 +11,7 @@ import java.util.List;
 @Data
 public class StandardTemplateRequestDto {
 
-    @NotBlank(message = "Standard is required (e.g., STD_10)")
+    @NotNull(message = "Standard is required (e.g., STD_10)")
     private Standard standard;
 
     @NotNull(message = "You must provide at least one subject.")
@@ -20,8 +20,7 @@ public class StandardTemplateRequestDto {
     @Data
     public static class SubjectTemplateDto {
         @NotBlank private String subjectName;
-        @NotBlank private String subjectCode;
-        @NotBlank private SubjectType subjectType;
+        @NotNull private SubjectType subjectType;
         @NotNull private Integer theoryMarks;
         @NotNull private Integer practicalMarks;
         @NotNull private Integer totalMarks;
