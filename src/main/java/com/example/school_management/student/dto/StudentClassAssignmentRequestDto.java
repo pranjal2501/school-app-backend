@@ -9,10 +9,6 @@ import lombok.Data;
 
 @Data
 public class StudentClassAssignmentRequestDto {
-
-    @NotNull(message = ValidationMessages.STANDARD_REQUIRED)
-    private Standard standard;
-
     @NotNull(message = ValidationMessages.DIVISION_REQUIRED)
     private Division division;
 }

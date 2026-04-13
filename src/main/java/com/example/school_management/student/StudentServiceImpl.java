@@ -191,7 +191,8 @@ public class StudentServiceImpl implements StudentService {
     public StudentResponseDto assignClassAndDivision(Long id, StudentClassAssignmentRequestDto request) {
         Student student=findById(id);
 
-        String className = request.getStandard() + "-" + request.getDivision();
+        String std= student.getStandard().toString();
+        String className = std.substring(std.indexOf('_') + 1) + "-" + request.getDivision();
 
         SchoolClass assignedClass = classRepository.findByClassName(className).orElseThrow(()->new ResourceNotFoundException("Class "+className+" don't exist"));
         SchoolClass previousClass = student.getAssignedClass();
