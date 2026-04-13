@@ -34,7 +34,6 @@ public class StudentController {
                 .body(ApiResponse.ok("Student admitted successfully", response));
     }
 
-    // 📌 Admit multiple students in bulk by Admin
     @PostMapping("/bulk")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<StudentResponseDto>>> admitStudentsBulk(
@@ -47,7 +46,6 @@ public class StudentController {
                 .body(ApiResponse.ok("Bulk students admitted successfully", response));
     }
 
-    // 📌 Fetch all students (accessible by Admin & Teacher)
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     public ResponseEntity<ApiResponse<List<StudentResponseDto>>> getAllStudents() {

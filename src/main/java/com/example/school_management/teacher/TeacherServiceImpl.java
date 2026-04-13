@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -121,6 +122,67 @@ public class TeacherServiceImpl implements TeacherService {
         );
 
         return teacherMapper.toResponseDto(savedTeacher);
+    }
+
+    @Override
+    @Transactional
+    public List<TeacherResponseDto> onboardTeachersBulk(List<TeacherFromAdminRequestDto> requests) {
+        verifyAdminIdentity();
+
+        List<Teacher> teachersToSave = new ArrayList<>();
+        List<String> generatedPasswords = new ArrayList<>(); // Track passwords for emails
+
+        for (TeacherFromAdminRequestDto request : requests) {
+            // 1. Validation Checks
+            if (teacherRepository.existsByEmail(request.getEmail())) {
+                throw new DuplicateResourceException("Teacher", "email", request.getEmail());
+            }
+            if (teacherRepository.existsByMobile(request.getMobile())) {
+                throw new DuplicateResourceException("Teacher", "mobile", request.getMobile());
+            }
+            if (teacherRepository.existsByAadharNo(request.getAadharNo())) {
+                throw new DuplicateResourceException("Teacher", "aadharNo", request.getAadharNo());
+            }
+            if (teacherRepository.existsByPanNo(request.getPanNo())) {
+                throw new DuplicateResourceException("Teacher", "panNo", request.getPanNo());
+            }
+
+            // 2. Mapping and Defaults
+            Teacher teacher = teacherMapper.toEntity(request);
+            teacher.setRole(Role.TEACHER);
+            teacher.setActive(true);
+
+            // 3. Password Generation
+            String namePart = getSafeSubstring(teacher.getLastName(), 3).toUpperCase(Locale.ROOT);
+            String mobilePart = getSafeSubstring(teacher.getMobile(), 3);
+            String aadharPart = getSafeSubstring(teacher.getAadharNo(), 3);
+            String rawPassword = namePart + mobilePart + aadharPart;
+
+            teacher.setPassword(passwordEncoder.encode(rawPassword));
+
+            teachersToSave.add(teacher);
+            generatedPasswords.add(rawPassword);
+        }
+
+        // 4. Batch Save to Database
+        List<Teacher> savedTeachers = teacherRepository.saveAll(teachersToSave);
+
+        // 5. Dispatch Emails and Map Responses
+        List<TeacherResponseDto> responses = new ArrayList<>();
+        for (int i = 0; i < savedTeachers.size(); i++) {
+            Teacher savedTeacher = savedTeachers.get(i);
+            String rawPassword = generatedPasswords.get(i);
+
+            emailService.sendTeacherOnboardingEmail(
+                    savedTeacher.getEmail(),
+                    savedTeacher.getFirstName() + " " + savedTeacher.getLastName(),
+                    rawPassword
+            );
+
+            responses.add(teacherMapper.toResponseDto(savedTeacher));
+        }
+
+        return responses;
     }
 
     @Override

@@ -30,6 +30,17 @@ public class TeacherController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/bulk-onboard")
+    public ResponseEntity<ApiResponse<List<TeacherResponseDto>>> onboardTeachersBulk(
+            @Valid @RequestBody List<TeacherFromAdminRequestDto> requests) {
+
+        List<TeacherResponseDto> responses = teacherService.onboardTeachersBulk(requests);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok("Teachers successfully onboarded in bulk", responses));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<TeacherResponseDto>>> getAllTeachers() {
 

@@ -131,9 +131,18 @@ public class StudentServiceImpl implements StudentService {
 
             Student student = studentMapper.toEntity(request);
             student.setParent(parent);
-            student.setAddedBy(admin);
-            student.setActive(true);
 
+            // 1. Set the owning side (Student -> Admin)
+            student.setAddedBy(admin);
+
+            // 2. Set the inverse side (Admin -> Student)
+            // Safety check to prevent NullPointerExceptions
+            if (admin.getAdmittedStudents() == null) {
+                admin.setAdmittedStudents(new ArrayList<>());
+            }
+            admin.getAdmittedStudents().add(student);
+
+            student.setActive(true);
             studentsToSave.add(student);
 
             emailDataList.add(new StudentEmailData(

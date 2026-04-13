@@ -83,6 +83,7 @@ public class StudentMapper {
         dto.setFirstName(student.getFirstName());
         dto.setMiddleName(student.getMiddleName());
         dto.setLastName(student.getLastName());
+        dto.setStandard(student.getStandard());
         dto.setRollNumber(student.getRollNumber());
         dto.setAadharNo(student.getAadharNo());
         dto.setGender(student.getGender());

@@ -41,7 +41,7 @@ public class Admin {
     private boolean isActive = true;
 
     @OneToMany(mappedBy = "addedBy", fetch = FetchType.LAZY)
-    List<Student> admittedStudents=new ArrayList<>();
+    List<Student> admittedStudents = new ArrayList<>();
 
     @OneToMany(mappedBy = "markedBy")
     private List<TeacherAttendance> teacherAttendances;

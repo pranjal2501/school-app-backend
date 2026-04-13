@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface TeacherService {
     TeacherResponseDto onboardTeacher(TeacherFromAdminRequestDto request);
+    List<TeacherResponseDto> onboardTeachersBulk(List<TeacherFromAdminRequestDto> requests);
     List<TeacherResponseDto> getAllTeachers();
     TeacherResponseDto updateTeacherAfterOnboard(Long teacherId, TeacherRemainingInfoDto request);
 }
