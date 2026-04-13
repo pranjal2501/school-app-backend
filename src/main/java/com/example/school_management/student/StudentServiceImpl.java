@@ -1,24 +1,30 @@
 package com.example.school_management.student;
 
+import com.example.school_management.admin.Admin;
+import com.example.school_management.admin.AdminRepository;
 import com.example.school_management.common.enums.Division;
 import com.example.school_management.common.enums.Standard;
+import com.example.school_management.common.payload.StudentEmailData;
+import com.example.school_management.parent.ParentMapper;
+import com.example.school_management.parent.dto.ParentCreateRequestDto;
+import com.example.school_management.schoolClass.Class;
 import com.example.school_management.parent.Parent;
 import com.example.school_management.common.enums.Gender;
 import com.example.school_management.common.exception.DuplicateResourceException;
 import com.example.school_management.common.exception.OutOfCapacityException;
 import com.example.school_management.common.exception.ResourceNotFoundException;
-import com.example.school_management.schoolClass.entity.SchoolClass;
+import com.example.school_management.schoolClass.ClassRepository;
 import com.example.school_management.parent.ParentRepository;
 import com.example.school_management.mail.EmailService;
-import com.example.school_management.schoolClass.repo.SchoolClassRepository;
 import com.example.school_management.student.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,47 +32,34 @@ import java.util.stream.Collectors;
 public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
-    private final SchoolClassRepository classRepository;
+    private final ClassRepository classRepository;
+    private final AdminRepository adminRepository;
     private final StudentMapper studentMapper;
     private final ParentRepository parentRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
     @Override
-    public StudentResponseDto admitStudent(StudentFromAdminRequestDto request) {
-
-        Parent parent;
-        String autoPassword=null;
+    @Transactional
+    public StudentResponseDto admitStudent(StudentFromAdminRequestDto request, String adminName) {
 
         if (studentRepository.existsByAadharNo(request.getAadharNo())) {
             throw new DuplicateResourceException(
-                    "Student with Aadhar " + request.getAadharNo() + " already exists");
+                    "Student with Aadhaar " + request.getAadharNo() + " already exists");
         }
 
-        if(request.getParent()==null && request.getParentId()==null)
-        {throw new IllegalArgumentException("Either parentId or parent must be provided");}
+        Admin admin = adminRepository.findByUsername(adminName)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
 
-        if(request.getParentId()!=null)
-        {
-            parent= parentRepository.findById(request.getParentId()).orElseThrow(() -> new RuntimeException("Parent not found"));
-            String tempPassword=parent.getFatherLastName().substring(0,3).toUpperCase(Locale.ROOT)+parent.getMobilePrimary().substring(0,3)+parent.getAadharNo().substring(0,3);
+        Parent parent = resolveParent(request);
 
-            if(passwordEncoder.matches(tempPassword, parent.getPassword())){
-                autoPassword=tempPassword;
-            }
-        }else{
-            parent= request.getParent();
-            autoPassword=parent.getFatherLastName().substring(0,3).toUpperCase(Locale.ROOT)+parent.getMobilePrimary().substring(0,3)+parent.getAadharNo().substring(0,3);
-            parent.setPassword(passwordEncoder.encode(autoPassword));
-            parent = parentRepository.save(parent);
-        }
+        String autoPassword = (request.getParentId() != null)
+                ? resolveAutoPassword(parent)
+                : generatePassword(parent);
 
-        Student student = studentMapper.toEntity(request);
+        Student student = createStudent(request, parent, admin);
 
-        student.setParent(parent);
-        student.setActive(true);
-
-        student=studentRepository.save(student);
+        student = studentRepository.save(student);
 
         emailService.sendAdmissionEmail(
                 parent.getEmail(),
@@ -74,6 +67,7 @@ public class StudentServiceImpl implements StudentService {
                 parent.getEmail(),
                 autoPassword
         );
+
         return studentMapper.toResponseDto(student);
     }
 
@@ -104,21 +98,57 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     @Transactional
-    public List<StudentResponseDto> admitStudentsBulk(List<StudentFromAdminRequestDto> requests) {
+    public List<StudentResponseDto> admitStudentsBulk(
+            List<StudentFromAdminRequestDto> requests,
+            String adminName
+    ) {
 
-         List<StudentResponseDto> savedStudents = new ArrayList<>();
+        Admin admin = adminRepository.findByUsername(adminName)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
 
-        for(StudentFromAdminRequestDto s : requests)
-        {
-            boolean already=studentRepository.findByAadharNo(s.getAadharNo()).isPresent();
-            if (already) {
-                System.out.println("Student already exists");
-            } else {
-                savedStudents.add(admitStudent(s));
-            }
+        Set<String> aadharNumbers = requests.stream()
+                .map(StudentFromAdminRequestDto::getAadharNo)
+                .collect(Collectors.toSet());
 
+        Set<String> existingAadhars = studentRepository
+                .findAllByAadharNoIn(aadharNumbers)
+                .stream()
+                .map(Student::getAadharNo)
+                .collect(Collectors.toSet());
+
+        List<Student> studentsToSave = new ArrayList<>();
+        List<StudentEmailData> emailDataList = new ArrayList<>();
+
+        for (StudentFromAdminRequestDto request : requests) {
+
+            if (existingAadhars.contains(request.getAadharNo())) continue;
+
+            Parent parent = resolveParent(request);
+
+            String autoPassword = (request.getParentId() != null)
+                    ? resolveAutoPassword(parent)
+                    : generatePassword(parent);
+
+            Student student = studentMapper.toEntity(request);
+            student.setParent(parent);
+            student.setAddedBy(admin);
+            student.setActive(true);
+
+            studentsToSave.add(student);
+
+            emailDataList.add(new StudentEmailData(
+                    student,
+                    parent.getEmail(),
+                    autoPassword
+            ));
         }
-        return savedStudents;
+        List<Student> savedStudents = studentRepository.saveAll(studentsToSave);
+
+        emailService.sendBulkAdmissionEmails(emailDataList);
+
+        return savedStudents.stream()
+                .map(studentMapper::toResponseDto)
+                .toList();
     }
 
     @Override
@@ -131,13 +161,6 @@ public class StudentServiceImpl implements StudentService {
         return studentMapper.toResponseDto(findById(id));
     }
 
-    @Override
-    public StudentResponseDto getStudentByRollNumber(Integer rollNumber) {
-        Student student = studentRepository.findByRollNumber(rollNumber)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Student not found with Roll Number: " + rollNumber));
-        return studentMapper.toResponseDto(student);
-    }
 
     @Override
     public StudentResponseDto updateStudent(Long id, StudentRequestDto request) {
@@ -146,12 +169,6 @@ public class StudentServiceImpl implements StudentService {
         return studentMapper.toResponseDto(studentRepository.save(existing));
     }
 
-    @Override
-    public void toggleStudentStatus(Long id) {
-        Student student = findById(id);
-        student.setActive(!student.isActive());
-        studentRepository.save(student);
-    }
 
     @Override
     public void deleteStudent(Long id) {
@@ -167,12 +184,13 @@ public class StudentServiceImpl implements StudentService {
 
         String className = request.getStandard() + "-" + request.getDivision();
 
-        SchoolClass assignedClass = classRepository.findByClassName(className).orElseThrow(()->new ResourceNotFoundException("Class "+className+" don't exist"));
-        SchoolClass previousClass = student.getAssignedClass();
+        Class assignedClass = classRepository.findByClassName(className).orElseThrow(()->new ResourceNotFoundException("Class "+className+" don't exist"));
+        Class previousClass = student.getAssignedClass();
 
         Gender gender= student.getGender();
 
-        if(gender.equals(Gender.MALE)){
+        if(gender.equals(Gender.MALE))
+        {
             if(assignedClass.getCurrentBoys()==assignedClass.getBoys())
             {throw new OutOfCapacityException("Boys capacity in class "+className+" already fulfilled");}
         }
@@ -206,5 +224,55 @@ public class StudentServiceImpl implements StudentService {
         return studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Student not found with ID: " + id));
+    }
+
+
+    //SUPPORTING METHODS, NOT INTENDED TO BE USED FOR ENDPOINTS
+
+    private Parent resolveParent(StudentFromAdminRequestDto request) {
+
+        if (request.getParent() == null && request.getParentId() == null) {
+            throw new IllegalArgumentException("Either parentId or parent must be provided");
+        }
+
+        if (request.getParentId() != null) {
+            return parentRepository.findById(request.getParentId())
+                    .orElseThrow(() -> new RuntimeException("Parent not found"));
+        }
+
+        Parent parent = ParentMapper.toEntity(request.getParent());
+
+        String password = generatePassword(parent);
+        parent.setPassword(passwordEncoder.encode(password));
+
+        return parentRepository.save(parent); // ✅ save ONCE
+    }
+
+    private String generatePassword(Parent parent) {
+        return safe(parent.getFatherLastName()).toUpperCase() +
+                safe(parent.getMobilePrimary()) +
+                safe(parent.getAadharNo());
+    }
+
+    private String safe(String value) {
+        return value.length() >= 3 ? value.substring(0, 3) : value;
+    }
+
+    private String resolveAutoPassword(Parent parent) {
+        String tempPassword = generatePassword(parent);
+
+        if (passwordEncoder.matches(tempPassword, parent.getPassword())) {
+            return tempPassword;
+        }
+
+        return "Use existing password";
+    }
+
+    private Student createStudent(StudentFromAdminRequestDto request, Parent parent, Admin admin) {
+        Student student = studentMapper.toEntity(request);
+        student.setParent(parent);
+        student.setAddedBy(admin);
+        student.setActive(true);
+        return student;
     }
 }

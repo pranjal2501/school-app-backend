@@ -3,6 +3,7 @@ package com.example.school_management.schoolClass.serviceImpl;
 import com.example.school_management.common.enums.Gender;
 import com.example.school_management.schoolClass.dto.ClassRequestDto;
 import com.example.school_management.schoolClass.dto.ClassResponseDto;
+import com.example.school_management.schoolClass.dto.StudentRollNoResponseDto;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.schoolClass.mapper.ClassMapper;
 import com.example.school_management.schoolClass.repo.SchoolClassRepository;
@@ -155,5 +156,25 @@ public class ClassServiceImpl implements ClassService {
         }
 
         return response;
+    }
+
+    @Override
+    public List<StudentRollNoResponseDto> getSTudentListWIthRollNum(Long classId)
+    {
+        SchoolClass currentClass= classRepository.findById(classId).orElseThrow(()-> new ResourceNotFoundException("Class not found"));
+
+        return currentClass.getStudents()
+                .stream()
+                .filter(Student::isActive)
+                .filter(s -> s.getRollNumber() != null)  // only students with roll assigned
+                .sorted(Comparator.comparing(Student::getRollNumber))
+                .map(s -> new StudentRollNoResponseDto(
+                        s.getRollNumber(),
+                        s.getFirstName(),
+                        s.getLastName(),
+                        s.getGender().name(),
+                        s.getRegId()
+                ))
+                .toList();
     }
 }

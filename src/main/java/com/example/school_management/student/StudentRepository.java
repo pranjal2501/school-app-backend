@@ -7,8 +7,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
@@ -26,4 +28,6 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
             @Param("standard") Standard standard,
             @Param("division") Division division,
             @Param("query") String query);
+
+    List<Student> findAllByAadharNoIn(Set<String> aadharNumbers);
 }

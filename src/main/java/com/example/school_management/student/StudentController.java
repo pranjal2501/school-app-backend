@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -21,27 +22,32 @@ public class StudentController {
 
     private final StudentService studentService;
 
+    // 📌 Admit a single student by Admin (auto-links logged-in admin)
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StudentResponseDto>> admitStudent(
-            @Valid @RequestBody StudentFromAdminRequestDto request) {
+            @Valid @RequestBody StudentFromAdminRequestDto request,
+            Principal principal) {
 
-        StudentResponseDto response = studentService.admitStudent(request);
+        StudentResponseDto response = studentService.admitStudent(request, principal.getName());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Student admitted successfully", response));
     }
 
+    // 📌 Admit multiple students in bulk by Admin
     @PostMapping("/bulk")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<StudentResponseDto>>> admitStudentsBulk(
-            @Valid @RequestBody List<StudentFromAdminRequestDto> requests) {
+            @Valid @RequestBody List<StudentFromAdminRequestDto> requests,
+            Principal principal) {
 
-        List<StudentResponseDto> response = studentService.admitStudentsBulk(requests);
+        List<StudentResponseDto> response = studentService.admitStudentsBulk(requests, principal.getName());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Bulk students admitted successfully", response));
     }
 
+    // 📌 Fetch all students (accessible by Admin & Teacher)
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     public ResponseEntity<ApiResponse<List<StudentResponseDto>>> getAllStudents() {
@@ -53,6 +59,7 @@ public class StudentController {
         );
     }
 
+    // 📌 Fetch a single student by ID (Admin & Teacher access)
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     public ResponseEntity<ApiResponse<StudentResponseDto>> getStudentById(
@@ -65,18 +72,7 @@ public class StudentController {
         );
     }
 
-    @GetMapping("/roll/{rollNumber}")
-    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
-    public ResponseEntity<ApiResponse<StudentResponseDto>> getStudentByRollNumber(
-            @PathVariable Integer rollNumber) {
-
-        StudentResponseDto student = studentService.getStudentByRollNumber(rollNumber);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Student fetched successfully", student)
-        );
-    }
-
+    // 📌 Fully update student details (Admin only)
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StudentResponseDto>> updateStudent(
@@ -90,6 +86,7 @@ public class StudentController {
         );
     }
 
+    // 📌 Partially update student info after admission (Admin or Parent)
     //Update the student from parents login
     @PatchMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','PARENT')")
@@ -104,26 +101,17 @@ public class StudentController {
         );
     }
 
-//    @PatchMapping("/assign-class/{id}")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ResponseEntity<ApiResponse<StudentResponseDto>> assignClassAndDivision(@PathVariable Long id, @Valid @RequestBody StudentClassAssignmentRequestDto request)
-//    {
-//        StudentResponseDto student= studentService.assignClassAndDivision(id, request);
-//
-//        return ResponseEntity.ok(ApiResponse.ok("Class, Division, and Roll Number assigned successfully",student));
-//    }
-
-    @PatchMapping("/{id}/status")
+    // 📌 Assign class and division to a student (Admin only)
+    @PatchMapping("/assign-class/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<String>> toggleStatus(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<StudentResponseDto>> assignClassAndDivision(@PathVariable Long id, @Valid @RequestBody StudentClassAssignmentRequestDto request)
+    {
+        StudentResponseDto student= studentService.assignClassAndDivision(id, request);
 
-        studentService.toggleStudentStatus(id);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Student status updated successfully", null)
-        );
+        return ResponseEntity.ok(ApiResponse.ok("Class and Division assigned successfully",student));
     }
 
+    // 📌 Delete a student record (Admin only)
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> deleteStudent(@PathVariable Long id) {
@@ -135,7 +123,7 @@ public class StudentController {
         );
     }
 
-
+    // 📌 Fetch profile for logged-in student/parent
     @GetMapping("/profile")
     @PreAuthorize("hasAnyRole('STUDENT','PARENT')")
     public ResponseEntity<ApiResponse<String>> profile() {
@@ -145,7 +133,7 @@ public class StudentController {
         );
     }
 
-
+    // 📌 Fetch dashboard data for student/parent
     @GetMapping("/dashboard")
     @PreAuthorize("hasAnyRole('STUDENT','PARENT')")
     public ResponseEntity<ApiResponse<String>> studentDashboard() {
@@ -155,83 +143,7 @@ public class StudentController {
         );
     }
 
-
-    @GetMapping("/{id}/blood-group")
-    @PreAuthorize("hasAnyRole('ADMIN','TEACHER','STUDENT')")
-    public ResponseEntity<ApiResponse<String>> getBloodGroupByStudentId(
-            @PathVariable Long id) {
-
-        StudentResponseDto student = studentService.getStudentById(id);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Blood group fetched successfully",
-                        student.getBloodGroup() != null ? student.getBloodGroup().name() : null)
-        );
-    }
-
-
-    @GetMapping("/{id}/religion")
-    @PreAuthorize("hasAnyRole('ADMIN','TEACHER','STUDENT')")
-    public ResponseEntity<ApiResponse<String>> getReligionByStudentId(
-            @PathVariable Long id) {
-
-        StudentResponseDto student = studentService.getStudentById(id);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Religion fetched successfully",
-                        student.getReligion() != null ? student.getReligion().name() : null)
-        );
-    }
-
-
-    @GetMapping("/{id}/category")
-    @PreAuthorize("hasAnyRole('ADMIN','TEACHER','STUDENT')")
-    public ResponseEntity<ApiResponse<String>> getCategoryByStudentId(
-            @PathVariable Long id) {
-
-        StudentResponseDto student = studentService.getStudentById(id);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Category fetched successfully",
-                        student.getCategory() != null ? student.getCategory().name() : null)
-        );
-    }
-
-
-    @GetMapping("/{id}/standard")
-    @PreAuthorize("hasAnyRole('ADMIN','TEACHER','STUDENT')")
-    public ResponseEntity<ApiResponse<String>> getStandardByStudentId(
-            @PathVariable Long id) {
-
-        StudentResponseDto student = studentService.getStudentById(id);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Standard fetched successfully",
-                        student.getStandard() != null ? student.getStandard().name() : null)
-        );
-    }
-
-
-    @GetMapping("/{id}/division")
-    @PreAuthorize("hasAnyRole('ADMIN','TEACHER','STUDENT')")
-    public ResponseEntity<ApiResponse<String>> getDivisionByStudentId(
-            @PathVariable Long id) {
-
-        StudentResponseDto student = studentService.getStudentById(id);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Division fetched successfully",
-                        student.getDivision() != null ? student.getDivision().name() : null)
-        );
-    }
-
-    @PatchMapping("/assign-class/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<StudentResponseDto>> assignClassAndDivision(@PathVariable Long id, @Valid @RequestBody StudentClassAssignmentRequestDto request){
-        StudentResponseDto student= studentService.assignClassAndDivision(id, request);
-        return ResponseEntity.ok(ApiResponse.ok("Class, Division, and Roll Number assigned successfully",student));
-    }
-
+    // 📌 Search students by standard, division, and name query (Admin & Teacher)
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<StudentDropdownDto>>> searchStudents(

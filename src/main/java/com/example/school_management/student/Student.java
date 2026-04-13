@@ -1,5 +1,8 @@
 package com.example.school_management.student;
 
+import com.example.school_management.admin.Admin;
+import com.example.school_management.attendance.entity.LeaveRequests;
+import com.example.school_management.attendance.entity.StudentAttendance;
 import com.example.school_management.common.enums.*;
 import com.example.school_management.complaint.Complaint;
 import com.example.school_management.common.ValidationMessages;
@@ -134,8 +137,18 @@ public class Student extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "added_by_admin")
+    private Admin addedBy;
+
     @JsonIgnore
     @Builder.Default
     @OneToMany(mappedBy = "targetStudent", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Complaint> complaints = new ArrayList<>();
+
+    @OneToMany(mappedBy = "student")
+    private List<StudentAttendance> attendances;
+
+    @OneToMany(mappedBy = "student")
+    private List<LeaveRequests> leaveRequests;
 }

@@ -28,6 +28,6 @@ public class ParentResponseDto {
     private String mobilePrimary;
     private String email;
     private String aadharNo;
-    private List<Student> students = new ArrayList<>();
+    private List<StudentLiteDto> students;
 
 }

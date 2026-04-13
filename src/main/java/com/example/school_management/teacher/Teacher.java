@@ -1,5 +1,8 @@
 package com.example.school_management.teacher;
 
+import com.example.school_management.attendance.entity.LeaveRequests;
+import com.example.school_management.attendance.entity.StudentAttendance;
+import com.example.school_management.attendance.entity.TeacherAttendance;
 import com.example.school_management.common.enums.Specialization;
 import com.example.school_management.employee.Employee;
 import com.example.school_management.notify.entity.UserNotification;
@@ -66,4 +69,13 @@ public class Teacher extends Employee {
 
     @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY)
     private List<UserNotification> notifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "markedBy")
+    private List<StudentAttendance> studentAttendances;
+
+    @OneToMany(mappedBy = "teacher")
+    private List<TeacherAttendance> teacherAttendances;
+
+    @OneToMany(mappedBy = "teacher")
+    private List<LeaveRequests> leaveRequests;
 }
