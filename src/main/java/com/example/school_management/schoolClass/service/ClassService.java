@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface ClassService {
     ClassResponseDto createClass(ClassRequestDto request);
+    List<ClassResponseDto> createClassesBulk(List<ClassRequestDto> requests);
     List<ClassResponseDto> getAllClasses();
     ClassResponseDto getClassById(Long id);
     ClassResponseDto updateClass(Long id, ClassRequestDto request);

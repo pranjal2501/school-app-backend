@@ -66,6 +66,39 @@ public class ClassServiceImpl implements ClassService {
     }
 
     @Override
+    @Transactional
+    public List<ClassResponseDto> createClassesBulk(List<ClassRequestDto> requests) {
+        verifyAdminIdentity();
+
+        List<SchoolClass> classesToSave = new ArrayList<>();
+
+        // Convert all DTOs to Entities
+        for (ClassRequestDto request : requests) {
+            String className = request.getStandard().getValue() + "-" + request.getDivision().name();
+
+            SchoolClass classEntity = new SchoolClass();
+            classEntity.setClassName(className);
+            classEntity.setGirls(request.getGirls());
+            classEntity.setBoys(request.getBoys());
+            classEntity.setCurrentBoys(0);     // Defaulting to 0 on creation
+            classEntity.setCurrentGirls(0);    // Defaulting to 0 on creation
+            classEntity.setTotalStudents(request.getTotalStudents());
+            classEntity.setDivision(request.getDivision());
+            classEntity.setStandard(request.getStandard());
+
+            classesToSave.add(classEntity);
+        }
+
+        // Save all entities in a single batch
+        List<SchoolClass> savedClasses = classRepository.saveAll(classesToSave);
+
+        // Convert the saved entities back to DTOs
+        return savedClasses.stream()
+                .map(classMapper::toResponseDto)
+                .toList();
+    }
+
+    @Override
     public List<ClassResponseDto> getAllClasses() {
         verifyAdminIdentity();
         return classMapper.toResponseDtoList(classRepository.findAll());

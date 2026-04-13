@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +19,16 @@ import java.util.List;
 @RequestMapping("/api/v1/classes")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
+@Validated
+/**
+ If you send a List<ClassRequestDto> in the @RequestBody, Spring Boot's @Valid annotation will not
+ automatically validate the individual items inside the list by default. It will only check if the list
+ itself exists!
+
+ To make sure your @NotNull and @Min(0) annotations inside ClassRequestDto actually fire for every item in
+ that JSON array you just made, you must add @Validated to the very top of your Controller class.
+ */
+
 public class ClassController {
 
     private final ClassService classService;
@@ -28,6 +39,16 @@ public class ClassController {
         ClassResponseDto response = classService.createClass(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Class created successfully", response));
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<ApiResponse<List<ClassResponseDto>>> createClassesBulk(
+            @Valid @RequestBody List<ClassRequestDto> requests) {
+
+        List<ClassResponseDto> responses = classService.createClassesBulk(requests);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok("Classes successfully bulk created", responses));
     }
 
     @GetMapping
