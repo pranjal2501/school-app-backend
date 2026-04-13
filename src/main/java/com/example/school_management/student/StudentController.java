@@ -99,12 +99,12 @@ public class StudentController {
         );
     }
 
-    // 📌 Assign class and division to a student (Admin only)
-    @PatchMapping("/assign-class/{id}")
+    // 📌 Assign the class and division with list of students id
+    @PatchMapping("/assign-class")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<StudentResponseDto>> assignClassAndDivision(@PathVariable Long id, @Valid @RequestBody StudentClassAssignmentRequestDto request)
+    public ResponseEntity<ApiResponse<List<StudentResponseDto>>> assignClassAndDivisionList(@Valid @RequestBody StudentClassAssignmentRequestDto request)
     {
-        StudentResponseDto student= studentService.assignClassAndDivision(id, request);
+        List<StudentResponseDto> student= studentService.assignClassAndDivision(request);
 
         return ResponseEntity.ok(ApiResponse.ok("Class and Division assigned successfully",student));
     }

@@ -21,9 +21,9 @@ public interface StudentService {
 
     void deleteStudent(Long id);
 
-    StudentResponseDto assignClassAndDivision(Long id, StudentClassAssignmentRequestDto request);
-
     StudentResponseDto updateStudentAfterAdmit(Long id, @Valid StudentRemainingInfoDto request);
 
     List<StudentDropdownDto> searchStudents(Standard standard, Division division, String query);
+
+    List<StudentResponseDto> assignClassAndDivision(StudentClassAssignmentRequestDto request);
 }
