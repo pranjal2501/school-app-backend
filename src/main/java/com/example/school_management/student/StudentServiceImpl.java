@@ -6,7 +6,6 @@ import com.example.school_management.common.enums.Division;
 import com.example.school_management.common.enums.Standard;
 import com.example.school_management.common.payload.StudentEmailData;
 import com.example.school_management.parent.ParentMapper;
-import com.example.school_management.parent.dto.ParentCreateRequestDto;
 import com.example.school_management.parent.Parent;
 import com.example.school_management.common.enums.Gender;
 import com.example.school_management.common.exception.DuplicateResourceException;
@@ -187,48 +186,6 @@ public class StudentServiceImpl implements StudentService {
         studentRepository.deleteById(id);
     }
 
-    @Override
-    public StudentResponseDto assignClassAndDivision(Long id, StudentClassAssignmentRequestDto request) {
-        Student student=findById(id);
-
-        String className = request.getStandard() + "-" + request.getDivision();
-
-        SchoolClass assignedClass = classRepository.findByClassName(className).orElseThrow(()->new ResourceNotFoundException("Class "+className+" don't exist"));
-        SchoolClass previousClass = student.getAssignedClass();
-
-        Gender gender= student.getGender();
-
-        if(gender.equals(Gender.MALE))
-        {
-            if(assignedClass.getCurrentBoys()==assignedClass.getBoys())
-            {throw new OutOfCapacityException("Boys capacity in class "+className+" already fulfilled");}
-        }
-        else if (gender.equals(Gender.FEMALE)) {
-            if(assignedClass.getCurrentGirls()== assignedClass.getGirls())
-            {throw new OutOfCapacityException("Girls capacity in class "+className+" already fulfilled");}
-        }
-
-        if (previousClass != null) {
-            if (gender.equals(Gender.MALE)) {
-                previousClass.setCurrentBoys(previousClass.getCurrentBoys() - 1);
-            } else if (gender.equals(Gender.FEMALE)) {
-                previousClass.setCurrentGirls(previousClass.getCurrentGirls() - 1);
-            }
-            classRepository.save(previousClass);
-        }
-
-        if(gender.equals(Gender.MALE)) {
-            assignedClass.setCurrentBoys(assignedClass.getCurrentBoys() + 1);
-        } else if (gender.equals(Gender.FEMALE)) {
-            assignedClass.setCurrentGirls(assignedClass.getCurrentGirls() + 1);
-        }
-
-        student.setAssignedClass(assignedClass);
-
-        return studentMapper.toResponseDto(studentRepository.save(student));
-    }
-
-
     private Student findById(Long id) {
         return studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -283,5 +240,52 @@ public class StudentServiceImpl implements StudentService {
         student.setAddedBy(admin);
         student.setActive(true);
         return student;
+    }
+
+    @Override
+    public List<StudentResponseDto> assignClassAndDivision(StudentClassAssignmentRequestDto request) {
+
+        List<Student> addedStudent=new ArrayList<>();
+        for(Long id: request.getStudentId()) {
+            Student student = findById(id);
+
+            String std = student.getStandard().toString();
+            String className = std.substring(std.indexOf('_') + 1) + "-" + request.getDivision();
+
+            SchoolClass assignedClass = classRepository.findByClassName(className).orElseThrow(() -> new ResourceNotFoundException("Class " + className + " don't exist"));
+            SchoolClass previousClass = student.getAssignedClass();
+
+            Gender gender = student.getGender();
+
+            if (gender.equals(Gender.MALE)) {
+                if (assignedClass.getCurrentBoys() == assignedClass.getBoys()) {
+                    throw new OutOfCapacityException("Boys capacity in class " + className + " already fulfilled");
+                }
+            } else if (gender.equals(Gender.FEMALE)) {
+                if (assignedClass.getCurrentGirls() == assignedClass.getGirls()) {
+                    throw new OutOfCapacityException("Girls capacity in class " + className + " already fulfilled");
+                }
+            }
+
+            if (previousClass != null) {
+                if (gender.equals(Gender.MALE)) {
+                    previousClass.setCurrentBoys(previousClass.getCurrentBoys() - 1);
+                } else if (gender.equals(Gender.FEMALE)) {
+                    previousClass.setCurrentGirls(previousClass.getCurrentGirls() - 1);
+                }
+                classRepository.save(previousClass);
+            }
+
+            if (gender.equals(Gender.MALE)) {
+                assignedClass.setCurrentBoys(assignedClass.getCurrentBoys() + 1);
+            } else if (gender.equals(Gender.FEMALE)) {
+                assignedClass.setCurrentGirls(assignedClass.getCurrentGirls() + 1);
+            }
+
+            student.setAssignedClass(assignedClass);
+            addedStudent.add(student);
+            studentRepository.save(student);
+        }
+        return studentMapper.toResponseDtoList(addedStudent);
     }
 }
