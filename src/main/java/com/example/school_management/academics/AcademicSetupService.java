@@ -3,6 +3,8 @@ package com.example.school_management.academics;
 import com.example.school_management.academics.dto.ClassOverrideRequestDto;
 import com.example.school_management.academics.dto.ClassSubjectAllocationRequestDto;
 import com.example.school_management.academics.dto.StandardTemplateRequestDto;
+import com.example.school_management.admin.Admin;
+import com.example.school_management.admin.AdminRepository;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.schoolClass.repo.SchoolClassRepository;
@@ -11,6 +13,7 @@ import com.example.school_management.subject.SubjectRepository;
 import com.example.school_management.teacher.Teacher;
 import com.example.school_management.teacher.TeacherRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -23,13 +26,16 @@ public class AcademicSetupService {
     private final SchoolClassRepository classRepository;
     private final TeacherRepository teacherRepository;
     private final ClassSubjectTeacherRepository pivotRepository;
+    private final AdminRepository adminRepository;
+
 
     /**
      * Fulfills Point #3: Creates subjects and applies them to ALL classes in the Standard.
      */
     @Transactional
-    public void applyTemplateToStandard(StandardTemplateRequestDto request) {
-
+    public void applyTemplateToStandard(StandardTemplateRequestDto request, String username) {
+        Admin admin = adminRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
         // 1. Fetch all classes for this standard (e.g., 10-A, 10-B)
         List<SchoolClass> classesInStandard = classRepository.findAllByStandard(request.getStandard());
 
@@ -80,8 +86,9 @@ public class AcademicSetupService {
      * Fulfills Point #4: Allows Admin to change the teacher for a specific class (e.g., 10-B English -> Mr. Jonathan)
      */
     @Transactional
-    public void overrideSubjectTeacher(Long classId, ClassOverrideRequestDto request) {
-
+    public void overrideSubjectTeacher(Long classId, ClassOverrideRequestDto request, String username) {
+        Admin admin = adminRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
         ClassSubjectTeacher mapping = pivotRepository
                 .findBySchoolClassIdAndSubjectId(classId, request.getSubjectId())
                 .orElseThrow(() -> new RuntimeException("This subject is not assigned to this class yet."));
@@ -99,21 +106,24 @@ public class AcademicSetupService {
      * The Subject itself remains in the DB in case other classes still use it.
      */
     @Transactional
-    public void removeSubjectFromClass(Long classId, Long subjectId, String adminIdentifier) {
+    public void removeSubjectFromClass(Long classId, Long subjectId,String username) {
+        Admin admin = adminRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
         ClassSubjectTeacher mapping = pivotRepository
                 .findBySchoolClassIdAndSubjectId(classId, subjectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Allocation", "classId/subjectId", classId + "/" + subjectId));
 
         pivotRepository.delete(mapping);
-//        log.info("Admin '{}' successfully removed Subject ID {} from Class ID {}", adminIdentifier, subjectId, classId);
     }
 
     /**
      * WORKFLOW: Create a BRAND NEW subject and assign it strictly to one class (e.g., Create Hindi for 10-L)
      */
     @Transactional
-    public void createAndAllocateSubjectToClass(Long classId, StandardTemplateRequestDto.SubjectTemplateDto request, String adminIdentifier) {
+    public void createAndAllocateSubjectToClass(Long classId, StandardTemplateRequestDto.SubjectTemplateDto request, String username) {
 
+        Admin admin = adminRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
         SchoolClass schoolClass = classRepository.findById(classId)
                 .orElseThrow(() -> new ResourceNotFoundException("Class", "id", classId));
 
@@ -154,7 +164,10 @@ public class AcademicSetupService {
      * WORKFLOW: Assign an EXISTING subject pool to a class (e.g., 10-A already created Hindi, now add it to 10-L)
      */
     @Transactional
-    public void allocateExistingSubjectToClass(Long classId, ClassSubjectAllocationRequestDto request, String adminIdentifier) {
+    public void allocateExistingSubjectToClass(Long classId, ClassSubjectAllocationRequestDto request, String username) {
+        Admin admin = adminRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+
         SchoolClass schoolClass = classRepository.findById(classId)
                 .orElseThrow(() -> new ResourceNotFoundException("Class", "id", classId));
 
@@ -183,6 +196,5 @@ public class AcademicSetupService {
         mapping.setTeacher(teacher);
 
         pivotRepository.save(mapping);
-//        log.info("Admin '{}' allocated existing Subject ID {} to Class ID {}", adminIdentifier, subject.getId(), classId);
     }
 }

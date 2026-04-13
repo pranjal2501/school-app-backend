@@ -22,7 +22,7 @@ public class StudentController {
 
     private final StudentService studentService;
 
-    // 📌 Admit a single student by Admin (auto-links logged-in admin)
+    // Admit a single student by Admin (auto-links logged-in admin)
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StudentResponseDto>> admitStudent(
@@ -57,7 +57,7 @@ public class StudentController {
         );
     }
 
-    // 📌 Fetch a single student by ID (Admin & Teacher access)
+    // Fetch a single student by ID (Admin & Teacher access)
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     public ResponseEntity<ApiResponse<StudentResponseDto>> getStudentById(
@@ -70,7 +70,7 @@ public class StudentController {
         );
     }
 
-    // 📌 Fully update student details (Admin only)
+    // Fully update student details (Admin only)
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StudentResponseDto>> updateStudent(
@@ -99,8 +99,8 @@ public class StudentController {
         );
     }
 
-    // 📌 Assign the class and division with list of students id
-    @PatchMapping("/assign-class")
+    // Assign the class and division with list of students id
+    @PatchMapping("/assign/class")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<StudentResponseDto>>> assignClassAndDivisionList(@Valid @RequestBody StudentClassAssignmentRequestDto request)
     {
@@ -109,7 +109,7 @@ public class StudentController {
         return ResponseEntity.ok(ApiResponse.ok("Class and Division assigned successfully",student));
     }
 
-    // 📌 Delete a student record (Admin only)
+    // Delete a student record (Admin only)
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> deleteStudent(@PathVariable Long id) {
@@ -121,7 +121,7 @@ public class StudentController {
         );
     }
 
-    // 📌 Fetch profile for logged-in student/parent
+    // Fetch profile for logged-in student/parent
     @GetMapping("/profile")
     @PreAuthorize("hasAnyRole('STUDENT','PARENT')")
     public ResponseEntity<ApiResponse<String>> profile() {
@@ -131,7 +131,7 @@ public class StudentController {
         );
     }
 
-    // 📌 Fetch dashboard data for student/parent
+    // Fetch dashboard data for student/parent
     @GetMapping("/dashboard")
     @PreAuthorize("hasAnyRole('STUDENT','PARENT')")
     public ResponseEntity<ApiResponse<String>> studentDashboard() {
@@ -141,7 +141,7 @@ public class StudentController {
         );
     }
 
-    // 📌 Search students by standard, division, and name query (Admin & Teacher)
+    // Search students by standard, division, and name query (Admin & Teacher)
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<StudentDropdownDto>>> searchStudents(
