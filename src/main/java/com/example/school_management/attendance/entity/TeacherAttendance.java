@@ -2,7 +2,7 @@ package com.example.school_management.attendance.entity;
 
 import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.common.BaseEntity;
-import com.example.school_management.common.enums.Attendence.AttendanceStatus;
+import com.example.school_management.common.enums.Attendance.AttendanceStatus;
 import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

@@ -1,52 +1,62 @@
 package com.example.school_management.attendance.entity;
 
+import com.example.school_management.attendance.JsonListConverter;
 import com.example.school_management.common.BaseEntity;
-import com.example.school_management.common.enums.Attendence.AttendanceStatus;
-import com.example.school_management.common.enums.Attendence.AttendanceType;
+import com.example.school_management.common.enums.Attendance.AttendanceType;
 import com.example.school_management.schoolClass.entity.SchoolClass;
-import com.example.school_management.student.entity.Student;
-import com.example.school_management.subject.entity.Subject;
 import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
-@Entity
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "Student_Attendance",
+@EqualsAndHashCode(callSuper = false)
+@Entity
+@Table(
+        name = "student_attendances",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_student_date_subject",
-                        columnNames = {"studentId", "date", "subjectId"}
+                        name = "uk_class_date",
+                        columnNames = {"class_id", "attendance_date"}
                 )
         },
         indexes = {
-                @Index(name = "idx_sa_class_date", columnList = "classId, date"),
-                @Index(name = "idx_sa_year_date", columnList = "academicYear, date")
-        })
+                @Index(name = "idx_sa_year_date", columnList = "academicYear, attendance_date")
+        }
+)
 public class StudentAttendance extends BaseEntity {
-    private LocalDate date;
+
+    @Column(name = "attendance_date", nullable = false)
+    private LocalDate attendanceDate;
+
+    @Column(nullable = false, length = 10)
     private String academicYear;
-    private AttendanceType attendanceType;
-    private AttendanceStatus status;
-    private String remarks;
 
-    @ManyToOne
-    @JoinColumn(name = "studentId", nullable = false)
-    private Student student;
+    @Column(columnDefinition = "TEXT")
+    @Convert(converter = JsonListConverter.class)
+    private List<Integer> absentRollNumbers = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "classId", nullable = false)
-    private SchoolClass classId;
+    @Column(columnDefinition = "TEXT")
+    @Convert(converter = JsonListConverter.class)
+    private List<Integer> lateRollNumbers = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "subjectId", nullable = true)
-    private Subject subject;
+    @Column(columnDefinition = "TEXT")
+    @Convert(converter = JsonListConverter.class)
+    private List<Integer> halfDayRollNumbers = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "markedBy", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "class_id", nullable = false)
+    private SchoolClass classEntity;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "marked_by", nullable = false)
     private Teacher markedBy;
 }

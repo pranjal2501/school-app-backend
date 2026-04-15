@@ -146,8 +146,5 @@ public class Student extends BaseEntity {
     private List<Complaint> complaints = new ArrayList<>();
 
     @OneToMany(mappedBy = "student")
-    private List<StudentAttendance> attendances;
-
-    @OneToMany(mappedBy = "student")
     private List<LeaveRequests> leaveRequests;
 }

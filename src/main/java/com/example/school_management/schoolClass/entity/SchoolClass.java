@@ -56,6 +56,6 @@ public class SchoolClass {
     @OneToMany(mappedBy = "assignedClass", fetch = FetchType.LAZY)
     private List<Student> students = new ArrayList<>();
 
-    @OneToMany(mappedBy = "classId")
+    @OneToMany(mappedBy = "classEntity")
     private List<StudentAttendance> studentAttendances;
 }

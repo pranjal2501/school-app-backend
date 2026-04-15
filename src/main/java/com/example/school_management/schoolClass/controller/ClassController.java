@@ -98,7 +98,7 @@ public class ClassController {
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     public ResponseEntity<ApiResponse<List<StudentRollNoResponseDto>>> getStudentListWithRollNum(@PathVariable Long classId)
     {
-        List<StudentRollNoResponseDto> response = classService.getSTudentListWIthRollNum(classId);
+        List<StudentRollNoResponseDto> response = classService.getStudentListWithRollNum(classId);
 
         return ResponseEntity.ok(ApiResponse.ok("Students list fetched successfully", response));
     }

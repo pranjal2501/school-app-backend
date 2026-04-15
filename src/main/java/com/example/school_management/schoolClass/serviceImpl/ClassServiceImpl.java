@@ -190,7 +190,7 @@ public class ClassServiceImpl implements ClassService {
     }
 
     @Override
-    public List<StudentRollNoResponseDto> getSTudentListWIthRollNum(Long classId)
+    public List<StudentRollNoResponseDto> getStudentListWithRollNum(Long classId)
     {
         SchoolClass currentClass= classRepository.findById(classId).orElseThrow(()-> new ResourceNotFoundException("Class not found"));
 

@@ -1,4 +1,4 @@
-package com.example.school_management.common.enums.Attendence;
+package com.example.school_management.common.enums.Attendance;
 
 public enum LeaveStatus {
     PENDING,

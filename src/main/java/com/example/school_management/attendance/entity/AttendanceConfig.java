@@ -1,38 +1,55 @@
 package com.example.school_management.attendance.entity;
 
 import com.example.school_management.common.BaseEntity;
-import com.example.school_management.common.enums.Attendence.AttendanceType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import com.example.school_management.common.enums.Attendance.AttendanceType;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+
 @Data
-@Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "Attendance_Configurations",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uk_config_academic_year", columnNames = {"academicYear"})
-        })
+@EqualsAndHashCode(callSuper = false)
+@Entity
+@Table(name = "attendance_configs",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_config_academic_year",
+                columnNames = {"academicYear"}
+        )
+)
 public class AttendanceConfig extends BaseEntity {
 
+    @Column(nullable = false, length = 10)
     private String academicYear;
 
-    private AttendanceType attendanceType;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AttendanceType attendanceType = AttendanceType.DAY_WISE;
 
-    private Float minAttendance;
+    @Column(nullable = false)
+    private Float studentMinAttendancePct;
 
-    private Integer workingDays;
+    @Column(nullable = false)
+    private Float teacherMinAttendancePct;
 
-    private Boolean allowLateMarks;
+    @Column(nullable = false)
+    private Integer studentWorkingDays;
 
+    @Column(nullable = false)
+    private Integer teacherWorkingDays;
+
+    private Boolean allowLateMarks = true;
+
+    @Column(nullable = false)
     private Integer lateMarksWindow;
 
-    private Boolean notifyParentOnAbsent;
+    @Column(nullable = false)
+    private Boolean notifyParentOnAbsent = true;
 
     private Integer absentNotifyThreshold;
 
+    private Integer minLeaveNoticeDays;
 }

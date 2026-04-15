@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -24,4 +25,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
             @Param("query") String query);
 
     List<Student> findAllByAadharNoIn(Set<String> aadharNumbers);
+
+    List<Student> findByAssignedClass_Id(Long classId);
+
+    Optional<Student> findByAssignedClass_IdAndRollNumber(Long classId, Integer rollNumber);
 }
