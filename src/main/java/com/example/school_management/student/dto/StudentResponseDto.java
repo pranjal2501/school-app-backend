@@ -22,8 +22,8 @@ public class StudentResponseDto {
     private String nationality;
     private Religion religion;
     private Category category;
-    private Standard standard;
-    private Division division;
+    private String standard;
+    private String division;
 
     private ParentResponseDto parent;
 

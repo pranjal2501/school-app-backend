@@ -1,6 +1,5 @@
 package com.example.school_management.subject.entity;
 
-import com.example.school_management.common.enums.Standard;
 import com.example.school_management.common.enums.SubjectType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
@@ -27,7 +26,7 @@ public class Subject {
     private String subjectName;
 
     @Column(name = "standard")
-    private Standard standard;
+    private String standard;
 
     @Column(name = "subject_code", unique = true)
     private String subjectCode;
@@ -82,7 +81,7 @@ public class Subject {
             prefix = prefix != null ? prefix.replaceAll("[^A-Z0-9]", "") : null;
 
             // 2. Get Standard Name (e.g., "STD_10")
-            Standard std = this.standard != null ? this.standard : Standard.STD_1;
+            String std = this.standard != null ? this.standard : "1";
 
             // 3. Generate a 4-character unique alphanumeric string to prevent DB Unique Constraint crashes
             String uniqueSuffix = UUID.randomUUID().toString().substring(0, 4).toUpperCase();

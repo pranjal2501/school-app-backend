@@ -1,6 +1,5 @@
-package com.example.school_management.academics.dto;
+package com.example.school_management.academics.dto.request;
 
-import com.example.school_management.common.enums.Standard;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -10,7 +9,7 @@ public class StandaloneSubjectRequestDto {
     @NotBlank
     private String subjectName;
     @NotBlank private String subjectCode;
-    @NotBlank private Standard standard; // e.g., "STD_10"
+    @NotBlank private String standard; // e.g., "STD_10"
     @NotBlank private String subjectType; // e.g., "OPTIONAL"
     @NotNull private Integer theoryMarks;
     @NotNull private Integer practicalMarks;

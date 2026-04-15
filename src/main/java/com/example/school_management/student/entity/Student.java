@@ -85,8 +85,7 @@ public class Student extends BaseEntity {
     private SchoolClass assignedClass;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
-    private Standard standard;
+    private String standard;
 
     @Min(value = 1, message = ValidationMessages.ROLL_NUMBER_MIN)
     @Column(name = "roll_number", unique = false, nullable = true)

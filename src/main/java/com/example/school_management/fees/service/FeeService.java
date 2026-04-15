@@ -1,6 +1,5 @@
 package com.example.school_management.fees.service;
 
-import com.example.school_management.common.enums.Standard;
 import com.example.school_management.fees.mapper.FeesMapper;
 import com.example.school_management.fees.dto.FeesRequestDto;
 import com.example.school_management.fees.dto.FeesResponseDto;
@@ -35,13 +34,13 @@ public class FeeService
                 .map(feesMapper::toResponseDTO)
                 .toList();
     }
-    public List<FeesResponseDto> getFeesByStd(Standard std) {
+    public List<FeesResponseDto> getFeesByStd(String std) {
         return feesRepository.findByStd(std)
                 .stream()
                 .map(feesMapper::toResponseDTO)
                 .toList();
     }
-    public List<FeesResponseDto> getFeesByStdAndYear(Standard std, String academicYear) {
+    public List<FeesResponseDto> getFeesByStdAndYear(String std, String academicYear) {
         return feesRepository.findByStdAndAcademicYear(std, academicYear)
                 .stream()
                 .map(feesMapper::toResponseDTO)

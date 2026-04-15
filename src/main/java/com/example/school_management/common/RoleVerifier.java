@@ -1,7 +1,6 @@
 package com.example.school_management.common;
 
 import com.example.school_management.common.enums.Role;
-import com.example.school_management.security.AppRole;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;

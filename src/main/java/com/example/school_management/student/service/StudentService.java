@@ -1,7 +1,5 @@
 package com.example.school_management.student.service;
 
-import com.example.school_management.common.enums.Division;
-import com.example.school_management.common.enums.Standard;
 import com.example.school_management.student.dto.*;
 import jakarta.validation.Valid;
 
@@ -23,7 +21,7 @@ public interface StudentService {
 
     StudentResponseDto updateStudentAfterAdmit(Long id, @Valid StudentRemainingInfoDto request);
 
-    List<StudentDropdownDto> searchStudents(Standard standard, Division division, String query);
+    List<StudentDropdownDto> searchStudents(String standard, String division, String query);
 
     List<StudentResponseDto> assignClassAndDivision(StudentClassAssignmentRequestDto request);
 }

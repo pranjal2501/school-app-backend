@@ -1,7 +1,5 @@
 package com.example.school_management.student.repository;
 
-import com.example.school_management.common.enums.Division;
-import com.example.school_management.common.enums.Standard;
 import com.example.school_management.student.entity.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,14 +17,10 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     boolean existsByAadharNo(String aadharNo);
     // @Query allows us to write strict, database-agnostic JPQL.
     // LOWER() ensures case-insensitive searching.
-    @Query("SELECT s FROM Student s WHERE s.assignedClass.standard = :standard " +
-            "AND s.assignedClass.division = :division " +
-            "AND (LOWER(s.firstName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(s.lastName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR s.rollNumber = :query)")
+    @Query("SELECT s FROM Student s WHERE s.assignedClass.academicStructure.standard = :standard AND s.assignedClass.academicStructure.division = :division AND (LOWER(s.firstName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(s.lastName) LIKE LOWER(CONCAT('%', :query, '%')) OR s.rollNumber = :query)")
     List<Student> searchStudentsForComplaint(
-            @Param("standard") Standard standard,
-            @Param("division") Division division,
+            @Param("standard") String standard,
+            @Param("division") String division,
             @Param("query") String query);
 
     List<Student> findAllByAadharNoIn(Set<String> aadharNumbers);

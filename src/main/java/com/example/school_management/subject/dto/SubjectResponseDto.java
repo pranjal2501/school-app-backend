@@ -1,7 +1,6 @@
 package com.example.school_management.subject.dto;
 
 // Standard Response DTO (Flattened for frontend ease)
-import com.example.school_management.common.enums.Standard;
 import com.example.school_management.common.enums.SubjectType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
@@ -12,7 +11,7 @@ public class SubjectResponseDto {
     private Long id;
     private String subjectName;
     private Integer subjectCode;
-    private Standard standard;
+    private String standard;
     private Integer weeklyHours;
     private SubjectType subjectType;
     private Long teacherId;

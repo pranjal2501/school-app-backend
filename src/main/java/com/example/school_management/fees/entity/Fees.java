@@ -3,7 +3,6 @@ package com.example.school_management.fees.entity;
 import com.example.school_management.common.BaseEntity;
 import com.example.school_management.common.enums.FineType;
 import com.example.school_management.common.enums.PaymentCycle;
-import com.example.school_management.common.enums.Standard;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -26,9 +25,8 @@ public class Fees extends BaseEntity {
     @Setter(AccessLevel.NONE)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "std", nullable = false, length = 10)
-    private Standard std;
+    private String std;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(

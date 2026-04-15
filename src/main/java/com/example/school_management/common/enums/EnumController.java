@@ -49,19 +49,6 @@ public class EnumController {
         return ResponseEntity.ok(list);
     }
 
-
-    @GetMapping("/divisions")
-    public ResponseEntity<List<Map<String, String>>> getDivisions() {
-        List<Map<String, String>> list = new ArrayList<>();
-        for (Division division : Division.values()) {
-            Map<String, String> map = new LinkedHashMap<>();
-            map.put("value", division.name());
-            map.put("displayName", division.name());
-            list.add(map);
-        }
-        return ResponseEntity.ok(list);
-    }
-
     @GetMapping("/degree-types")
     public ResponseEntity<List<Map<String, String>>> getDegreeTypes() {
         List<Map<String, String>> list = new ArrayList<>();
@@ -87,17 +74,7 @@ public class EnumController {
     }
 
 
-    @GetMapping("/standards")
-    public ResponseEntity<List<Map<String, String>>> getStandards() {
-        List<Map<String, String>> list = new ArrayList<>();
-        for (Standard standard : Standard.values()) {
-            Map<String, String> map = new LinkedHashMap<>();
-            map.put("value", standard.getValue());
-            map.put("displayName", standard.getValue());
-            list.add(map);
-        }
-        return ResponseEntity.ok(list);
-    }
+
 
 
     @GetMapping("/blood-groups")

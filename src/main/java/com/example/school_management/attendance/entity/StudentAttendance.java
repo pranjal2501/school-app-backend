@@ -28,16 +28,10 @@ import java.time.LocalDate;
                 @Index(name = "idx_sa_year_date", columnList = "academicYear, date")
         })
 public class StudentAttendance extends BaseEntity {
-
-
     private LocalDate date;
-
     private String academicYear;
-
     private AttendanceType attendanceType;
-
     private AttendanceStatus status;
-
     private String remarks;
 
     @ManyToOne
@@ -55,5 +49,4 @@ public class StudentAttendance extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "markedBy", nullable = false)
     private Teacher markedBy;
-
 }

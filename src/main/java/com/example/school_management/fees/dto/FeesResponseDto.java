@@ -3,7 +3,6 @@ package com.example.school_management.fees.dto;
 import com.example.school_management.common.enums.FeeType;
 import com.example.school_management.common.enums.FineType;
 import com.example.school_management.common.enums.PaymentCycle;
-import com.example.school_management.common.enums.Standard;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +16,7 @@ import java.util.List;
 public class FeesResponseDto {
 
     private Long id;
-    private Standard std;
+    private String std;
     private List<FeeItemDTO> feeItems;
     private PaymentCycle paymentCycle;
     private String academicYear;

@@ -4,9 +4,7 @@ package com.example.school_management.student.service;
 import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.admin.repository.AdminRepository;
 import com.example.school_management.common.RoleVerifier;
-import com.example.school_management.common.enums.Division;
 import com.example.school_management.common.enums.Role;
-import com.example.school_management.common.enums.Standard;
 import com.example.school_management.common.payload.StudentEmailData;
 import com.example.school_management.common.enums.Gender;
 import com.example.school_management.common.exception.DuplicateResourceException;
@@ -202,7 +200,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<StudentDropdownDto> searchStudents(Standard standard, Division division, String query) {
+    public List<StudentDropdownDto> searchStudents(String standard, String division, String query) {
         enforceAdminOrTeacherAccess();
 
         String safeQuery = (query != null && !query.trim().isEmpty()) ? query.trim() : "";

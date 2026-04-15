@@ -1,4 +1,4 @@
-package com.example.school_management.academics.dto;
+package com.example.school_management.academics.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

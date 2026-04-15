@@ -41,9 +41,9 @@ public class StudentRequestDto {
     @NotNull(message = ValidationMessages.RELIGION_REQUIRED)
     private Religion religion;
 
-    private Standard standard;
+    private String standard;
 
-    private Division division;
+    private String division;
 
     @NotNull(message = ValidationMessages.CATEGORY_REQUIRED)
     private Category category;

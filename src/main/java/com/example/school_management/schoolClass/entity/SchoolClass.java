@@ -1,15 +1,12 @@
 package com.example.school_management.schoolClass.entity;
 //Only main class info, details of class like students and rollnum of each class is in Classroom.java
 
+import com.example.school_management.academics.entity.AcademicStructure;
 import com.example.school_management.attendance.entity.StudentAttendance;
-import com.example.school_management.common.ValidationMessages;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.teacher.entity.Teacher;
-import com.example.school_management.common.enums.Division;
-import com.example.school_management.common.enums.Standard;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -27,15 +24,9 @@ public class SchoolClass {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = ValidationMessages.STANDARD_REQUIRED)
-    @Enumerated(EnumType.STRING)
-    @Column(name = "standard", nullable = false)
-    private Standard standard;
-
-    @NotNull(message = ValidationMessages.DIVISION_REQUIRED)
-    @Enumerated(EnumType.STRING)
-    @Column(name = "division", nullable = false)
-    private Division division;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "academic_structure_id", nullable = false, unique = true)
+    private AcademicStructure academicStructure;
 
     @Min(0)
     @Column(name = "total_students")

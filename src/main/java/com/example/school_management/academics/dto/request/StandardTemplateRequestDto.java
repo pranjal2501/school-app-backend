@@ -1,6 +1,5 @@
-package com.example.school_management.academics.dto;
+package com.example.school_management.academics.dto.request;
 
-import com.example.school_management.common.enums.Standard;
 import com.example.school_management.common.enums.SubjectType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,7 +11,7 @@ import java.util.List;
 public class StandardTemplateRequestDto {
 
     @NotNull(message = "Standard is required (e.g., STD_10)")
-    private Standard standard;
+    private String standard;
 
     @NotNull(message = "You must provide at least one subject.")
     private List<SubjectTemplateDto> subjects;

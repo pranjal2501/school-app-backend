@@ -17,8 +17,8 @@ public class ClassMapper {
 
         ClassResponseDto dto = new ClassResponseDto();
         dto.setId(classEntity.getId());
-        dto.setStandard(classEntity.getStandard());
-        dto.setDivision(classEntity.getDivision());
+        dto.setStandard(classEntity.getAcademicStructure().getStandard());
+        dto.setDivision(classEntity.getAcademicStructure().getDivision());
         dto.setTotalStudents(classEntity.getTotalStudents());
         dto.setBoys(classEntity.getBoys());
         dto.setGirls(classEntity.getGirls());

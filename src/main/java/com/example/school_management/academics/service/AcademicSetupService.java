@@ -1,22 +1,36 @@
 package com.example.school_management.academics.service;
 
+import com.example.school_management.academics.dto.request.ClassBulkSetupRequestDto;
+import com.example.school_management.academics.dto.request.ClassOverrideRequestDto;
+import com.example.school_management.academics.dto.request.ClassSubjectAllocationRequestDto;
+import com.example.school_management.academics.dto.request.StandardTemplateRequestDto;
+import com.example.school_management.academics.dto.response.AcademicStructureResponseDto;
+import com.example.school_management.academics.dto.response.SubjectWithTeachersResponseDto;
+import com.example.school_management.academics.entity.AcademicStructure;
+import com.example.school_management.academics.repository.AcademicStructureRepository;
 import com.example.school_management.academics.repository.ClassSubjectTeacherRepository;
-import com.example.school_management.academics.dto.ClassOverrideRequestDto;
-import com.example.school_management.academics.dto.ClassSubjectAllocationRequestDto;
-import com.example.school_management.academics.dto.StandardTemplateRequestDto;
 import com.example.school_management.academics.entity.ClassSubjectTeacher;
 import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.admin.repository.AdminRepository;
+import com.example.school_management.common.RoleVerifier;
+import com.example.school_management.common.enums.Role;
 import com.example.school_management.common.exception.ResourceNotFoundException;
+import com.example.school_management.schoolClass.dto.ClassResponseDto;
 import com.example.school_management.schoolClass.entity.SchoolClass;
+import com.example.school_management.schoolClass.mapper.ClassMapper;
 import com.example.school_management.schoolClass.repo.SchoolClassRepository;
 import com.example.school_management.subject.entity.Subject;
 import com.example.school_management.subject.repository.SubjectRepository;
+import com.example.school_management.teacher.dto.TeacherResponseDto;
 import com.example.school_management.teacher.entity.Teacher;
+import com.example.school_management.teacher.mapper.TeacherMapper;
 import com.example.school_management.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,7 +42,114 @@ public class AcademicSetupService {
     private final TeacherRepository teacherRepository;
     private final ClassSubjectTeacherRepository pivotRepository;
     private final AdminRepository adminRepository;
+    private final TeacherMapper teacherMapper;
+    private final AcademicStructureRepository academicStructureRepository;
+    private final ClassMapper classMapper;
+    private final RoleVerifier roleVerifier;
 
+    private void verifyAndGetAdminRecord() {
+        if (!roleVerifier.hasRole(Role.ADMIN)) {
+            throw new AccessDeniedException("Access Denied: Only Admins can perform this action.");
+        }
+        adminRepository.findByUsername(roleVerifier.getCurrentUsername())
+                .orElseThrow(() -> new AccessDeniedException("Admin record not found."));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SubjectWithTeachersResponseDto> getSubjectsByStandard(String standard, String username) {
+//        verifyAndGetAdminRecord(); // Vault Check
+
+        // 1. Fetch all subjects for this standard
+        List<Subject> subjects = subjectRepository.findAllByStandard(standard);
+
+        // 2. Fetch all teacher allocations for this entire standard in ONE query (Performance Optimization)
+        List<ClassSubjectTeacher> standardAllocations = pivotRepository.findAllBySubject_Standard(standard);
+
+        // 3. Map everything securely together
+        return subjects.stream().map(subject -> {
+
+            // Find all distinct teachers assigned to this specific subject across all divisions
+            List<TeacherResponseDto> assignedTeachers = standardAllocations.stream()
+                    .filter(mapping -> mapping.getSubject().getId().equals(subject.getId()))
+                    .map(ClassSubjectTeacher::getTeacher)
+                    .distinct() // Removes duplicates (e.g., if Mr. Smith teaches both 6-A and 6-B)
+                    .map(teacherMapper::toResponseDto)
+                    .toList();
+
+            return SubjectWithTeachersResponseDto.builder()
+                    .subjectId(subject.getId())
+                    .subjectName(subject.getSubjectName())
+                    .subjectCode(subject.getSubjectCode())
+                    .subjectType(subject.getSubjectType())
+                    .theoryMarks(subject.getTheoryMarks())
+                    .practicalMarks(subject.getPracticalMarks())
+                    .totalMarks(subject.getTotalMarks())
+                    .passingMarks(subject.getPassingMarks())
+                    .weeklyHours(subject.getWeeklyHours())
+                    .assignedTeachers(assignedTeachers)
+                    .build();
+        }).toList();
+    }
+
+    @Transactional
+    public List<ClassResponseDto> setupStandardAndClasses(ClassBulkSetupRequestDto request) {
+        verifyAndGetAdminRecord();
+
+        String standard = request.getStandard().trim();
+        List<SchoolClass> activeClasses = new ArrayList<>();
+
+        for (String divInput : request.getDivisions()) {
+            String division = divInput.trim();
+
+            // 1. Upsert the Academic Structure (Lookup Table)
+            AcademicStructure structure = academicStructureRepository
+                    .findByStandardAndDivision(standard, division)
+                    .orElseGet(() -> {
+                        AcademicStructure newStructure = AcademicStructure.builder()
+                                .standard(standard)
+                                .division(division)
+                                .build();
+                        return academicStructureRepository.save(newStructure);
+                    });
+
+            // 2. Upsert the actual physical SchoolClass
+            SchoolClass schoolClass = classRepository.findByAcademicStructureId(structure.getId())
+                    .orElseGet(() -> {
+                        SchoolClass newClass = new SchoolClass();
+                        newClass.setAcademicStructure(structure);
+                        newClass.setClassName(standard + "-" + division);
+
+                        // Default zero-states for a brand new empty classroom
+                        newClass.setBoys(0);
+                        newClass.setGirls(0);
+                        newClass.setCurrentBoys(0);
+                        newClass.setCurrentGirls(0);
+                        newClass.setTotalStudents(0);
+
+                        return classRepository.save(newClass);
+                    });
+
+            activeClasses.add(schoolClass);
+        }
+
+        // Return the created/existing classes mapped to your standard DTO
+        return activeClasses.stream()
+                // Assuming you have access to your classMapper in this service
+                .map(classMapper::toResponseDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClassSubjectTeacher> getAllocationsByClass(Long classId) {
+        // Strict security check mimicking your existing methods
+        verifyAndGetAdminRecord();
+
+        if (!classRepository.existsById(classId)) {
+            throw new ResourceNotFoundException("Class", "id", classId);
+        }
+
+        return pivotRepository.findAllBySchoolClassId(classId);
+    }
 
     /**
      * Fulfills Point #3: Creates subjects and applies them to ALL classes in the Standard.
@@ -38,8 +159,7 @@ public class AcademicSetupService {
         Admin admin = adminRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Admin not found"));
         // 1. Fetch all classes for this standard (e.g., 10-A, 10-B)
-        List<SchoolClass> classesInStandard = classRepository.findAllByStandard(request.getStandard());
-
+        List<SchoolClass> classesInStandard = classRepository.findAllByAcademicStructure_Standard(request.getStandard());
         if (classesInStandard.isEmpty()) {
             throw new RuntimeException("No classes found for standard: " + request.getStandard());
         }
@@ -134,12 +254,13 @@ public class AcademicSetupService {
         // 1. Save the new Subject definition
         Subject subject = Subject.builder()
                 .subjectName(request.getSubjectName())
-                .standard(schoolClass.getStandard()) // Inherit standard from the class
+                .standard(schoolClass.getAcademicStructure().getStandard()) // Inherit standard from the class
                 .subjectType(request.getSubjectType())
                 .theoryMarks(request.getTheoryMarks())
                 .practicalMarks(request.getPracticalMarks())
                 .totalMarks(request.getTotalMarks())
                 .passingMarks(request.getPassingMarks())
+                .weeklyHours(request.getWeeklyHours())
                 .build();
 
         subject = subjectRepository.save(subject);
@@ -197,5 +318,27 @@ public class AcademicSetupService {
         mapping.setTeacher(teacher);
 
         pivotRepository.save(mapping);
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> getAllDistinctStandards() {
+        verifyAndGetAdminRecord(); // Vault Check
+        return academicStructureRepository.findDistinctStandards();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AcademicStructureResponseDto> getDivisionsByStandard(String standard) {
+        verifyAndGetAdminRecord(); // Vault Check
+
+        List<AcademicStructure> structures = academicStructureRepository.findAllByStandard(standard);
+
+        // Map the entities to DTOs
+        return structures.stream()
+                .map(structure -> AcademicStructureResponseDto.builder()
+                        .id(structure.getId())
+                        .standard(structure.getStandard())
+                        .division(structure.getDivision())
+                        .build())
+                .toList();
     }
 }

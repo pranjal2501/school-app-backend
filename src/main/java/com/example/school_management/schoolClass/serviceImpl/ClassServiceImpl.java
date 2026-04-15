@@ -1,5 +1,6 @@
 package com.example.school_management.schoolClass.serviceImpl;
 
+import com.example.school_management.academics.entity.AcademicStructure;
 import com.example.school_management.common.enums.Gender;
 import com.example.school_management.schoolClass.dto.ClassRequestDto;
 import com.example.school_management.schoolClass.dto.ClassResponseDto;
@@ -51,7 +52,7 @@ public class ClassServiceImpl implements ClassService {
         verifyAdminIdentity();
 
         String className = request.getStandard() + "-" + request.getDivision();
-
+        AcademicStructure academicStructure = AcademicStructure.builder().standard(request.getStandard()).division(request.getDivision()).build();
         SchoolClass classEntity = new SchoolClass();
         classEntity.setClassName(className);
         classEntity.setGirls(request.getGirls());
@@ -59,8 +60,7 @@ public class ClassServiceImpl implements ClassService {
         classEntity.setCurrentBoys(0);
         classEntity.setCurrentGirls(0);
         classEntity.setTotalStudents(request.getTotalStudents());
-        classEntity.setDivision(request.getDivision());
-        classEntity.setStandard(request.getStandard());
+        classEntity.setAcademicStructure(academicStructure);
 
         return classMapper.toResponseDto(classRepository.save(classEntity));
     }
@@ -74,8 +74,8 @@ public class ClassServiceImpl implements ClassService {
 
         // Convert all DTOs to Entities
         for (ClassRequestDto request : requests) {
-            String className = request.getStandard().getValue() + "-" + request.getDivision().name();
-
+            String className = request.getStandard() + "-" + request.getDivision();
+            AcademicStructure academicStructure = AcademicStructure.builder().standard(request.getStandard()).division(request.getDivision()).build();
             SchoolClass classEntity = new SchoolClass();
             classEntity.setClassName(className);
             classEntity.setGirls(request.getGirls());
@@ -83,8 +83,7 @@ public class ClassServiceImpl implements ClassService {
             classEntity.setCurrentBoys(0);     // Defaulting to 0 on creation
             classEntity.setCurrentGirls(0);    // Defaulting to 0 on creation
             classEntity.setTotalStudents(request.getTotalStudents());
-            classEntity.setDivision(request.getDivision());
-            classEntity.setStandard(request.getStandard());
+            classEntity.setAcademicStructure(academicStructure);
 
             classesToSave.add(classEntity);
         }
@@ -120,13 +119,12 @@ public class ClassServiceImpl implements ClassService {
         SchoolClass existing = classRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Class", "id", id));
 
-        existing.setStandard(request.getStandard());
-        existing.setDivision(request.getDivision());
+        AcademicStructure academicStructure = AcademicStructure.builder().standard(request.getStandard()).division(request.getDivision()).build();
         existing.setTotalStudents(request.getTotalStudents());
         existing.setBoys(request.getBoys());
         existing.setGirls(request.getGirls());
 
-        String className = existing.getStandard() + "-" + existing.getDivision();
+        String className = existing.getAcademicStructure().getStandard() + "-" + existing.getAcademicStructure().getDivision();
         existing.setClassName(className);
 
         return classMapper.toResponseDto(classRepository.save(existing));

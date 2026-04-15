@@ -1,7 +1,6 @@
 package com.example.school_management.fees.controller;
 
 import com.example.school_management.common.ApiResponse;
-import com.example.school_management.common.enums.Standard;
 import com.example.school_management.fees.service.FeeService;
 import com.example.school_management.fees.dto.FeesRequestDto;
 import com.example.school_management.fees.dto.FeesResponseDto;
@@ -55,7 +54,7 @@ public class FeesController {
 
     @GetMapping("/std/{std}")
     public ResponseEntity<ApiResponse<List<FeesResponseDto>>> getFeesByStd(
-            @PathVariable Standard std) {
+            @PathVariable String std) {
 
         List<FeesResponseDto> response = feesService.getFeesByStd(std);
 
@@ -66,7 +65,7 @@ public class FeesController {
 
     @GetMapping("/std/{std}/year/{academicYear}")
     public ResponseEntity<ApiResponse<List<FeesResponseDto>>> getFeesByStdAndYear(
-            @PathVariable Standard std,
+            @PathVariable String std,
             @PathVariable String academicYear) {
 
         List<FeesResponseDto> response =
@@ -99,15 +98,15 @@ public class FeesController {
         );
     }
 
-    @GetMapping("/standards")
-    public ResponseEntity<ApiResponse<List<String>>> getStandards() {
-
-        List<String> standards = Arrays.stream(Standard.values())
-                .map(Standard::getValue)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Standards fetched successfully", standards)
-        );
-    }
+//    @GetMapping("/standards")
+//    public ResponseEntity<ApiResponse<List<String>>> getStandards() {
+//
+//        List<String> standards = Arrays.stream(Standard.values())
+//                .map(Standard::getValue)
+//                .collect(Collectors.toList());
+//
+//        return ResponseEntity.ok(
+//                ApiResponse.ok("Standards fetched successfully", standards)
+//        );
+//    }
 }

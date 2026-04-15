@@ -4,7 +4,6 @@ import com.example.school_management.common.ValidationMessages;
 import com.example.school_management.common.enums.FeeType;
 import com.example.school_management.common.enums.FineType;
 import com.example.school_management.common.enums.PaymentCycle;
-import com.example.school_management.common.enums.Standard;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -15,7 +14,7 @@ import java.util.List;
 public class FeesRequestDto {
 
     @NotNull(message = ValidationMessages.STANDARD_REQUIRED)
-    private Standard std;
+    private String std;
 
     @NotEmpty(message = ValidationMessages.FEE_ITEMS_REQUIRED)
     @Valid

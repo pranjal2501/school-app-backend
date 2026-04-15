@@ -2,8 +2,6 @@ package com.example.school_management.student.controller;
 
 import com.example.school_management.common.ApiResponse;
 import com.example.school_management.common.RoleVerifier;
-import com.example.school_management.common.enums.Division;
-import com.example.school_management.common.enums.Standard;
 import com.example.school_management.student.service.StudentService;
 import com.example.school_management.student.dto.*;
 import jakarta.validation.Valid;
@@ -118,8 +116,8 @@ public class StudentController {
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<StudentDropdownDto>>> searchStudents(
-            @RequestParam Standard standard,
-            @RequestParam Division division,
+            @RequestParam String standard,
+            @RequestParam String division,
             @RequestParam String query) {
 
         List<StudentDropdownDto> response = studentService.searchStudents(standard, division, query);
