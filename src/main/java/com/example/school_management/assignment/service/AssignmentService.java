@@ -1,23 +1,14 @@
 package com.example.school_management.assignment.service;
 
-import com.example.school_management.assignment.dto.AssignmentRequestDto;
-import com.example.school_management.assignment.dto.AssignmentResponseDto;
+
+import com.example.school_management.academics.dto.response.AssignmentResponseDto;
+import com.example.school_management.assignment.dto.request.AssignmentRequestDto;
+import com.example.school_management.assignment.dto.response.TeacherClassDropdownDto;
 
 import java.util.List;
 
 public interface AssignmentService {
-
-    AssignmentResponseDto createAssignment(AssignmentRequestDto requestDto);
-
-    AssignmentResponseDto updateAssignment(Long id, AssignmentRequestDto requestDto);
-
-    AssignmentResponseDto getAssignmentById(Long id);
-
-    List<AssignmentResponseDto> getAllAssignments();
-
-    void deleteAssignment(Long id);
-
-    AssignmentResponseDto publishAssignment(Long id);
-
-    AssignmentResponseDto cancelAssignment(Long id);
+    List<TeacherClassDropdownDto> getMyAllocations();
+    AssignmentResponseDto createAssignment(AssignmentRequestDto request);
+    List<AssignmentResponseDto> getAssignmentsForClass(Long classId);
 }
