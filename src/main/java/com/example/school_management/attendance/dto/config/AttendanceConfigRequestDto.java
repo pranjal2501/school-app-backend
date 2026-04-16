@@ -1,6 +1,6 @@
 package com.example.school_management.attendance.dto.config;
 
-import com.example.school_management.common.enums.Attendance.AttendanceType;
+import com.example.school_management.common.enums.attendance.AttendanceType;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 

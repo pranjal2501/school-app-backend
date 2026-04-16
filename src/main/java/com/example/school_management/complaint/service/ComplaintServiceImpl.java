@@ -2,7 +2,9 @@ package com.example.school_management.complaint.service;
 
 import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.admin.repository.AdminRepository;
+import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.enums.ComplaintStatus;
+import com.example.school_management.common.enums.Role;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.common.exception.UnauthorizedAccessException;
 import com.example.school_management.complaint.dto.*;
@@ -28,12 +30,15 @@ public class ComplaintServiceImpl implements ComplaintService {
     private final EmployeeRepository employeeRepository;
     private final ComplaintMapper complaintMapper;
     private final AdminRepository adminRepository;
+    private final RoleVerifier roleVerifier; // Injected for strict security context checks
 
-    // @Transactional ensures that if ANY step fails, the entire database operation rolls back.
-    // Isolation.READ_COMMITTED prevents reading "dirty" uncommitted data from other concurrent transactions.
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public ComplaintResponseDto raiseComplaint(ComplaintRequestDto request, String userIdentifier, boolean isAdmin) {
+    public ComplaintResponseDto raiseComplaint(ComplaintRequestDto request) {
+
+        // Securely retrieve the current session details
+        String currentUser = roleVerifier.getCurrentUsername();
+        boolean isAdmin = roleVerifier.hasRole(Role.ADMIN);
 
         // 1. Strict Validation: Target student
         Student targetStudent = studentRepository.findById(request.getTargetStudentId())
@@ -43,13 +48,13 @@ public class ComplaintServiceImpl implements ComplaintService {
         Complaint complaint = complaintMapper.toEntity(request);
         complaint.setTargetStudent(targetStudent);
 
-        // 3. Smart Raiser Resolution
+        // 3. Smart Raiser Resolution based on Role
         if (isAdmin) {
-            Admin adminRaiser = adminRepository.findByUsername(userIdentifier)
+            Admin adminRaiser = adminRepository.findByUsername(currentUser)
                     .orElseThrow(() -> new UnauthorizedAccessException("Admin session is invalid."));
             complaint.setReportedByAdmin(adminRaiser);
         } else {
-            Employee empRaiser = employeeRepository.findByIdentifier(userIdentifier)
+            Employee empRaiser = employeeRepository.findByIdentifier(currentUser)
                     .orElseThrow(() -> new UnauthorizedAccessException("Teacher session is invalid."));
             complaint.setReportedByEmployee(empRaiser);
         }
@@ -60,21 +65,18 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     @Transactional
-    public ComplaintResponseDto updateComplaintStatus(String ticketNumber, ComplaintStatusUpdateDto request, String userIdentifier, boolean isAdmin) {
+    public ComplaintResponseDto updateComplaintStatus(String ticketNumber, ComplaintStatusUpdateDto request) {
+
+        // Securely retrieve the current session details
+        String currentUser = roleVerifier.getCurrentUsername();
+        boolean isAdmin = roleVerifier.hasRole(Role.ADMIN);
 
         Complaint complaint = complaintRepository.findByTicketNumber(ticketNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint", "ticketNumber", ticketNumber));
 
         // --- 1. STRICT DOMAIN AUTHORIZATION: Admins or Class Teacher Only ---
         if (!isAdmin) {
-            boolean isClassTeacher = false;
-            if (complaint.getTargetStudent() != null && complaint.getTargetStudent().getAssignedClass() != null) {
-                Teacher classTeacher = complaint.getTargetStudent().getAssignedClass().getClassTeacher();
-                if (classTeacher != null && classTeacher.isIdentifiedBy(userIdentifier)) {
-                    isClassTeacher = true;
-                }
-            }
-            if (!isClassTeacher) {
+            if (!isClassTeacher(currentUser, complaint)) {
                 throw new UnauthorizedAccessException("Access Denied: Only an Administrator or the student's Class Teacher can resolve this complaint.");
             }
         }
@@ -94,10 +96,10 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         if (request.getNewStatus() == ComplaintStatus.RESOLVED) {
             if (isAdmin) {
-                adminResolver = adminRepository.findByUsername(userIdentifier)
+                adminResolver = adminRepository.findByUsername(currentUser)
                         .orElseThrow(() -> new UnauthorizedAccessException("Admin identity could not be verified."));
             } else {
-                employeeResolver = employeeRepository.findByIdentifier(userIdentifier)
+                employeeResolver = employeeRepository.findByIdentifier(currentUser)
                         .orElseThrow(() -> new UnauthorizedAccessException("Teacher identity could not be verified."));
             }
         }
@@ -119,18 +121,16 @@ public class ComplaintServiceImpl implements ComplaintService {
         return complaintMapper.toResponseDto(complaintRepository.save(complaint));
     }
 
-    private static boolean isClassTeacher(String userIdentifier, Complaint complaint) {
-        boolean isClassTeacher = false;
-
+    private static boolean isClassTeacher(String currentUser, Complaint complaint) {
         // Defensively navigate the relationships to find the Class Teacher
         if (complaint.getTargetStudent() != null && complaint.getTargetStudent().getAssignedClass() != null) {
             Teacher classTeacher = complaint.getTargetStudent().getAssignedClass().getClassTeacher();
 
             // Check if the current user is the class teacher
-            if (classTeacher != null && classTeacher.isIdentifiedBy(userIdentifier)) {
-                isClassTeacher = true;
+            if (classTeacher != null && classTeacher.isIdentifiedBy(currentUser)) {
+                return true;
             }
         }
-        return isClassTeacher;
+        return false;
     }
 }

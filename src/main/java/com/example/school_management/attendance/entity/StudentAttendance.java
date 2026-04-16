@@ -2,14 +2,10 @@ package com.example.school_management.attendance.entity;
 
 import com.example.school_management.attendance.JsonListConverter;
 import com.example.school_management.common.BaseEntity;
-import com.example.school_management.common.enums.Attendance.AttendanceType;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -32,6 +28,7 @@ import java.util.List;
                 @Index(name = "idx_sa_year_date", columnList = "academicYear, attendance_date")
         }
 )
+@Builder
 public class StudentAttendance extends BaseEntity {
 
     @Column(name = "attendance_date", nullable = false)

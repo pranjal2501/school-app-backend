@@ -7,6 +7,6 @@ import jakarta.validation.Valid;
 
 public interface ComplaintService {
 
-    ComplaintResponseDto raiseComplaint(ComplaintRequestDto request, String userIdentifier, boolean isAdmin);
-    ComplaintResponseDto updateComplaintStatus(String ticketNumber, @Valid ComplaintStatusUpdateDto request, String userIdentifier, boolean isAdmin);
+    ComplaintResponseDto raiseComplaint(ComplaintRequestDto request);
+    ComplaintResponseDto updateComplaintStatus(String ticketNumber, @Valid ComplaintStatusUpdateDto request);
 }

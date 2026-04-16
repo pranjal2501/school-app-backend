@@ -1,4 +1,4 @@
-package com.example.school_management.schoolClass.serviceImpl;
+package com.example.school_management.schoolClass.service;
 
 import com.example.school_management.academics.entity.AcademicStructure;
 import com.example.school_management.common.enums.Gender;
@@ -8,7 +8,6 @@ import com.example.school_management.schoolClass.dto.StudentRollNoResponseDto;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.schoolClass.mapper.ClassMapper;
 import com.example.school_management.schoolClass.repo.SchoolClassRepository;
-import com.example.school_management.schoolClass.service.ClassService;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.teacher.entity.Teacher;
 import com.example.school_management.common.exception.DuplicateResourceException;

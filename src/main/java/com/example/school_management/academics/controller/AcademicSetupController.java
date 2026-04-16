@@ -34,10 +34,9 @@ public class AcademicSetupController {
     @GetMapping("/standards/{standard}/subjects")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<SubjectWithTeachersResponseDto>>> getSubjectsForStandard(
-            @PathVariable String standard,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @PathVariable String standard) {
 
-        List<SubjectWithTeachersResponseDto> response = academicSetupService.getSubjectsByStandard(standard, userDetails.getUsername());
+        List<SubjectWithTeachersResponseDto> response = academicSetupService.getSubjectsByStandard(standard);
         return ResponseEntity.ok(ApiResponse.ok("Subjects fetched for standard: " + standard, response));
     }
 
@@ -57,22 +56,21 @@ public class AcademicSetupController {
      */
     @GetMapping("/classes/{classId}/subjects")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Object>> getSubjectsForClass(
+    public ResponseEntity<ApiResponse<List<SubjectWithTeachersResponseDto>>> getSubjectsForClass(
             @PathVariable Long classId) {
 
-        Object response = academicSetupService.getAllocationsByClass(classId);
+        List<SubjectWithTeachersResponseDto> response = academicSetupService.getAllocationsByClass(classId);
+
         return ResponseEntity.ok(ApiResponse.ok("Allocations fetched for class.", response));
     }
 
     @PostMapping("/standards/template")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> applyStandardTemplate(
-            @Valid @RequestBody StandardTemplateRequestDto request,
-            // Extracts the authenticated admin's identity directly from the security context
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @Valid @RequestBody StandardTemplateRequestDto request) {
 
         // Passing the admin username down to the service to record exactly who applied the template
-        academicSetupService.applyTemplateToStandard(request, userDetails.getUsername());
+        academicSetupService.applyTemplateToStandard(request);
 
         // Standardized the response to use your custom ApiResponse wrapper
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -83,10 +81,9 @@ public class AcademicSetupController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> overrideSubjectTeacher(
             @PathVariable Long classId,
-            @Valid @RequestBody ClassOverrideRequestDto request,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @Valid @RequestBody ClassOverrideRequestDto request) {
 
-        academicSetupService.overrideSubjectTeacher(classId, request, userDetails.getUsername());
+        academicSetupService.overrideSubjectTeacher(classId, request);
 
         return ResponseEntity.ok(ApiResponse.ok("Teacher override applied successfully for class.", null));
     }
@@ -95,10 +92,9 @@ public class AcademicSetupController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> removeSubjectFromClass(
             @PathVariable Long classId,
-            @PathVariable Long subjectId,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @PathVariable Long subjectId) {
 
-        academicSetupService.removeSubjectFromClass(classId, subjectId, userDetails.getUsername());
+        academicSetupService.removeSubjectFromClass(classId, subjectId);
 
         return ResponseEntity.ok(ApiResponse.ok("Subject successfully removed from the class.", null));
     }
@@ -107,10 +103,9 @@ public class AcademicSetupController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> createAndAllocateSubject(
             @PathVariable Long classId,
-            @Valid @RequestBody StandardTemplateRequestDto.SubjectTemplateDto request,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @Valid @RequestBody StandardTemplateRequestDto.SubjectTemplateDto request) {
 
-        academicSetupService.createAndAllocateSubjectToClass(classId, request, userDetails.getUsername());
+        academicSetupService.createAndAllocateSubjectToClass(classId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("New subject created and allocated successfully.", null));
@@ -120,16 +115,13 @@ public class AcademicSetupController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> allocateExistingSubject(
             @PathVariable Long classId,
-            @Valid @RequestBody ClassSubjectAllocationRequestDto request,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @Valid @RequestBody ClassSubjectAllocationRequestDto request) {
 
-        academicSetupService.allocateExistingSubjectToClass(classId, request, userDetails.getUsername());
+        academicSetupService.allocateExistingSubjectToClass(classId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Existing subject allocated to class successfully.", null));
     }
-
-    // --- NEW LOOKUP ENDPOINTS ---
 
     /**
      *  Fetches a list of all available distinct Standards (e.g., ["6", "7", "10"])

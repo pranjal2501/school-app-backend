@@ -2,11 +2,13 @@ package com.example.school_management.attendance.dto.studentAttendance;
 
 // ── RESPONSE — yearly summary report ────────────────────────────────
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
 
 @Data
+@Builder
 public class StudentAttendanceReportResponseDto {
 
     private String studentName;

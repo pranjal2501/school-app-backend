@@ -2,12 +2,14 @@ package com.example.school_management.attendance.dto.studentAttendance;
 
 // ── RESPONSE — monthly calendar (parent dashboard main screen) ───────
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Data
+@Builder
 public class StudentMonthlyCalendarResponseDto {
 
     private String studentName;

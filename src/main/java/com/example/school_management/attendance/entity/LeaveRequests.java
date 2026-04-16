@@ -2,9 +2,9 @@ package com.example.school_management.attendance.entity;
 
 import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.common.BaseEntity;
-import com.example.school_management.common.enums.Attendance.LeaveRequesterType;
-import com.example.school_management.common.enums.Attendance.LeaveStatus;
-import com.example.school_management.common.enums.Attendance.LeaveType;
+import com.example.school_management.common.enums.attendance.LeaveRequesterType;
+import com.example.school_management.common.enums.attendance.LeaveStatus;
+import com.example.school_management.common.enums.attendance.LeaveType;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;

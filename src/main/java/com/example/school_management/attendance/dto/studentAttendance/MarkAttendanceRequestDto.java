@@ -1,6 +1,6 @@
 package com.example.school_management.attendance.dto.studentAttendance;
 
-import com.example.school_management.common.enums.Attendance.AttendanceType;
+import com.example.school_management.common.enums.attendance.AttendanceType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;

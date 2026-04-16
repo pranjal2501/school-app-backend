@@ -39,7 +39,6 @@ public class SchoolHolidayService {
         }
 
         List<SchoolHolidays> entitiesToSave = new ArrayList<>();
-
         for (SchoolHolidayRequestDto dto : dtos) {
             if (dto.getHolidayDate().getDayOfWeek() == DayOfWeek.SUNDAY) {
                 throw new IllegalArgumentException("Date " + dto.getHolidayDate() + " is a Sunday. Sundays are already non-working days.");

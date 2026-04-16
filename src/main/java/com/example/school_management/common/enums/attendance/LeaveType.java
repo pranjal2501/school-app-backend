@@ -1,4 +1,4 @@
-package com.example.school_management.common.enums.Attendance;
+package com.example.school_management.common.enums.attendance;
 
 public enum LeaveType {
     SICK_LEAVE,

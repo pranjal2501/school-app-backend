@@ -1,11 +1,11 @@
 package com.example.school_management.security;
 
 import com.example.school_management.admin.entity.Admin;
-import com.example.school_management.employee.entity.Employee;
 import com.example.school_management.parent.entity.Parent;
+import com.example.school_management.teacher.entity.Teacher;
 import com.example.school_management.admin.repository.AdminRepository;
-import com.example.school_management.employee.repository.EmployeeRepository;
 import com.example.school_management.parent.repository.ParentRepository;
+import com.example.school_management.teacher.repository.TeacherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
@@ -16,16 +16,16 @@ import java.util.List;
 public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private EmployeeRepository employeeRepository;
+    private TeacherRepository teacherRepository;
+
     @Autowired
     private ParentRepository parentRepository;
+
     @Autowired
     private AdminRepository adminRepository;
 
-
     @Override
     public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
-
 
         var adminOpt = adminRepository.findByUsername(identifier);
         if (adminOpt.isPresent()) {
@@ -33,11 +33,12 @@ public class CustomUserDetailsService implements UserDetailsService {
             return buildUser(admin.getUsername(), admin.getPassword(), "ADMIN");
         }
 
-        var empOpt = employeeRepository.findByEmail(identifier)
-                .or(() -> employeeRepository.findByMobile(identifier));
-        if (empOpt.isPresent()) {
-            Employee emp = empOpt.get();
-            return buildUser(identifier, emp.getPassword(), emp.getRole().name());
+        var teacherOpt = teacherRepository.findByEmail(identifier)
+                .or(() -> teacherRepository.findByMobile(identifier));
+        if (teacherOpt.isPresent()) {
+            Teacher teacher = teacherOpt.get();
+            // Assuming your Teacher entity has a getRole() method returning an Enum (e.g., TEACHER)
+            return buildUser(identifier, teacher.getPassword(), teacher.getRole().name());
         }
 
         var parentOpt = parentRepository.findByEmail(identifier)

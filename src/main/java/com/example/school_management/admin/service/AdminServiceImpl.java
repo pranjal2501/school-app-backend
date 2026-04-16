@@ -5,10 +5,13 @@ import com.example.school_management.admin.dto.AdminRequestDto;
 import com.example.school_management.admin.dto.AdminResponseDto;
 import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.admin.repository.AdminRepository;
+import com.example.school_management.common.RoleVerifier;
+import com.example.school_management.common.enums.Role;
 import com.example.school_management.common.exception.DuplicateResourceException;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.common.exception.UnauthorizedAccessException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,30 +27,20 @@ public class AdminServiceImpl implements AdminService {
     private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
     private final AdminMapper adminMapper;
+    private final RoleVerifier roleVerifier;
 
-    private void verifyAdminIdentity() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new UnauthorizedAccessException("Authentication required to perform this action");
+    private void verifyAndGetAdminRecord() {
+        if (!roleVerifier.hasRole(Role.ADMIN)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access Denied: Only Admins can perform this action.");
         }
-
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
-
-        if (!isAdmin) {
-            throw new UnauthorizedAccessException("Identity Verification Failed: Only administrators can execute this operation");
-        }
+        adminRepository.findByUsername(roleVerifier.getCurrentUsername())
+                .orElseThrow(() -> new AccessDeniedException("Admin record not found."));
     }
 
     @Override
     @Transactional
     public AdminResponseDto createAdmin(AdminRequestDto request) {
-//        verifyAdminIdentity();
-
-        if (adminRepository.existsByUsername(request.getUsername())) {
-            throw new DuplicateResourceException("Admin", "username", request.getUsername());
-        }
+        verifyAndGetAdminRecord();
 
         Admin admin = adminMapper.toEntity(request);
         admin.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -58,13 +51,13 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public List<AdminResponseDto> getAllAdmins() {
-        verifyAdminIdentity();
+        verifyAndGetAdminRecord();
         return adminMapper.toResponseDtoList(adminRepository.findAll());
     }
 
     @Override
     public AdminResponseDto getAdminById(Long id) {
-        verifyAdminIdentity();
+        verifyAndGetAdminRecord();
 
         Admin admin = adminRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Admin", "id", id));

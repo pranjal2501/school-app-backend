@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -18,6 +19,7 @@ import java.time.LocalDate;
         )
 )
 @Data
+@Builder
 @NoArgsConstructor // Required by Hibernate
 @AllArgsConstructor // For Builder/Easy instantiation
 public class SchoolHolidays extends BaseEntity {

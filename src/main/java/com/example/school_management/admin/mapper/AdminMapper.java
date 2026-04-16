@@ -15,6 +15,9 @@ public class AdminMapper {
         Admin admin = new Admin();
         admin.setUsername(dto.getUsername());
         admin.setPassword(dto.getPassword());
+        admin.setEmail(dto.getEmail());
+        admin.setFirstName(dto.getFirstName());
+        admin.setLastName(dto.getLastName());
         return admin;
     }
 
@@ -22,6 +25,9 @@ public class AdminMapper {
         return AdminResponseDto.builder()
                 .id(admin.getId())
                 .username(admin.getUsername())
+                .email(admin.getEmail())
+                .firstName(admin.getFirstName())
+                .lastName(admin.getLastName())
                 .isActive(admin.isActive())
                 .build();
     }

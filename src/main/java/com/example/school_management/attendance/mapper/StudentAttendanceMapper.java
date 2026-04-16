@@ -17,7 +17,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Component
 @RequiredArgsConstructor
 public class StudentAttendanceMapper {
@@ -26,50 +25,60 @@ public class StudentAttendanceMapper {
                                       SchoolClass classEntity,
                                       Teacher markedBy,
                                       Subject subject) {
+        if (request == null) {
+            return null;
+        }
 
-        StudentAttendance attendance = new StudentAttendance();
-
-        attendance.setAttendanceDate(request.getAttendanceDate());
-        attendance.setAcademicYear(request.getAcademicYear());
-        attendance.setClassEntity(classEntity);
-        attendance.setMarkedBy(markedBy);
-
-        attendance.setAbsentRollNumbers(request.getAbsentRollNumbers() != null
-                ? request.getAbsentRollNumbers() : new ArrayList<>());
-        attendance.setLateRollNumbers(request.getLateRollNumbers() != null
-                ? request.getLateRollNumbers() : new ArrayList<>());
-        attendance.setHalfDayRollNumbers(request.getHalfDayRollNumbers() != null
-                ? request.getHalfDayRollNumbers() : new ArrayList<>());
-
-        return attendance;
+        return StudentAttendance.builder()
+                .attendanceDate(request.getAttendanceDate())
+                .academicYear(request.getAcademicYear())
+                .classEntity(classEntity)
+                .markedBy(markedBy)
+                // The subject parameter is passed but not utilized in the original entity setup,
+                // add it here if StudentAttendance has a subject field: .subject(subject)
+                .absentRollNumbers(request.getAbsentRollNumbers() != null ? request.getAbsentRollNumbers() : new ArrayList<>())
+                .lateRollNumbers(request.getLateRollNumbers() != null ? request.getLateRollNumbers() : new ArrayList<>())
+                .halfDayRollNumbers(request.getHalfDayRollNumbers() != null ? request.getHalfDayRollNumbers() : new ArrayList<>())
+                .build();
     }
 
     public MarkAttendanceResponseDto toMarkResponse(StudentAttendance saved, int totalStudents) {
-        MarkAttendanceResponseDto res = new MarkAttendanceResponseDto();
+        if (saved == null) {
+            return null;
+        }
 
-        res.setId(saved.getId());
-        res.setAttendanceDate(saved.getAttendanceDate());
-        res.setAcademicYear(saved.getAcademicYear());
-        res.setClassId(saved.getClassEntity().getId());
-        res.setClassName(saved.getClassEntity().getClassName());
-        res.setMarkedById(saved.getMarkedBy().getId());
-        res.setMarkedByName(saved.getMarkedBy().getFirstName() + " " + saved.getMarkedBy().getLastName());
+        List<Integer> absent = saved.getAbsentRollNumbers() != null ? saved.getAbsentRollNumbers() : new ArrayList<>();
+        List<Integer> late = saved.getLateRollNumbers() != null ? saved.getLateRollNumbers() : new ArrayList<>();
+        List<Integer> halfDay = saved.getHalfDayRollNumbers() != null ? saved.getHalfDayRollNumbers() : new ArrayList<>();
 
-        List<Integer> absent = saved.getAbsentRollNumbers();
-        List<Integer> late = saved.getLateRollNumbers();
-        List<Integer> halfDay = saved.getHalfDayRollNumbers();
+        // Safely extract nested entity data
+        Long classId = (saved.getClassEntity() != null) ? saved.getClassEntity().getId() : null;
+        String className = (saved.getClassEntity() != null) ? saved.getClassEntity().getClassName() : null;
 
-        res.setAbsentRollNumbers(absent);
-        res.setLateRollNumbers(late);
-        res.setHalfDayRollNumbers(halfDay);
+        Long markedById = null;
+        String markedByName = null;
+        if (saved.getMarkedBy() != null) {
+            markedById = saved.getMarkedBy().getId();
+            markedByName = saved.getMarkedBy().getFirstName() + " " + saved.getMarkedBy().getLastName();
+        }
 
-        res.setTotalStudents(totalStudents);
-        res.setTotalAbsent(absent.size());
-        res.setTotalLate(late.size());
-        res.setTotalHalfDay(halfDay.size());
-        res.setTotalPresent(totalStudents - absent.size() - late.size() - halfDay.size());
-
-        return res;
+        return MarkAttendanceResponseDto.builder()
+                .id(saved.getId())
+                .attendanceDate(saved.getAttendanceDate())
+                .academicYear(saved.getAcademicYear())
+                .classId(classId)
+                .className(className)
+                .markedById(markedById)
+                .markedByName(markedByName)
+                .absentRollNumbers(absent)
+                .lateRollNumbers(late)
+                .halfDayRollNumbers(halfDay)
+                .totalStudents(totalStudents)
+                .totalAbsent(absent.size())
+                .totalLate(late.size())
+                .totalHalfDay(halfDay.size())
+                .totalPresent(totalStudents - absent.size() - late.size() - halfDay.size())
+                .build();
     }
 
     public StudentAttendanceReportResponseDto toReportResponse(
@@ -83,26 +92,24 @@ public class StudentAttendanceMapper {
             Long totalPresent,
             Long sessionsConducted) {
 
-        StudentAttendanceReportResponseDto response = new StudentAttendanceReportResponseDto();
+        if (student == null || classEntity == null || config == null) {
+            return null;
+        }
 
-        response.setStudentName(student.getFirstName() + " " + student.getLastName());
-        response.setRollNumber(student.getRollNumber());
-        response.setClassName(classEntity.getClassName());
-        response.setAcademicYear(config.getAcademicYear());
-
-        response.setTotalWorkingDays(config.getStudentWorkingDays());
-        response.setDaysConducted(sessionsConducted);
-
-        response.setTotalAbsent(totalAbsent);
-        response.setTotalLate(totalLate);
-        response.setTotalHalfDay(totalHalfDay);
-
-        response.setTotalPresent(totalPresent);
-
-        response.setAttendancePercentage(percentage);
-        response.setIsShortage(percentage < config.getStudentMinAttendancePct());
-
-        return response;
+        return StudentAttendanceReportResponseDto.builder()
+                .studentName(student.getFirstName() + " " + student.getLastName())
+                .rollNumber(student.getRollNumber())
+                .className(classEntity.getClassName())
+                .academicYear(config.getAcademicYear())
+                .totalWorkingDays(config.getStudentWorkingDays())
+                .daysConducted(sessionsConducted)
+                .totalAbsent(totalAbsent)
+                .totalLate(totalLate)
+                .totalHalfDay(totalHalfDay)
+                .totalPresent(totalPresent)
+                .attendancePercentage(percentage)
+                .isShortage(percentage < config.getStudentMinAttendancePct())
+                .build();
     }
 
     public StudentMonthlyCalendarResponseDto toCalendarResponse(
@@ -115,19 +122,20 @@ public class StudentAttendanceMapper {
             int totalHolidays,
             float percentage) {
 
-        StudentMonthlyCalendarResponseDto res = new StudentMonthlyCalendarResponseDto();
-        res.setStudentName(student.getFirstName() + " " + student.getLastName());
-        res.setRollNumber(student.getRollNumber());
-        res.setClassName(classEntity.getClassName());
+        if (student == null || classEntity == null || monthStart == null) {
+            return null;
+        }
 
-        res.setMonth(monthStart.getMonth().name() + " " + monthStart.getYear());
-
-        res.setTotalPresent(totalPresent);
-        res.setTotalAbsent(totalAbsent);
-        res.setTotalHolidays(totalHolidays);
-        res.setAttendancePercentage(percentage);
-        res.setDailyRecords(dailyRecords);
-
-        return res;
+        return StudentMonthlyCalendarResponseDto.builder()
+                .studentName(student.getFirstName() + " " + student.getLastName())
+                .rollNumber(student.getRollNumber())
+                .className(classEntity.getClassName())
+                .month(monthStart.getMonth().name() + " " + monthStart.getYear())
+                .totalPresent(totalPresent)
+                .totalAbsent(totalAbsent)
+                .totalHolidays(totalHolidays)
+                .attendancePercentage(percentage)
+                .dailyRecords(dailyRecords)
+                .build();
     }
 }

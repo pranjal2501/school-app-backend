@@ -18,7 +18,6 @@ public class StudentAttendanceController {
 
     private final StudentAttendanceService attendanceService;
 
-
     //Mark attendance for a whole class.
     @PostMapping("/mark")
     @PreAuthorize("hasRole('TEACHER')")

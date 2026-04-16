@@ -1,12 +1,9 @@
 package com.example.school_management.attendance.entity;
 
 import com.example.school_management.common.BaseEntity;
-import com.example.school_management.common.enums.Attendance.AttendanceType;
+import com.example.school_management.common.enums.attendance.AttendanceType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 
 @Data
@@ -14,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity
+@Builder
 @Table(name = "attendance_configs",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_config_academic_year",
