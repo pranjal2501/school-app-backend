@@ -7,6 +7,7 @@ import com.example.school_management.common.enums.*;
 import com.example.school_management.complaint.entity.Complaint;
 import com.example.school_management.common.ValidationMessages;
 import com.example.school_management.common.BaseEntity;
+import com.example.school_management.grievance.bonafide.entity.BonafideRequest;
 import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -147,4 +148,7 @@ public class Student extends BaseEntity {
 
     @OneToMany(mappedBy = "student")
     private List<LeaveRequests> leaveRequests;
+
+    @OneToMany(mappedBy = "student")
+    private List<BonafideRequest> bonafideRequests;
 }
