@@ -1,282 +1,88 @@
 package com.example.school_management.assignment.service;
 
-import com.example.school_management.assignment.repository.AssignmentRepository;
-import com.example.school_management.assignment.dto.AssignmentRequestDto;
-import com.example.school_management.assignment.dto.AssignmentResponseDto;
+import com.example.school_management.academics.dto.response.AssignmentResponseDto;
+import com.example.school_management.academics.entity.ClassSubjectTeacher;
+import com.example.school_management.academics.repository.ClassSubjectTeacherRepository;
+import com.example.school_management.assignment.dto.request.AssignmentRequestDto;
+import com.example.school_management.assignment.dto.response.TeacherClassDropdownDto;
 import com.example.school_management.assignment.entity.Assignment;
 import com.example.school_management.assignment.mapper.AssignmentMapper;
-import com.example.school_management.schoolClass.entity.SchoolClass;
-import com.example.school_management.schoolClass.repo.SchoolClassRepository;
-import com.example.school_management.subject.entity.Subject;
-import com.example.school_management.teacher.entity.Teacher;
-import com.example.school_management.common.enums.AssignmentMarkingType;
-import com.example.school_management.common.enums.AssignmentStatus;
-import com.example.school_management.common.enums.AssignmentType;
+import com.example.school_management.assignment.repository.AssignmentRepository;
+import com.example.school_management.common.RoleVerifier;
+import com.example.school_management.common.enums.Role;
 import com.example.school_management.common.exception.ResourceNotFoundException;
-import com.example.school_management.subject.repository.SubjectRepository;
+import com.example.school_management.teacher.entity.Teacher;
 import com.example.school_management.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
-public class AssignmentServiceImpl implements AssignmentService {
+public class AssignmentServiceImpl implements AssignmentService{
 
     private final AssignmentRepository assignmentRepository;
+    private final ClassSubjectTeacherRepository pivotRepository;
     private final TeacherRepository teacherRepository;
-    private final SchoolClassRepository classRepository;
-    private final SubjectRepository subjectRepository;
     private final AssignmentMapper assignmentMapper;
+    private final RoleVerifier roleVerifier;
 
-    @Override
-    public AssignmentResponseDto createAssignment(AssignmentRequestDto dto) {
-
-        Teacher teacher = findTeacher(dto.getTeacherId());
-        SchoolClass assignedClass = findClass(dto.getClassId());
-        Subject subject = findSubject(dto.getSubjectId());
-
-        validateMarkingType(dto.getAssignmentType(), dto.getMarkingType());
-        validateMarksFields(dto.getMarkingType(), dto.getTotalMarks(), dto.getPassingMarks());
-        validateLateSubmission(dto.getAllowLateSubmission(), dto.getDueDate(), dto.getLateSubmissionDueDate());
-
-        Assignment saved = assignmentRepository.save(
-                assignmentMapper.toEntity(dto, teacher, assignedClass, subject));
-
-        log.info("Assignment created with id: {}", saved.getId());
-        return assignmentMapper.toResponseDto(saved);
-    }
-
-    @Override
-    public AssignmentResponseDto updateAssignment(Long id, AssignmentRequestDto dto) {
-
-        Assignment assignment = findAssignmentById(id);
-
-        switch (assignment.getStatus()) {
-            case DRAFT:
-            case PUBLISHED:
-                break;
-            case CLOSED:
-                throw new IllegalStateException("CLOSED assignment cannot be updated.");
-            case CANCELLED:
-                throw new IllegalStateException("CANCELLED assignment cannot be updated.");
-            default:
-                throw new IllegalStateException("Invalid status.");
+    private Teacher getCurrentTeacher() {
+        if (!roleVerifier.hasRole(Role.TEACHER)) {
+            throw new AccessDeniedException("Only teachers can perform this action.");
         }
-
-        Teacher teacher = findTeacher(dto.getTeacherId());
-        SchoolClass assignedClass = findClass(dto.getClassId());
-        Subject subject = findSubject(dto.getSubjectId());
-
-        validateMarkingType(dto.getAssignmentType(), dto.getMarkingType());
-        validateMarksFields(dto.getMarkingType(), dto.getTotalMarks(), dto.getPassingMarks());
-        validateLateSubmission(dto.getAllowLateSubmission(), dto.getDueDate(), dto.getLateSubmissionDueDate());
-
-        assignmentMapper.updateEntity(dto, assignment, teacher, assignedClass, subject);
-        Assignment updated = assignmentRepository.save(assignment);
-
-        log.info("Assignment updated with id: {}", updated.getId());
-        return assignmentMapper.toResponseDto(updated);
+        String username = roleVerifier.getCurrentUsername();
+        return teacherRepository.findByEmail(username)
+                .or(() -> teacherRepository.findByMobile(username))
+                .orElseThrow(() -> new AccessDeniedException("Teacher profile not found."));
     }
 
-    @Override
+    /**
+     * Powers the UI Dropdown so the Teacher knows exactly what classes they can assign work to.
+     */
+    @Transactional(readOnly = true)
+    public List<TeacherClassDropdownDto> getMyAllocations() {
+        Teacher currentTeacher = getCurrentTeacher();
+
+        List<ClassSubjectTeacher> myAllocations = pivotRepository.findAllByTeacherId(currentTeacher.getId());
+
+        // Pass the entire list to the mapper for grouping
+        return assignmentMapper.toClassDropdownList(myAllocations);
+    }
+
     @Transactional
-    public AssignmentResponseDto getAssignmentById(Long id) {
-        Assignment assignment = findAssignmentById(id);
-        autoCloseIfOverdue(assignment);
-        return assignmentMapper.toResponseDto(assignment);
-    }
+    public AssignmentResponseDto createAssignment(AssignmentRequestDto request) {
+        Teacher currentTeacher = getCurrentTeacher();
 
-    @Override
-    public List<AssignmentResponseDto> getAllAssignments() {
-        return assignmentMapper.toResponseDtoList(assignmentRepository.findAll());
-    }
+        // 1. Check if the Subject is actually taught in this Class (Triggers 404 Not Found)
+        ClassSubjectTeacher allocation = pivotRepository
+                .findBySchoolClassIdAndSubjectId(request.getClassId(), request.getSubjectId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Allocation", "Class/Subject", request.getClassId() + "/" + request.getSubjectId()));
 
-    @Override
-    public void deleteAssignment(Long id) {
-        Assignment assignment = findAssignmentById(id);
-
-        switch (assignment.getStatus()) {
-            case DRAFT:
-            case CANCELLED:
-                break;
-            case PUBLISHED:
-                throw new IllegalStateException("PUBLISHED assignment cannot be deleted. Cancel it first.");
-            case CLOSED:
-                throw new IllegalStateException("CLOSED assignment cannot be deleted.");
-            default:
-                throw new IllegalStateException("Invalid status.");
+        // 2. STRICT DOMAIN CHECK: Is THIS teacher the one teaching it? (Triggers 403 Forbidden)
+        if (!allocation.getTeacher().getId().equals(currentTeacher.getId())) {
+            throw new AccessDeniedException(
+                    "You are not authorized to assign work to this class. The designated teacher is "
+                            + allocation.getTeacher().getFirstName() + " " + allocation.getTeacher().getLastName());
         }
 
-        assignmentRepository.delete(assignment);
-        log.info("Assignment deleted with id: {}", id);
-    }
-
-    @Override
-    public AssignmentResponseDto publishAssignment(Long id) {
-        Assignment assignment = findAssignmentById(id);
-
-        switch (assignment.getStatus()) {
-            case DRAFT:
-                if (assignment.getDueDate().isBefore(LocalDateTime.now())) {
-                    throw new IllegalStateException(
-                            "Cannot publish an assignment whose due date has already passed.");
-                }
-                assignment.setStatus(AssignmentStatus.PUBLISHED);
-                break;
-            case PUBLISHED:
-                throw new IllegalStateException("Assignment is already PUBLISHED.");
-            case CLOSED:
-                throw new IllegalStateException("CLOSED assignment cannot be published.");
-            case CANCELLED:
-                throw new IllegalStateException("CANCELLED assignment cannot be published.");
-            default:
-                throw new IllegalStateException("Invalid status.");
-        }
-
+        // 3. Map and Save
+        Assignment assignment = assignmentMapper.toEntity(request, allocation);
         Assignment saved = assignmentRepository.save(assignment);
-        log.info("Assignment published with id: {}", id);
+
         return assignmentMapper.toResponseDto(saved);
     }
 
-    @Override
-    public AssignmentResponseDto cancelAssignment(Long id) {
-        Assignment assignment = findAssignmentById(id);
-
-        switch (assignment.getStatus()) {
-            case DRAFT:
-            case PUBLISHED:
-                assignment.setStatus(AssignmentStatus.CANCELLED);
-                break;
-            case CLOSED:
-                throw new IllegalStateException("CLOSED assignment cannot be cancelled.");
-            case CANCELLED:
-                throw new IllegalStateException("Assignment is already CANCELLED.");
-            default:
-                throw new IllegalStateException("Invalid status.");
-        }
-
-        Assignment saved = assignmentRepository.save(assignment);
-        log.info("Assignment cancelled with id: {}", id);
-        return assignmentMapper.toResponseDto(saved);
-    }
-
-    private Assignment findAssignmentById(Long id) {
-        return assignmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Assignment not found with id: " + id));
-    }
-
-    private Teacher findTeacher(Long id) {
-        return teacherRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Teacher not found with id: " + id));
-    }
-
-    private SchoolClass findClass(Long id) {
-        return classRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Class not found with id: " + id));
-    }
-
-    private Subject findSubject(Long id) {
-        return subjectRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Subject not found with id: " + id));
-    }
-
-    private void autoCloseIfOverdue(Assignment assignment) {
-        switch (assignment.getStatus()) {
-            case PUBLISHED:
-                LocalDateTime effectiveDueDate = Boolean.TRUE.equals(assignment.getAllowLateSubmission())
-                        && assignment.getLateSubmissionDueDate() != null
-                        ? assignment.getLateSubmissionDueDate()
-                        : assignment.getDueDate();
-
-                if (effectiveDueDate != null && LocalDateTime.now().isAfter(effectiveDueDate)) {
-                    assignment.setStatus(AssignmentStatus.CLOSED);
-                    assignmentRepository.save(assignment);
-                    log.info("Assignment auto-closed with id: {}", assignment.getId());
-                }
-                break;
-            case DRAFT:
-            case CLOSED:
-            case CANCELLED:
-                break;
-            default:
-                throw new IllegalStateException("Invalid status.");
-        }
-    }
-
-    private void validateMarkingType(AssignmentType assignmentType, AssignmentMarkingType markingType) {
-        if (assignmentType == null || markingType == null) return;
-
-        boolean isCheckBased = assignmentType == AssignmentType.HOMEWORK
-                || assignmentType == AssignmentType.CLASSWORK;
-
-        boolean isCheckMarkingType = markingType == AssignmentMarkingType.CHECKED
-                || markingType == AssignmentMarkingType.UNCHECKED;
-
-        if (isCheckBased && !isCheckMarkingType) {
-            throw new IllegalArgumentException(
-                    "HOMEWORK and CLASSWORK assignments can only use CHECKED or UNCHECKED marking type.");
-        }
-
-        if (!isCheckBased && isCheckMarkingType) {
-            throw new IllegalArgumentException(
-                    "PROJECT, QUIZ, and EXAM assignments must use MARKS, GRADE, or PASS_FAIL marking type.");
-        }
-    }
-
-    private void validateMarksFields(AssignmentMarkingType markingType, Integer totalMarks, Integer passingMarks) {
-        if (markingType == null) return;
-
-        switch (markingType) {
-            case MARKS, PASS_FAIL -> {
-                if (totalMarks == null) {
-                    throw new IllegalArgumentException(
-                            "Total marks are required for " + markingType + " marking type.");
-                }
-                if (passingMarks == null) {
-                    throw new IllegalArgumentException(
-                            "Passing marks are required for " + markingType + " marking type.");
-                }
-                if (passingMarks > totalMarks) {
-                    throw new IllegalArgumentException(
-                            "Passing marks cannot be greater than total marks.");
-                }
-            }
-            case CHECKED, UNCHECKED -> {
-                if (totalMarks != null || passingMarks != null) {
-                    throw new IllegalArgumentException(
-                            "Marks fields must not be set for CHECKED or UNCHECKED marking type.");
-                }
-            }
-            case GRADE -> { }
-        }
-    }
-
-    private void validateLateSubmission(Boolean allowLateSubmission, LocalDateTime dueDate,
-                                        LocalDateTime lateSubmissionDueDate) {
-        if (Boolean.TRUE.equals(allowLateSubmission)) {
-            if (lateSubmissionDueDate == null) {
-                throw new IllegalArgumentException(
-                        "Late submission due date is required when late submission is allowed.");
-            }
-            if (dueDate != null && !lateSubmissionDueDate.isAfter(dueDate)) {
-                throw new IllegalArgumentException(
-                        "Late submission due date must be after the original due date.");
-            }
-        } else {
-            if (lateSubmissionDueDate != null) {
-                throw new IllegalArgumentException(
-                        "Late submission due date must not be set when late submission is not allowed.");
-            }
-        }
+    @Transactional(readOnly = true)
+    public List<AssignmentResponseDto> getAssignmentsForClass(Long classId) {
+        // Anyone authenticated can view assignments (Students, Parents, Teachers, Admins)
+        return assignmentRepository.findAllByAllocation_SchoolClass_Id(classId)
+                .stream()
+                .map(assignmentMapper::toResponseDto)
+                .toList();
     }
 }

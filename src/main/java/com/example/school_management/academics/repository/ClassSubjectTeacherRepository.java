@@ -12,4 +12,6 @@ public interface ClassSubjectTeacherRepository extends JpaRepository<ClassSubjec
 
     List<ClassSubjectTeacher> findAllBySchoolClassId(Long classId);
     List<ClassSubjectTeacher> findAllBySubject_Standard(String standard);
+    // Used to populate the Teacher's Dropdown
+    List<ClassSubjectTeacher> findAllByTeacherId(Long teacherId);
 }

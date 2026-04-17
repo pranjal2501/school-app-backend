@@ -1,88 +1,85 @@
 package com.example.school_management.assignment.mapper;
 
-import com.example.school_management.assignment.dto.AssignmentRequestDto;
-import com.example.school_management.assignment.dto.AssignmentResponseDto;
+import com.example.school_management.academics.dto.response.AssignmentResponseDto;
+import com.example.school_management.academics.entity.ClassSubjectTeacher;
+import com.example.school_management.assignment.dto.request.AssignmentRequestDto;
+import com.example.school_management.assignment.dto.response.TeacherClassDropdownDto;
+import com.example.school_management.assignment.dto.response.TeacherSubjectDropdownDto;
 import com.example.school_management.assignment.entity.Assignment;
-import com.example.school_management.schoolClass.entity.SchoolClass;
-import com.example.school_management.subject.entity.Subject;
-import com.example.school_management.teacher.entity.Teacher;
-import com.example.school_management.common.enums.AssignmentStatus;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class AssignmentMapper {
 
-    public Assignment toEntity(AssignmentRequestDto dto, Teacher teacher, SchoolClass assignedClass, Subject subject) {
-        Assignment assignment = new Assignment();
-        applyDtoToEntity(dto, assignment, teacher, assignedClass, subject);
-        assignment.setAssignedDate(LocalDateTime.now());
-        assignment.setStatus(AssignmentStatus.DRAFT);
-        return assignment;
+    public Assignment toEntity(AssignmentRequestDto dto, ClassSubjectTeacher allocation) {
+        if (dto == null || allocation == null) return null;
+
+        return Assignment.builder()
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .documentUrl(dto.getDocumentUrl())
+                .assignmentType(dto.getAssignmentType())
+                .dueDate(dto.getDueDate())
+                .totalMarks(dto.getTotalMarks())
+                .allocation(allocation)
+                .build();
     }
 
-    public void updateEntity(AssignmentRequestDto dto, Assignment assignment, Teacher teacher, SchoolClass assignedClass, Subject subject) {
-        applyDtoToEntity(dto, assignment, teacher, assignedClass, subject);
+    public AssignmentResponseDto toResponseDto(Assignment entity) {
+        if (entity == null) return null;
+
+        ClassSubjectTeacher alloc = entity.getAllocation();
+        String teacherName = alloc.getTeacher().getFirstName() + " " + alloc.getTeacher().getLastName();
+
+        return AssignmentResponseDto.builder()
+                .id(entity.getId())
+                .title(entity.getTitle())
+                .description(entity.getDescription())
+                .documentUrl(entity.getDocumentUrl())
+                .assignmentType(entity.getAssignmentType())
+                .dueDate(entity.getDueDate())
+                .totalMarks(entity.getTotalMarks())
+                .createdAt(entity.getCreatedAt())
+                .classId(alloc.getSchoolClass().getId())
+                .className(alloc.getSchoolClass().getClassName())
+                .subjectId(alloc.getSubject().getId())
+                .subjectName(alloc.getSubject().getSubjectName())
+                .teacherName(teacherName)
+                .build();
     }
-
-    public AssignmentResponseDto toResponseDto(Assignment assignment) {
-        AssignmentResponseDto dto = new AssignmentResponseDto();
-
-        dto.setId(assignment.getId());
-        dto.setTitle(assignment.getTitle());
-        dto.setDescription(assignment.getDescription());
-        dto.setAssignmentType(assignment.getAssignmentType());
-        dto.setMarkingType(assignment.getMarkingType());
-        dto.setTotalMarks(assignment.getTotalMarks());
-        dto.setPassingMarks(assignment.getPassingMarks());
-        dto.setAssignedDate(assignment.getAssignedDate());
-        dto.setDueDate(assignment.getDueDate());
-        dto.setStatus(assignment.getStatus());
-        dto.setAllowLateSubmission(assignment.getAllowLateSubmission());
-        dto.setLateSubmissionDueDate(assignment.getLateSubmissionDueDate());
-        dto.setAllowedFileTypes(assignment.getAllowedFileTypes());
-
-        if (assignment.getTeacher() != null) {
-            dto.setTeacherId(assignment.getTeacher().getId());
-            dto.setTeacherName(assignment.getTeacher().getFirstName() + " " + assignment.getTeacher().getLastName());
+    // Add this to AssignmentMapper.java
+    public List<TeacherClassDropdownDto> toClassDropdownList(List<ClassSubjectTeacher> allocations) {
+        if (allocations == null || allocations.isEmpty()) {
+            return new ArrayList<>();
         }
 
-        if (assignment.getAssignedClass() != null) {
-            dto.setClassId(assignment.getAssignedClass().getId());
-        }
+        // 1. Group the allocations by the SchoolClass entity
+        java.util.Map<com.example.school_management.schoolClass.entity.SchoolClass, List<ClassSubjectTeacher>> groupedAllocations =
+                allocations.stream().collect(java.util.stream.Collectors.groupingBy(ClassSubjectTeacher::getSchoolClass));
 
-        if (assignment.getSubject() != null) {
-            dto.setSubjectId(assignment.getSubject().getId());
-            dto.setSubjectName(assignment.getSubject().getSubjectName());
-        }
+        // 2. Map the grouped map into the nested DTO structure
+        return groupedAllocations.entrySet().stream()
+                .map(entry -> {
+                    com.example.school_management.schoolClass.entity.SchoolClass schoolClass = entry.getKey();
 
-        return dto;
-    }
+                    // Build the inner list of subjects
+                    List<TeacherSubjectDropdownDto> subjects = entry.getValue().stream()
+                            .map(alloc -> TeacherSubjectDropdownDto.builder()
+                                    .subjectId(alloc.getSubject().getId())
+                                    .subjectName(alloc.getSubject().getSubjectName())
+                                    .build())
+                            .toList();
 
-    public List<AssignmentResponseDto> toResponseDtoList(List<Assignment> assignments) {
-        return assignments.stream()
-                .map(this::toResponseDto)
-                .collect(Collectors.toList());
-    }
-
-
-    private void applyDtoToEntity(AssignmentRequestDto dto, Assignment assignment,
-                                  Teacher teacher, SchoolClass assignedClass, Subject subject) {
-        assignment.setTitle(dto.getTitle());
-        assignment.setDescription(dto.getDescription());
-        assignment.setAssignmentType(dto.getAssignmentType());
-        assignment.setMarkingType(dto.getMarkingType());
-        assignment.setTotalMarks(dto.getTotalMarks());
-        assignment.setPassingMarks(dto.getPassingMarks());
-        assignment.setDueDate(dto.getDueDate());
-        assignment.setAllowLateSubmission(dto.getAllowLateSubmission() != null ? dto.getAllowLateSubmission() : false);
-        assignment.setLateSubmissionDueDate(Boolean.TRUE.equals(dto.getAllowLateSubmission()) ? dto.getLateSubmissionDueDate() : null);
-        assignment.setAllowedFileTypes(dto.getAllowedFileTypes());
-        assignment.setTeacher(teacher);
-        assignment.setAssignedClass(assignedClass);
-        assignment.setSubject(subject);
+                    // Build the outer class wrapper
+                    return TeacherClassDropdownDto.builder()
+                            .classId(schoolClass.getId())
+                            .className(schoolClass.getClassName())
+                            .subjects(subjects)
+                            .build();
+                })
+                .toList();
     }
 }

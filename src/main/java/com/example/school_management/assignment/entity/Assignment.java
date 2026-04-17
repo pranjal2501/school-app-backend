@@ -1,92 +1,55 @@
 package com.example.school_management.assignment.entity;
 
-import com.example.school_management.schoolClass.entity.SchoolClass;
-import com.example.school_management.subject.entity.Subject;
-import com.example.school_management.teacher.entity.Teacher;
-import com.example.school_management.common.enums.AssignmentMarkingType;
-import com.example.school_management.common.enums.AssignmentStatus;
+import com.example.school_management.academics.entity.ClassSubjectTeacher;
 import com.example.school_management.common.enums.AssignmentType;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
-import static com.example.school_management.common.ValidationMessages.*;
-
 @Entity
 @Table(name = "assignments")
-@Data
-@SuperBuilder
+@Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Assignment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = ASSIGNMENT_TITLE_REQUIRED)
-    @Size(max = 255, message = ASSIGNMENT_TITLE_MAX)
-    @Column(name = "title", nullable = false)
+    @Column(nullable = false)
     private String title;
 
-    @Size(max = 2000, message = ASSIGNMENT_DESCRIPTION_MAX)
-    @Column(name = "description", length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @NotNull(message = ASSIGNMENT_TYPE_REQUIRED)
+    // This will hold the AWS S3 / Cloudinary URL for the PDF/Word doc
+    @Column(name = "document_url")
+    private String documentUrl;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "assignment_type", nullable = false, length = 20)
+    @Column(name = "assignment_type", nullable = false)
     private AssignmentType assignmentType;
 
-    @NotNull(message = MARKING_TYPE_REQUIRED)
-    @Enumerated(EnumType.STRING)
-    @Column(name = "marking_type", nullable = false, length = 20)
-    private AssignmentMarkingType markingType;
-
-    @Min(value = 0, message = ASSIGNMENT_TOTAL_MARKS_MIN)
-    @Column(name = "total_marks")
-    private Integer totalMarks;
-
-    @Min(value = 0, message = ASSIGNMENT_PASSING_MARKS_MIN)
-    @Column(name = "passing_marks")
-    private Integer passingMarks;
-
-    @Column(name = "assigned_date", nullable = false, updatable = false)
-    private LocalDateTime assignedDate;
-
-    @NotNull(message = DUE_DATE_REQUIRED)
     @Column(name = "due_date", nullable = false)
     private LocalDateTime dueDate;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
-    private AssignmentStatus status;
+    @Column(name = "total_marks")
+    private Integer totalMarks;
 
-    @Column(name = "allow_late_submission", nullable = false)
-    private Boolean allowLateSubmission = false;
-
-    @Column(name = "late_submission_due_date")
-    private LocalDateTime lateSubmissionDueDate;
-
-    @Size(max = 500, message = ALLOWED_FILE_TYPES_MAX)
-    @Column(name = "allowed_file_types", length = 500)
-    private String allowedFileTypes;
-
-    @NotNull(message = CLASS_REQUIRED)
+    // 🔒 THE VAULT: This single relationship locks the assignment to a valid Teacher+Class+Subject combo
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "class_id", nullable = false)
-    private SchoolClass assignedClass;
+    @JoinColumn(name = "class_subject_teacher_id", nullable = false)
+    private ClassSubjectTeacher allocation;
 
-    @NotNull(message = TEACHER_REQUIRED)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "teacher_id", nullable = false)
-    private Teacher teacher;
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
-    @NotNull(message = SUBJECT_REQUIRED_ASSIGNMENT)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "subject_id", nullable = false)
-    private Subject subject;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }
