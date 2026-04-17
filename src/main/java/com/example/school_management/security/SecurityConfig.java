@@ -37,7 +37,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admins/create").permitAll()
                         // ADD THIS LINE to allow Spring Boot to show you actual errors:
                         .requestMatchers("/error").permitAll()
-
+                        .requestMatchers("/api/v1/seeder/**").permitAll()
                         .requestMatchers("/teachers/**").authenticated()
                         .requestMatchers("/api/students/**").authenticated()
                         .requestMatchers("/finance/**").authenticated()

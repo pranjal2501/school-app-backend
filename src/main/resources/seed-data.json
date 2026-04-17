@@ -1,0 +1,129 @@
+{
+  "admin": {
+    "firstName": "Super",
+    "lastName": "Admin",
+    "email": "admin@school.com",
+    "username": "admin_master",
+    "password": "SecurePassword123!"
+  },
+  "classes": [
+    { "standard": "1", "divisions": ["A", "B", "C", "D"] },
+    { "standard": "2", "divisions": ["A", "B", "C", "D"] },
+    { "standard": "3", "divisions": ["A", "B", "C", "D"] },
+    { "standard": "4", "divisions": ["A", "B", "C", "D"] },
+    { "standard": "5", "divisions": ["A", "B", "C", "D"] },
+    { "standard": "6", "divisions": ["A", "B", "C", "D"] },
+    { "standard": "7", "divisions": ["A", "B", "C", "D"] },
+    { "standard": "8", "divisions": ["A", "B", "C", "D"] },
+    { "standard": "9", "divisions": ["A", "B", "C", "D"] },
+    { "standard": "10", "divisions": ["A", "B", "C", "D"] },
+    { "standard": "11", "divisions": ["A", "B", "C", "D"] },
+    { "standard": "12", "divisions": ["A", "B", "C", "D"] }
+  ],
+  "teachers": [
+    { "firstName": "Alice", "middleName": "M", "lastName": "Smith", "email": "alice@school.com", "mobile": "9000000001", "gender": "FEMALE", "dob": "1985-05-10", "joiningDate": "2020-06-01", "yearsOfExperienceInCurrentSchool": 5, "aadharNo": "111122220001", "panNo": "ABCDE1234F" },
+    { "firstName": "Bob", "middleName": "J", "lastName": "Johnson", "email": "bob@school.com", "mobile": "9000000002", "gender": "MALE", "dob": "1980-08-15", "joiningDate": "2018-04-10", "yearsOfExperienceInCurrentSchool": 7, "aadharNo": "111122220002", "panNo": "FGHIJ5678K" },
+    { "firstName": "Charlie", "middleName": "T", "lastName": "Brown", "email": "charlie@school.com", "mobile": "9000000003", "gender": "MALE", "dob": "1990-12-01", "joiningDate": "2021-08-15", "yearsOfExperienceInCurrentSchool": 4, "aadharNo": "111122220003", "panNo": "LMNOP9012Q" },
+    { "firstName": "Diana", "middleName": "L", "lastName": "Prince", "email": "diana@school.com", "mobile": "9000000004", "gender": "FEMALE", "dob": "1988-03-22", "joiningDate": "2019-06-05", "yearsOfExperienceInCurrentSchool": 6, "aadharNo": "111122220004", "panNo": "RSTUV3456W" },
+    { "firstName": "Ethan", "middleName": "R", "lastName": "Hunt", "email": "ethan@school.com", "mobile": "9000000005", "gender": "MALE", "dob": "1975-07-30", "joiningDate": "2015-01-20", "yearsOfExperienceInCurrentSchool": 10, "aadharNo": "111122220005", "panNo": "XYZAB7890C" },
+    { "firstName": "Fiona", "middleName": "K", "lastName": "Gallagher", "email": "fiona@school.com", "mobile": "9000000006", "gender": "FEMALE", "dob": "1992-11-18", "joiningDate": "2022-09-01", "yearsOfExperienceInCurrentSchool": 3, "aadharNo": "111122220006", "panNo": "DEFGH1234I" },
+    { "firstName": "George", "middleName": "W", "lastName": "Miller", "email": "george@school.com", "mobile": "9000000007", "gender": "MALE", "dob": "1983-02-14", "joiningDate": "2017-05-15", "yearsOfExperienceInCurrentSchool": 8, "aadharNo": "111122220007", "panNo": "JKLMN5678O" },
+    { "firstName": "Hannah", "middleName": "S", "lastName": "Abbott", "email": "hannah@school.com", "mobile": "9000000008", "gender": "FEMALE", "dob": "1995-09-05", "joiningDate": "2023-01-10", "yearsOfExperienceInCurrentSchool": 2, "aadharNo": "111122220008", "panNo": "PQRST9012U" },
+    { "firstName": "Ian", "middleName": "D", "lastName": "Malcolm", "email": "ian@school.com", "mobile": "9000000009", "gender": "MALE", "dob": "1978-04-20", "joiningDate": "2016-08-01", "yearsOfExperienceInCurrentSchool": 9, "aadharNo": "111122220009", "panNo": "VWXYZ3456A" },
+    { "firstName": "Julia", "middleName": "E", "lastName": "Roberts", "email": "julia@school.com", "mobile": "9000000010", "gender": "FEMALE", "dob": "1989-10-31", "joiningDate": "2020-11-01", "yearsOfExperienceInCurrentSchool": 5, "aadharNo": "111122220010", "panNo": "BCDEF7890G" }
+  ],
+  "standardTemplates": [
+    {
+      "standard": "7",
+      "subjects": [
+        { "subjectName": "Mathematics", "subjectType": "COMPULSORY", "theoryMarks": 80, "practicalMarks": 20, "totalMarks": 100, "passingMarks": 35, "internalMarks": 10, "projectMarks": 10, "oralMarks": 0, "weeklyHours": 5, "defaultTeacherId": 1 },
+        { "subjectName": "Science", "subjectType": "COMPULSORY", "theoryMarks": 80, "practicalMarks": 20, "totalMarks": 100, "passingMarks": 35, "internalMarks": 10, "projectMarks": 10, "oralMarks": 0, "weeklyHours": 5, "defaultTeacherId": 2 },
+        { "subjectName": "English", "subjectType": "COMPULSORY", "theoryMarks": 80, "practicalMarks": 20, "totalMarks": 100, "passingMarks": 35, "internalMarks": 10, "projectMarks": 10, "oralMarks": 0, "weeklyHours": 4, "defaultTeacherId": 3 },
+        { "subjectName": "History", "subjectType": "COMPULSORY", "theoryMarks": 80, "practicalMarks": 20, "totalMarks": 100, "passingMarks": 35, "internalMarks": 10, "projectMarks": 10, "oralMarks": 0, "weeklyHours": 3, "defaultTeacherId": 4 },
+        { "subjectName": "Geography", "subjectType": "COMPULSORY", "theoryMarks": 80, "practicalMarks": 20, "totalMarks": 100, "passingMarks": 35, "internalMarks": 10, "projectMarks": 10, "oralMarks": 0, "weeklyHours": 3, "defaultTeacherId": 5 },
+        { "subjectName": "Computer Science", "subjectType": "OPTIONAL", "theoryMarks": 50, "practicalMarks": 50, "totalMarks": 100, "passingMarks": 35, "internalMarks": 0, "projectMarks": 0, "oralMarks": 0, "weeklyHours": 2, "defaultTeacherId": 6 },
+        { "subjectName": "French", "subjectType": "OPTIONAL", "theoryMarks": 80, "practicalMarks": 20, "totalMarks": 100, "passingMarks": 35, "internalMarks": 10, "projectMarks": 10, "oralMarks": 0, "weeklyHours": 2, "defaultTeacherId": 7 }
+      ]
+    }
+  ],
+  "students": [
+    { "firstName": "Stu01", "lastName": "Test", "gender": "MALE", "dob": "2013-01-01", "aadharNo": "999988880001", "standard": "7", "parent": { "fatherFirstName": "Dad01", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom01", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500001", "email": "parent01@school.com", "aadharNo": "888877770001", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu02", "lastName": "Test", "gender": "FEMALE", "dob": "2013-02-01", "aadharNo": "999988880002", "standard": "7", "parent": { "fatherFirstName": "Dad02", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom02", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500002", "email": "parent02@school.com", "aadharNo": "888877770002", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu03", "lastName": "Test", "gender": "MALE", "dob": "2013-03-01", "aadharNo": "999988880003", "standard": "7", "parent": { "fatherFirstName": "Dad03", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom03", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500003", "email": "parent03@school.com", "aadharNo": "888877770003", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu04", "lastName": "Test", "gender": "FEMALE", "dob": "2013-04-01", "aadharNo": "999988880004", "standard": "7", "parent": { "fatherFirstName": "Dad04", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom04", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500004", "email": "parent04@school.com", "aadharNo": "888877770004", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu05", "lastName": "Test", "gender": "MALE", "dob": "2013-05-01", "aadharNo": "999988880005", "standard": "7", "parent": { "fatherFirstName": "Dad05", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom05", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500005", "email": "parent05@school.com", "aadharNo": "888877770005", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu06", "lastName": "Test", "gender": "FEMALE", "dob": "2013-06-01", "aadharNo": "999988880006", "standard": "7", "parent": { "fatherFirstName": "Dad06", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom06", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500006", "email": "parent06@school.com", "aadharNo": "888877770006", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu07", "lastName": "Test", "gender": "MALE", "dob": "2013-07-01", "aadharNo": "999988880007", "standard": "7", "parent": { "fatherFirstName": "Dad07", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom07", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500007", "email": "parent07@school.com", "aadharNo": "888877770007", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu08", "lastName": "Test", "gender": "FEMALE", "dob": "2013-08-01", "aadharNo": "999988880008", "standard": "7", "parent": { "fatherFirstName": "Dad08", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom08", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500008", "email": "parent08@school.com", "aadharNo": "888877770008", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu09", "lastName": "Test", "gender": "MALE", "dob": "2013-09-01", "aadharNo": "999988880009", "standard": "7", "parent": { "fatherFirstName": "Dad09", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom09", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500009", "email": "parent09@school.com", "aadharNo": "888877770009", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu10", "lastName": "Test", "gender": "FEMALE", "dob": "2013-10-01", "aadharNo": "999988880010", "standard": "7", "parent": { "fatherFirstName": "Dad10", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom10", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500010", "email": "parent10@school.com", "aadharNo": "888877770010", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu11", "lastName": "Test", "gender": "MALE", "dob": "2013-11-01", "aadharNo": "999988880011", "standard": "7", "parent": { "fatherFirstName": "Dad11", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom11", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500011", "email": "parent11@school.com", "aadharNo": "888877770011", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu12", "lastName": "Test", "gender": "FEMALE", "dob": "2013-12-01", "aadharNo": "999988880012", "standard": "7", "parent": { "fatherFirstName": "Dad12", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom12", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500012", "email": "parent12@school.com", "aadharNo": "888877770012", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu13", "lastName": "Test", "gender": "MALE", "dob": "2013-01-15", "aadharNo": "999988880013", "standard": "7", "parent": { "fatherFirstName": "Dad13", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom13", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500013", "email": "parent13@school.com", "aadharNo": "888877770013", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu14", "lastName": "Test", "gender": "FEMALE", "dob": "2013-02-15", "aadharNo": "999988880014", "standard": "7", "parent": { "fatherFirstName": "Dad14", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom14", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500014", "email": "parent14@school.com", "aadharNo": "888877770014", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu15", "lastName": "Test", "gender": "MALE", "dob": "2013-03-15", "aadharNo": "999988880015", "standard": "7", "parent": { "fatherFirstName": "Dad15", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom15", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500015", "email": "parent15@school.com", "aadharNo": "888877770015", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu16", "lastName": "Test", "gender": "FEMALE", "dob": "2013-04-15", "aadharNo": "999988880016", "standard": "7", "parent": { "fatherFirstName": "Dad16", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom16", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500016", "email": "parent16@school.com", "aadharNo": "888877770016", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu17", "lastName": "Test", "gender": "MALE", "dob": "2013-05-15", "aadharNo": "999988880017", "standard": "7", "parent": { "fatherFirstName": "Dad17", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom17", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500017", "email": "parent17@school.com", "aadharNo": "888877770017", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu18", "lastName": "Test", "gender": "FEMALE", "dob": "2013-06-15", "aadharNo": "999988880018", "standard": "7", "parent": { "fatherFirstName": "Dad18", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom18", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500018", "email": "parent18@school.com", "aadharNo": "888877770018", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu19", "lastName": "Test", "gender": "MALE", "dob": "2013-07-15", "aadharNo": "999988880019", "standard": "7", "parent": { "fatherFirstName": "Dad19", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom19", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500019", "email": "parent19@school.com", "aadharNo": "888877770019", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu20", "lastName": "Test", "gender": "FEMALE", "dob": "2013-08-15", "aadharNo": "999988880020", "standard": "7", "parent": { "fatherFirstName": "Dad20", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom20", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500020", "email": "parent20@school.com", "aadharNo": "888877770020", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu21", "lastName": "Test", "gender": "MALE", "dob": "2013-09-15", "aadharNo": "999988880021", "standard": "7", "parent": { "fatherFirstName": "Dad21", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom21", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500021", "email": "parent21@school.com", "aadharNo": "888877770021", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu22", "lastName": "Test", "gender": "FEMALE", "dob": "2013-10-15", "aadharNo": "999988880022", "standard": "7", "parent": { "fatherFirstName": "Dad22", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom22", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500022", "email": "parent22@school.com", "aadharNo": "888877770022", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu23", "lastName": "Test", "gender": "MALE", "dob": "2013-11-15", "aadharNo": "999988880023", "standard": "7", "parent": { "fatherFirstName": "Dad23", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom23", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500023", "email": "parent23@school.com", "aadharNo": "888877770023", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu24", "lastName": "Test", "gender": "FEMALE", "dob": "2013-12-15", "aadharNo": "999988880024", "standard": "7", "parent": { "fatherFirstName": "Dad24", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom24", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500024", "email": "parent24@school.com", "aadharNo": "888877770024", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu25", "lastName": "Test", "gender": "MALE", "dob": "2013-01-20", "aadharNo": "999988880025", "standard": "7", "parent": { "fatherFirstName": "Dad25", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom25", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500025", "email": "parent25@school.com", "aadharNo": "888877770025", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu26", "lastName": "Test", "gender": "FEMALE", "dob": "2013-02-20", "aadharNo": "999988880026", "standard": "7", "parent": { "fatherFirstName": "Dad26", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom26", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500026", "email": "parent26@school.com", "aadharNo": "888877770026", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu27", "lastName": "Test", "gender": "MALE", "dob": "2013-03-20", "aadharNo": "999988880027", "standard": "7", "parent": { "fatherFirstName": "Dad27", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom27", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500027", "email": "parent27@school.com", "aadharNo": "888877770027", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu28", "lastName": "Test", "gender": "FEMALE", "dob": "2013-04-20", "aadharNo": "999988880028", "standard": "7", "parent": { "fatherFirstName": "Dad28", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom28", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500028", "email": "parent28@school.com", "aadharNo": "888877770028", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu29", "lastName": "Test", "gender": "MALE", "dob": "2013-05-20", "aadharNo": "999988880029", "standard": "7", "parent": { "fatherFirstName": "Dad29", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom29", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500029", "email": "parent29@school.com", "aadharNo": "888877770029", "aadharOwnerType": "FATHER" } },
+    { "firstName": "Stu30", "lastName": "Test", "gender": "FEMALE", "dob": "2013-06-20", "aadharNo": "999988880030", "standard": "7", "parent": { "fatherFirstName": "Dad30", "fatherMiddleName": "M", "fatherLastName": "Test", "fatherOccupation": "Service", "motherFirstName": "Mom30", "motherMiddleName": "M", "motherLastName": "Test", "motherOccupation": "Homemaker", "mobilePrimary": "9876500030", "email": "parent30@school.com", "aadharNo": "888877770030", "aadharOwnerType": "FATHER" } }
+  ],
+  "classAssignments": [
+    { "studentId": [], "division": "A" },
+    { "studentId": [], "division": "B" },
+    { "studentId": [], "division": "C" },
+    { "studentId": [], "division": "D" }
+  ],
+  "assignments": [
+    {
+      "teacherUsername": "alice@school.com",
+      "payload": {
+        "title": "Algebra Basics",
+        "description": "Complete exercises 1 to 20.",
+        "assignmentType": "HOMEWORK",
+        "dueDate": "2026-05-01T10:00:00",
+        "totalMarks": 20,
+        "classId": 25,
+        "subjectId": 1
+      }
+    },
+    {
+      "teacherUsername": "bob@school.com",
+      "payload": {
+        "title": "Physics Experiment Log",
+        "description": "Submit your findings for the gravity experiment.",
+        "assignmentType": "PROJECT",
+        "dueDate": "2026-05-10T23:59:00",
+        "totalMarks": 50,
+        "classId": 26,
+        "subjectId": 2
+      }
+    }
+  ],
+  "complaints": [
+    {
+      "targetStudentId": 1,
+      "title": "Disruptive Behavior",
+      "description": "Student was constantly interrupting the math lecture.",
+      "category": "DISCIPLINE",
+      "priority": "MEDIUM"
+    },
+    {
+      "targetStudentId": 16,
+      "title": "Missing Homework",
+      "description": "Student has failed to submit the last 3 assignments.",
+      "category": "ACADEMIC",
+      "priority": "HIGH"
+    }
+  ]
+}

@@ -50,6 +50,10 @@ public class RoleVerifier {
     }
 
     public String getCurrentUsername() {
-        return getAuthentication().getName();
+        Object principal = getAuthentication().getPrincipal();
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+            return ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+        }
+        return principal.toString();
     }
 }

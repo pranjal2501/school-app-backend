@@ -42,7 +42,6 @@ public class StudentSubjectMark {
     @Column(name = "exam_term", nullable = false)
     private ExamTerm examTerm;
 
-    // --- OBTAINED MARKS ---
     @Min(0)
     @Column(name = "theory_obtained")
     private Integer theoryObtained;

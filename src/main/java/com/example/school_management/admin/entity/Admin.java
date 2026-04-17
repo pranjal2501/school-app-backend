@@ -1,7 +1,7 @@
 package com.example.school_management.admin.entity;
 
 import com.example.school_management.attendance.entity.LeaveRequests;
-import com.example.school_management.attendance.entity.TeacherAttendance;
+//import com.example.school_management.attendance.entity.TeacherAttendance;
 import com.example.school_management.complaint.entity.Complaint;
 import com.example.school_management.student.entity.Student;
 import jakarta.persistence.*;
@@ -60,8 +60,8 @@ public class Admin {
     @OneToMany(mappedBy = "addedBy", fetch = FetchType.LAZY)
     List<Student> admittedStudents = new ArrayList<>();
 
-    @OneToMany(mappedBy = "markedBy")
-    private List<TeacherAttendance> teacherAttendances;
+//    @OneToMany(mappedBy = "markedBy")
+//    private List<TeacherAttendance> teacherAttendances;
 
     @OneToMany(mappedBy = "approvedBy")
     private List<LeaveRequests> leaveRequests;
