@@ -112,4 +112,87 @@ public class EmailServiceImpl implements EmailService {
             }
         }
     }
+
+    @Async
+    @Override
+    public void sendBonafideApproved(String toEmail, String parentName,
+                                     String studentName, byte[] imageBytes) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(senderEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("Bonafide Certificate Approved – " + studentName);
+            helper.setText(buildBonafideApprovedTemplate(parentName, studentName), true);
+            helper.addAttachment(
+                    "Bonafide_" + studentName.replace(" ", "_") + ".png",
+                    () -> new java.io.ByteArrayInputStream(imageBytes),
+                    "image/png"
+            );
+
+            mailSender.send(message);
+            log.info("Bonafide approval email sent to: {}", toEmail);
+
+        } catch (MessagingException e) {
+            log.error("Failed to send bonafide approval email to: {}. Error: {}", toEmail, e.getMessage());
+        }
+    }
+
+    @Async
+    @Override
+    public void sendBonafideRejected(String toEmail, String parentName,
+                                     String studentName, String remarks) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+
+            helper.setFrom(senderEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("Bonafide Request Update – " + studentName);
+            helper.setText(buildBonafideRejectedTemplate(parentName, studentName, remarks), true);
+
+            mailSender.send(message);
+            log.info("Bonafide rejection email sent to: {}", toEmail);
+
+        } catch (MessagingException e) {
+            log.error("Failed to send bonafide rejection email to: {}. Error: {}", toEmail, e.getMessage());
+        }
+    }
+
+    private String buildBonafideApprovedTemplate(String parentName, String studentName) {
+        return "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;\">"
+                + "<h2 style=\"color: #2c3e50; text-align: center;\">Bonafide Certificate Approved ✓</h2>"
+                + "<p style=\"color: #333; font-size: 16px;\">Dear <strong>" + parentName + "</strong>,</p>"
+                + "<p style=\"color: #333; font-size: 16px; line-height: 1.5;\">We are pleased to inform you that the bonafide certificate request for <strong>" + studentName + "</strong> has been <span style=\"color: #27ae60; font-weight: bold;\">approved</span> by the school administration.</p>"
+
+                // Info box
+                + "<div style=\"background-color: #f0fff4; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #27ae60;\">"
+                + "<p style=\"margin: 5px 0; font-size: 16px;\">📎 The bonafide certificate is attached to this email as a <strong>PDF</strong>.</p>"
+                + "<p style=\"margin: 5px 0; font-size: 14px; color: #555;\">Please download and keep it safe for your records.</p>"
+                + "</div>"
+
+                + "<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\" />"
+                + "<p style=\"color: #555; font-size: 14px;\">Best Regards,<br><strong style=\"color: #2c3e50;\">School Administration Team</strong></p>"
+                + "</div>";
+    }
+
+    private String buildBonafideRejectedTemplate(String parentName, String studentName, String remarks) {
+        return "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;\">"
+                + "<h2 style=\"color: #2c3e50; text-align: center;\">Bonafide Request Update</h2>"
+                + "<p style=\"color: #333; font-size: 16px;\">Dear <strong>" + parentName + "</strong>,</p>"
+                + "<p style=\"color: #333; font-size: 16px; line-height: 1.5;\">We regret to inform you that the bonafide certificate request for <strong>" + studentName + "</strong> has been <span style=\"color: #e74c3c; font-weight: bold;\">rejected</span> by the school administration.</p>"
+
+                // Reason box
+                + "<div style=\"background-color: #fff5f5; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #e74c3c;\">"
+                + "<p style=\"margin: 5px 0; font-size: 16px;\"><strong>Reason:</strong></p>"
+                + "<p style=\"margin: 5px 0; font-size: 16px; color: #555;\">" + remarks + "</p>"
+                + "</div>"
+
+                + "<p style=\"color: #333; font-size: 15px;\">Please visit the school administration office or submit a new request after addressing the above reason.</p>"
+
+                + "<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\" />"
+                + "<p style=\"color: #555; font-size: 14px;\">Best Regards,<br><strong style=\"color: #2c3e50;\">School Administration Team</strong></p>"
+                + "</div>";
+    }
 }

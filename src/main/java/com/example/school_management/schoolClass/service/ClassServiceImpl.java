@@ -175,8 +175,8 @@ public class ClassServiceImpl implements ClassService {
             .filter(Student::isActive)
             .sorted(Comparator
                     .comparing((Student s) -> s.getGender() == Gender.MALE ? 0 : 1)  // boys first
-                    .thenComparing(Student::getFirstName)                              // then A-Z by first name
-                    .thenComparing(Student::getLastName))                              // tie-break by last name
+                    .thenComparing(Student::getLastName)                              // then A-Z by first name
+                    .thenComparing(Student::getFirstName))                              // tie-break by last name
             .toList();
 
         List<String> response= new ArrayList<>();

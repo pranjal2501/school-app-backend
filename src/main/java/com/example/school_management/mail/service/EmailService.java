@@ -14,4 +14,7 @@ public interface EmailService {
 
     @Async
     void sendBulkAdmissionEmails(List<StudentEmailData> emailDataList);
+
+    void sendBonafideApproved(String toEmail, String parentName, String studentName, byte[] imageBytes);
+    void sendBonafideRejected(String toEmail, String parentName, String studentName, String remarks);
 }
