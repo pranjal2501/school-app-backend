@@ -1,5 +1,7 @@
 package com.example.school_management.student.repository;
 
+import com.example.school_management.parent.entity.Parent;
+import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.student.entity.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -29,4 +31,6 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     List<Student> findByAssignedClass_Id(Long classId);
 
     Optional<Student> findByAssignedClass_IdAndRollNumber(Long classId, Integer rollNumber);
+
+    List<Student> findByAssignedClassIdIn(List<Long> targetClasses);
 }

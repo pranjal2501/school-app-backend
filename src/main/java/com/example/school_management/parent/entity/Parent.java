@@ -151,4 +151,11 @@ public class Parent {
 
     @OneToMany(mappedBy = "requestedBy")
     private List<BonafideRequest> bonafideRequestList;
+
+    public boolean isIdentifiedBy(String identifier) {
+        if (identifier == null || identifier.trim().isEmpty()) {
+            return false;
+        }
+        return identifier.equalsIgnoreCase(this.email) || identifier.equals(this.mobilePrimary);
+    }
 }

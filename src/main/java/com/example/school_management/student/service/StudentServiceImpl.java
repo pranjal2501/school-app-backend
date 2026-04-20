@@ -5,12 +5,18 @@ import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.admin.repository.AdminRepository;
 import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.enums.Role;
+import com.example.school_management.common.enums.notify.AudienceType;
+import com.example.school_management.common.enums.notify.NotificationType;
 import com.example.school_management.common.payload.StudentEmailData;
 import com.example.school_management.common.enums.Gender;
 import com.example.school_management.common.exception.DuplicateResourceException;
 import com.example.school_management.common.exception.OutOfCapacityException;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.mail.service.EmailService;
+import com.example.school_management.notify.entity.Notification;
+import com.example.school_management.notify.entity.UserNotification;
+import com.example.school_management.notify.repository.NotificationRepository;
+import com.example.school_management.notify.repository.UserNotificationRepository;
 import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.parent.mapper.ParentMapper;
 import com.example.school_management.parent.repository.ParentRepository;
@@ -21,11 +27,13 @@ import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.mapper.StudentMapper;
 import com.example.school_management.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.User;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -38,6 +46,8 @@ public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
     private final SchoolClassRepository classRepository;
     private final AdminRepository adminRepository;
+    private final NotificationRepository notificationRepository;
+    private final UserNotificationRepository userNotificationRepository;
     private final StudentMapper studentMapper;
     private final ParentRepository parentRepository;
     private final PasswordEncoder passwordEncoder;
@@ -92,6 +102,8 @@ public class StudentServiceImpl implements StudentService {
                 parent.getEmail(),
                 autoPassword
         );
+
+        notifyToCompleteProfile(student);
 
         return studentMapper.toResponseDto(student);
     }
@@ -312,5 +324,32 @@ public class StudentServiceImpl implements StudentService {
         student.setAddedBy(admin);
         student.setActive(true);
         return student;
+    }
+
+    private void notifyToCompleteProfile(Student student) {
+        Parent parent=student.getParent();
+        if (parent == null) return;
+
+        Notification notification = Notification.builder()
+                .title("Complete the profile")
+                .description("Attention parent please complete the profile of your child "+ student.getFirstName()+ " as soon as possible")
+                .shortInfo("Hello "+student.getParent().getFatherLastName()+" , please complete the student profile for "+ student.getFirstName() + ".")
+                .audienceType(AudienceType.PARENT)
+                .notificationType(NotificationType.UPDATE)
+                .eventDateTime(LocalDateTime.now()) // immediate event
+                .scheduledDispatchTime(LocalDateTime.now())
+                .dispatched(true)
+                .build();
+
+        notificationRepository.save(notification);
+
+        UserNotification userNotification = UserNotification.builder()
+                .notification(notification)
+                .parent(parent)
+                .deliveredAt(LocalDateTime.now())
+                .build();
+
+        userNotificationRepository.save(userNotification);
+
     }
 }

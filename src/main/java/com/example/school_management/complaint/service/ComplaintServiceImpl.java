@@ -73,6 +73,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
 
         Complaint saved=complaintRepository.save(complaint);
+        complaintRepository.flush();
         notifyParentsOnComplaint(complaint, targetStudent);
         // 4. Save and Return
         return complaintMapper.toResponseDto(saved);

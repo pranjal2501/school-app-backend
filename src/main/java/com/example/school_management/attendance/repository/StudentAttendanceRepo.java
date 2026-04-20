@@ -1,11 +1,14 @@
 package com.example.school_management.attendance.repository;
 
 import com.example.school_management.attendance.entity.StudentAttendance;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -93,5 +96,8 @@ public interface StudentAttendanceRepo extends JpaRepository<StudentAttendance, 
 
     @Query(value = "SELECT COUNT(*) FROM student_attendances WHERE class_id = :classId AND academic_year = :year", nativeQuery = true)
     long countTotalSessionsConducted(@Param("classId") Long classId, @Param("year") String year);
+
+    //List<StudentAttendance> findTopNByClassEntityIdOrderByAttendanceDateDesc(@NotNull(message = "Class ID is required") Long classId, int threshold);
+    List<StudentAttendance> findByClassEntityIdOrderByAttendanceDateDesc(Long classId, Pageable pageable);
 
 }

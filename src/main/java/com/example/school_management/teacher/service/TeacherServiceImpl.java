@@ -1,10 +1,18 @@
 package com.example.school_management.teacher.service;
 
 import com.example.school_management.common.enums.Role;
+import com.example.school_management.common.enums.notify.AudienceType;
+import com.example.school_management.common.enums.notify.NotificationType;
 import com.example.school_management.common.exception.DuplicateResourceException;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.common.exception.UnauthorizedAccessException;
 import com.example.school_management.mail.service.EmailService;
+import com.example.school_management.notify.entity.Notification;
+import com.example.school_management.notify.entity.UserNotification;
+import com.example.school_management.notify.repository.NotificationRepository;
+import com.example.school_management.notify.repository.UserNotificationRepository;
+import com.example.school_management.parent.entity.Parent;
+import com.example.school_management.student.entity.Student;
 import com.example.school_management.subject.entity.Subject;
 import com.example.school_management.subject.repository.SubjectRepository;
 import com.example.school_management.teacher.dto.TeacherFromAdminRequestDto;
@@ -20,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -33,6 +42,8 @@ public class TeacherServiceImpl implements TeacherService {
     private final TeacherMapper teacherMapper;
     private final PasswordEncoder passwordEncoder;
     private final SubjectRepository subjectRepository;
+    private final NotificationRepository notificationRepository;
+    private final UserNotificationRepository userNotificationRepository;
     private final EmailService emailService;
 
     private void verifyAdminOrOwnerIdentity(Teacher targetTeacher) {
@@ -102,12 +113,15 @@ public class TeacherServiceImpl implements TeacherService {
         teacher.setPassword(passwordEncoder.encode(rawPassword));
 
         Teacher savedTeacher = teacherRepository.save(teacher);
+        teacherRepository.flush();
 
         emailService.sendTeacherOnboardingEmail(
                 savedTeacher.getEmail(),
                 savedTeacher.getFirstName() + " " + savedTeacher.getLastName(),
                 rawPassword
         );
+
+        notifyToCompleteProfile(savedTeacher);
 
         return teacherMapper.toResponseDto(savedTeacher);
     }
@@ -182,5 +196,31 @@ public class TeacherServiceImpl implements TeacherService {
     private String getSafeSubstring(String value, int length) {
         if (value == null) return "";
         return value.length() < length ? value : value.substring(0, length);
+    }
+
+// ===================== HELPER METHODS ===========================
+
+    private void notifyToCompleteProfile(Teacher savedTeacher) {
+
+        Notification notification = Notification.builder()
+                .title("Complete Profile")
+                .description("Attention "+ savedTeacher.getFirstName() +" complete the remaining profile from your login")
+                .shortInfo("Complete the profile")
+                .audienceType(AudienceType.TEACHER)
+                .notificationType(NotificationType.UPDATE)
+                .eventDateTime(LocalDateTime.now()) // immediate event
+                .scheduledDispatchTime(LocalDateTime.now())
+                .dispatched(true)
+                .build();
+
+        notificationRepository.save(notification);
+
+        UserNotification userNotification = UserNotification.builder()
+                .notification(notification)
+                .teacher(savedTeacher)
+                .deliveredAt(LocalDateTime.now())
+                .build();
+
+        userNotificationRepository.save(userNotification);
     }
 }

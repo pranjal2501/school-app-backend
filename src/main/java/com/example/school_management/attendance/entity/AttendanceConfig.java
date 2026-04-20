@@ -25,6 +25,7 @@ public class AttendanceConfig extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private AttendanceType attendanceType = AttendanceType.DAY_WISE;
 
     @Column(nullable = false)
@@ -39,12 +40,13 @@ public class AttendanceConfig extends BaseEntity {
     @Column(nullable = false)
     private Integer teacherWorkingDays;
 
+    @Builder.Default
     private Boolean allowLateMarks = true;
 
-    @Column(nullable = false)
     private Integer lateMarksWindow;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean notifyParentOnAbsent = true;
 
     private Integer absentNotifyThreshold;

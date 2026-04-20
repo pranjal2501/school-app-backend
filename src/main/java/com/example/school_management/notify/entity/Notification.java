@@ -1,18 +1,21 @@
 package com.example.school_management.notify.entity;
 
 import com.example.school_management.common.enums.notify.*;
+import com.example.school_management.schoolClass.entity.SchoolClass;
+import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
 @Entity
 @Table(name = "notifications")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -52,12 +55,26 @@ public class Notification {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "notification_target_classes",
+            joinColumns = @JoinColumn(name = "notification_id"),
+            inverseJoinColumns = @JoinColumn(name = "class_id")
+    )
+    private Set<SchoolClass> targetClasses = new HashSet<>();
+
+    @ElementCollection
+    @CollectionTable(name = "notification_teacher_targets",
+            joinColumns = @JoinColumn(name = "notification_id"))
+    @Column(name = "teacher_id")
+    private Set<Long> teacherIds = new HashSet<>();
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
-        if (Boolean.TRUE.equals(this.dispatched)) return;
 
-        // Dispatch window: 3 days before for parents, 10 days for teachers
+        if (this.scheduledDispatchTime != null) return; // already set by mapper (dispatchNow = true)
+
         if (this.audienceType == AudienceType.PARENT) {
             this.scheduledDispatchTime = this.eventDateTime.minusDays(3);
         } else {

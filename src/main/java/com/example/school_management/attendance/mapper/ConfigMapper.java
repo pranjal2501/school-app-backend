@@ -56,7 +56,7 @@ public class ConfigMapper {
     }
 
     // Setters remain here because you cannot use a Builder to update an existing, attached Hibernate entity.
-    private void mapDtoToEntity(AttendanceConfigRequestDto dto, AttendanceConfig entity) {
+    public void mapDtoToEntity(AttendanceConfigRequestDto dto, AttendanceConfig entity) {
         entity.setAcademicYear(dto.getAcademicYear());
         entity.setAttendanceType(dto.getAttendanceType());
         entity.setStudentWorkingDays(dto.getStudentWorkingDays());
