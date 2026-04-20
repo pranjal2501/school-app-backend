@@ -1,6 +1,5 @@
 package com.example.school_management.common.enums;
 
-public enum Gender
-{
+public enum Gender{
     MALE, FEMALE, OTHER
 }

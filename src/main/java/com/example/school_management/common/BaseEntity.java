@@ -17,7 +17,7 @@ import java.time.Instant;
 public abstract class BaseEntity
 {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "shared_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "shared_seq")
     @SequenceGenerator(name = "shared_seq", sequenceName = "shared_sequence", allocationSize = 50)
     private Long id;
 

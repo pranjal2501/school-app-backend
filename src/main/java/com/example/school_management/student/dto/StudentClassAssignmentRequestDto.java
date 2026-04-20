@@ -10,7 +10,6 @@ import java.util.List;
 public class StudentClassAssignmentRequestDto {
 
     private List<Long> studentId;
-
     @NotNull(message = ValidationMessages.DIVISION_REQUIRED)
     private String division;
 }

@@ -40,7 +40,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional
     public AdminResponseDto createAdmin(AdminRequestDto request) {
-        verifyAndGetAdminRecord();
+//        verifyAndGetAdminRecord();
 
         Admin admin = adminMapper.toEntity(request);
         admin.setPassword(passwordEncoder.encode(request.getPassword()));

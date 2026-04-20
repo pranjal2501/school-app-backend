@@ -58,11 +58,11 @@ public class AcademicMapper {
         newClass.setClassName(safeStandard + "-" + safeDivision);
 
         // Default zero-states for a brand new empty classroom
-        newClass.setBoys(0);
-        newClass.setGirls(0);
+        newClass.setBoys(30);
+        newClass.setGirls(30);
         newClass.setCurrentBoys(0);
         newClass.setCurrentGirls(0);
-        newClass.setTotalStudents(0);
+        newClass.setTotalStudents(60);
 
         return newClass;
     }
