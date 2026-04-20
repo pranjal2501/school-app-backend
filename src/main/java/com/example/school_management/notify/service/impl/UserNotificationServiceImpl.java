@@ -3,6 +3,7 @@ package com.example.school_management.notify.service.impl;
 
 import com.example.school_management.common.enums.notify.AudienceType;
 import com.example.school_management.common.exception.ResourceNotFoundException;
+import com.example.school_management.notify.dto.ParentNotificationResponseDto;
 import com.example.school_management.notify.entity.Notification;
 import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.notify.mapper.UserNotificationMapper;
@@ -16,7 +17,7 @@ import com.example.school_management.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import com.example.school_management.notify.dto.ParentNotificationResponseDto;
+import com.example.school_management.notify.dto.GeneralParentNotificationResponseDto;
 import com.example.school_management.notify.dto.TeacherNotificationResponseDto;
 
 import java.time.LocalDateTime;
@@ -70,6 +71,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
     @Override
     public List<ParentNotificationResponseDto> getParentNotifications(Long parentId) {
+
         return userNotificationRepository.findByParentId(parentId)
                 .stream()
                 .map(userNotificationMapper::toParentResponseDto)

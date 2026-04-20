@@ -32,11 +32,11 @@ public class Notification {
     private String shortInfo;          // minimal info — shown to parents
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 30)
     private AudienceType audienceType;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50 )
     private NotificationType notificationType;
 
     @Column(nullable = false)
@@ -55,6 +55,8 @@ public class Notification {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+        if (Boolean.TRUE.equals(this.dispatched)) return;
+
         // Dispatch window: 3 days before for parents, 10 days for teachers
         if (this.audienceType == AudienceType.PARENT) {
             this.scheduledDispatchTime = this.eventDateTime.minusDays(3);
@@ -63,10 +65,11 @@ public class Notification {
         }
     }
 
-    //Testing Purpose
+//    Testing Purpose
 //    @PrePersist
 //    public void prePersist() {
 //        this.createdAt = LocalDateTime.now();
+//          if (Boolean.TRUE.equals(this.dispatched)) return;
 //        // TEMP: dispatch immediately for testing
 //        this.scheduledDispatchTime = LocalDateTime.now().minusMinutes(1);
 //    }

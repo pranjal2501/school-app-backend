@@ -1,6 +1,8 @@
 package com.example.school_management.grievance.bonafide.service;
 
+import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.enums.BonafideStatus;
+import com.example.school_management.common.enums.Role;
 import com.example.school_management.grievance.bonafide.dto.*;
 import com.example.school_management.grievance.bonafide.entity.BonafideRequest;
 import com.example.school_management.grievance.bonafide.entity.BonafideTemplate;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,11 +35,16 @@ public class BonafideRequestService {
     private final BonafideImageService imageService;
     private final EmailService emailService;
     private final BonafideMapper bonafideMapper;
+    private final RoleVerifier roleVerifier;
 
     // ── PARENT ACTIONS ─────────────────────────────────────────────────────────
 
     @Transactional
-    public BonafideRequestResponse submitRequest(Long parentId, BonafideRequestCreate dto) {
+    public BonafideRequestResponse submitRequest(Long parentId, BonafideRequestCreate dto) throws AccessDeniedException {
+        if(!roleVerifier.hasRole(Role.PARENT))
+        {
+            throw new AccessDeniedException("Only admin can access");
+        }
 
         Parent parent = parentRepository.findById(parentId)
                 .orElseThrow(() -> new EntityNotFoundException("Parent not found"));
@@ -64,7 +72,12 @@ public class BonafideRequestService {
     }
 
     @Transactional(readOnly = true)
-    public List<BonafideRequestResponse> getMyRequests(Long parentId) {
+    public List<BonafideRequestResponse> getMyRequests(Long parentId) throws AccessDeniedException {
+
+        if(!roleVerifier.hasRole(Role.ADMIN))
+        {
+            throw new AccessDeniedException("Only admin can access");
+        }
         return requestRepository.findByRequestedById(parentId)
                 .stream()
                 .map(bonafideMapper::toResponse)
@@ -74,7 +87,11 @@ public class BonafideRequestService {
     // ── ADMIN ACTIONS ──────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public List<BonafideRequestResponse> getAllPendingRequests() {
+    public List<BonafideRequestResponse> getAllPendingRequests() throws AccessDeniedException {
+        if(!roleVerifier.hasRole(Role.ADMIN))
+        {
+            throw new AccessDeniedException("Only admin can access");
+        }
         return requestRepository.findByStatus(BonafideStatus.PENDING)
                 .stream()
                 .map(bonafideMapper::toResponse)
@@ -83,7 +100,13 @@ public class BonafideRequestService {
 
 
     @Transactional(readOnly = true)
-    public List<BonafideRequestResponse> getAllRequests() {
+    public List<BonafideRequestResponse> getAllRequests() throws AccessDeniedException {
+
+        if(!roleVerifier.hasRole(Role.ADMIN))
+        {
+            throw new AccessDeniedException("Only admin can access");
+        }
+
         return requestRepository.findAll()
                 .stream()
                 .map(bonafideMapper::toResponse)
@@ -91,7 +114,12 @@ public class BonafideRequestService {
     }
 
     @Transactional
-    public BonafideRequestResponse approveRequest(Long requestId) {
+    public BonafideRequestResponse approveRequest(Long requestId) throws AccessDeniedException {
+
+        if(!roleVerifier.hasRole(Role.ADMIN))
+        {
+            throw new AccessDeniedException("Only admin can access");
+        }
 
         BonafideRequest request = getPendingRequestOrThrow(requestId);
         BonafideTemplate template = templateService.getActiveTemplateEntity();
@@ -113,8 +141,12 @@ public class BonafideRequestService {
     }
 
     @Transactional
-    public BonafideRequestResponse rejectRequest(Long requestId, BonafideRejectRequest dto) {
+    public BonafideRequestResponse rejectRequest(Long requestId, BonafideRejectRequest dto) throws AccessDeniedException {
 
+        if(!roleVerifier.hasRole(Role.ADMIN))
+        {
+            throw new AccessDeniedException("Only admin can access");
+        }
         BonafideRequest request = getPendingRequestOrThrow(requestId);
 
         request.setStatus(BonafideStatus.REJECTED);

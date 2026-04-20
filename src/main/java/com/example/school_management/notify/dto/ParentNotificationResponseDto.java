@@ -1,17 +1,12 @@
 package com.example.school_management.notify.dto;
 
-import com.example.school_management.common.enums.notify.NotificationType;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import java.time.LocalDateTime;
-
-@Data
-public class ParentNotificationResponseDto {
-    private Long id;   //usernotification_id
-    private String title;
-    private String shortInfo;
-    private NotificationType notificationType;
-    private LocalDateTime eventDateTime;
-    private Boolean isRead;
-    private LocalDateTime readAt;
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = GeneralParentNotificationResponseDto.class, name = "GENERAL"),
+        @JsonSubTypes.Type(value = ComplaintNotificationResponse.class, name = "COMPLAINT")
+})
+public interface ParentNotificationResponseDto {
 }

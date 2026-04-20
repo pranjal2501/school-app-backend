@@ -5,6 +5,8 @@ import com.example.school_management.admin.repository.AdminRepository;
 import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.enums.ComplaintStatus;
 import com.example.school_management.common.enums.Role;
+import com.example.school_management.common.enums.notify.AudienceType;
+import com.example.school_management.common.enums.notify.NotificationType;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.common.exception.UnauthorizedAccessException;
 import com.example.school_management.complaint.dto.*;
@@ -13,6 +15,13 @@ import com.example.school_management.complaint.mappper.ComplaintMapper;
 import com.example.school_management.complaint.repository.ComplaintRepository;
 import com.example.school_management.employee.entity.Employee;
 import com.example.school_management.employee.repository.EmployeeRepository;
+import com.example.school_management.notify.dto.CreateNotificationRequestDto;
+import com.example.school_management.notify.entity.Notification;
+import com.example.school_management.notify.entity.UserNotification;
+import com.example.school_management.notify.repository.NotificationRepository;
+import com.example.school_management.notify.repository.UserNotificationRepository;
+import com.example.school_management.notify.service.impl.NotificationServiceImpl;
+import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.repository.StudentRepository;
 import com.example.school_management.teacher.entity.Teacher;
@@ -20,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +42,8 @@ public class ComplaintServiceImpl implements ComplaintService {
     private final ComplaintMapper complaintMapper;
     private final AdminRepository adminRepository;
     private final RoleVerifier roleVerifier; // Injected for strict security context checks
+    private final NotificationRepository notificationRepository;
+    private final UserNotificationRepository userNotificationRepository;
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -59,8 +72,10 @@ public class ComplaintServiceImpl implements ComplaintService {
             complaint.setReportedByEmployee(empRaiser);
         }
 
+        Complaint saved=complaintRepository.save(complaint);
+        notifyParentsOnComplaint(complaint, targetStudent);
         // 4. Save and Return
-        return complaintMapper.toResponseDto(complaintRepository.save(complaint));
+        return complaintMapper.toResponseDto(saved);
     }
 
     @Override
@@ -133,4 +148,33 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
         return false;
     }
+//   ===============================Helper methods=========================
+
+    private void notifyParentsOnComplaint(Complaint complaint, Student targetStudent) {
+        Parent parent=targetStudent.getParent();
+        if (parent == null) return;
+
+        // 1. Create Notification
+        Notification notification = Notification.builder()
+                .title(complaint.getTitle())
+                .description("Complaint : " +complaint.getDescription())
+                .shortInfo("Complaint raised for your child"+complaint.getTargetStudent().getFirstName())
+                .audienceType(AudienceType.PARENT)
+                .notificationType(NotificationType.COMPLAINT)
+                .eventDateTime(LocalDateTime.now()) // immediate event
+                .scheduledDispatchTime(LocalDateTime.now())
+                .dispatched(true)
+                .build();
+
+        notificationRepository.save(notification);
+
+        UserNotification userNotification = UserNotification.builder()
+                .notification(notification)
+                .parent(parent)
+                .deliveredAt(LocalDateTime.now())
+                .build();
+
+        userNotificationRepository.save(userNotification);
+    }
+
 }
