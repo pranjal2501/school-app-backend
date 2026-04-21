@@ -72,9 +72,6 @@ public class Teacher extends Employee {
     @OneToMany(mappedBy = "markedBy")
     private List<StudentAttendance> studentAttendances;
 
-//    @OneToMany(mappedBy = "teacher")
-//    private List<TeacherAttendance> teacherAttendances;
-
     @OneToMany(mappedBy = "teacher")
     private List<LeaveRequests> leaveRequests;
 }

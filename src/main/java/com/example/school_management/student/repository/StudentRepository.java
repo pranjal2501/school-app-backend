@@ -33,4 +33,6 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     Optional<Student> findByAssignedClass_IdAndRollNumber(Long classId, Integer rollNumber);
 
     List<Student> findByAssignedClassIdIn(List<Long> targetClasses);
+
+    Student findByRegId(String RegId);
 }

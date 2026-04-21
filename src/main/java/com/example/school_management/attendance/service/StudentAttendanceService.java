@@ -9,9 +9,12 @@ import com.example.school_management.attendance.repository.AttendanceConfigRepo;
 import com.example.school_management.attendance.repository.SchoolHolidaysRepository;
 import com.example.school_management.attendance.repository.StudentAttendanceRepo;
 import com.example.school_management.common.RoleVerifier;
+import com.example.school_management.common.enums.Gender;
 import com.example.school_management.common.enums.Role;
+import com.example.school_management.common.enums.attendance.AttendanceStatus;
 import com.example.school_management.common.enums.notify.AudienceType;
 import com.example.school_management.common.enums.notify.NotificationType;
+import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.notify.entity.Notification;
 import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.notify.repository.NotificationRepository;
@@ -48,8 +51,10 @@ public class StudentAttendanceService {
 
     private final StudentAttendanceRepo attendanceRepo;
     private final SchoolHolidaysRepository holidayRepo;
+    private final StudentRepository studentRepository;
     private final UserNotificationRepository userNotificationRepo;
     private final NotificationRepository notificationRepository;
+    private final StudentAttendanceRepo studentAttendanceRepo;
     private final SchoolClassRepository classRepo;
     private final TeacherRepository teacherRepo;
     private final StudentRepository studentRepo;
@@ -57,6 +62,7 @@ public class StudentAttendanceService {
     private final AttendanceConfigRepo attendanceConfigRepo;
     private final StudentAttendanceMapper attendanceMapper;
     private final RoleVerifier verify;
+    private final SchoolClassRepository schoolClassRepository;
 
     // ── Mark attendance for entire class ────────────────────────────
 
@@ -328,5 +334,42 @@ public class StudentAttendanceService {
 
             userNotificationRepo.save(userNotification);
         }
+    }
+
+    public SingleDayAttendanceResponseDto getSingleDayReport(SingleDayAttendanceRequestDto request) throws AccessDeniedException {
+
+        if(!verify.hasAnyRole(Role.ADMIN, Role.TEACHER)){
+            throw new AccessDeniedException("Only ADMIN and teacher can perform this action");
+        }
+
+        SchoolClass schoolClass = schoolClassRepository.findById(request.getClassId())
+                .orElseThrow(() -> new ResourceNotFoundException("Class", "id", request.getClassId()));
+
+        StudentAttendance attendance = studentAttendanceRepo
+                .findByClassEntityAndAttendanceDate(schoolClass, request.getDate())
+                .orElseThrow(() -> new ResourceNotFoundException("Attendance record not found for this class on " + request.getDate()));
+
+        List<Student> students = studentRepository.findByAssignedClass_Id(request.getClassId());
+        List<StudentAttendanceRecordDto> recordDtos = new ArrayList<>();
+
+        for (Student student : students) {
+            int roll = student.getRollNumber();
+
+            AttendanceStatus status;
+            if (attendance.getAbsentRollNumbers().contains(roll)) {
+                status = AttendanceStatus.ABSENT;
+            } else if (attendance.getLateRollNumbers().contains(roll)) {
+                status = AttendanceStatus.LATE;
+            } else if (attendance.getHalfDayRollNumbers().contains(roll)) {
+                status = AttendanceStatus.HALF_DAY;
+            } else {
+                status = AttendanceStatus.PRESENT;
+            }
+
+            recordDtos.add(attendanceMapper.toRecordDto(student, status, schoolClass.getClassName()));
+        }
+
+        return attendanceMapper.toSingleDayResponseDto(request.getDate(), recordDtos);
+
     }
 }

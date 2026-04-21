@@ -47,4 +47,13 @@ public class StudentAttendanceController {
 
         return ResponseEntity.ok(ApiResponse.ok("Yearwise report",attendanceService.getYearlyReport(request)));
     }
+
+    @GetMapping("/daily-report")
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
+    public ResponseEntity<ApiResponse<SingleDayAttendanceResponseDto>> fetchSingleDayRecord(
+            @RequestBody SingleDayAttendanceRequestDto request
+    ) throws AccessDeniedException {
+        return ResponseEntity.ok(ApiResponse.ok("Attendance for date "+request.getDate()+"Fetched successfully", attendanceService.getSingleDayReport(request)));
+    }
+
 }

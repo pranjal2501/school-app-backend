@@ -174,9 +174,9 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     @Transactional(readOnly = true)
-    public StudentResponseDto getStudentById(Long id) {
+    public StudentResponseDto getStudentByRegId(String RegId) {
         enforceAdminOrTeacherAccess();
-        return studentMapper.toResponseDto(findById(id));
+        return studentMapper.toResponseDto(studentRepository.findByRegId(RegId));
     }
 
     @Override

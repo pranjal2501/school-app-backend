@@ -1,6 +1,7 @@
 package com.example.school_management.attendance.repository;
 
 import com.example.school_management.attendance.entity.StudentAttendance;
+import com.example.school_management.schoolClass.entity.SchoolClass;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -100,4 +101,7 @@ public interface StudentAttendanceRepo extends JpaRepository<StudentAttendance, 
     //List<StudentAttendance> findTopNByClassEntityIdOrderByAttendanceDateDesc(@NotNull(message = "Class ID is required") Long classId, int threshold);
     List<StudentAttendance> findByClassEntityIdOrderByAttendanceDateDesc(Long classId, Pageable pageable);
 
+    Optional<StudentAttendance> findByClassEntityAndAttendanceDate(SchoolClass schoolClass, @NotNull LocalDate date);
+
+    List<StudentAttendance> findByClassEntity(SchoolClass assignedClass);
 }

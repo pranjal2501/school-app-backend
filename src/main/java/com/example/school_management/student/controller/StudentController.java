@@ -52,10 +52,10 @@ public class StudentController {
         return ResponseEntity.ok(ApiResponse.ok("Students fetched successfully", students));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{RegId}")
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
-    public ResponseEntity<ApiResponse<StudentResponseDto>> getStudentById(@PathVariable Long id) {
-        StudentResponseDto student = studentService.getStudentById(id);
+    public ResponseEntity<ApiResponse<StudentResponseDto>> getStudentByRegId(@PathVariable String RegId) {
+        StudentResponseDto student = studentService.getStudentByRegId(RegId);
 
         return ResponseEntity.ok(ApiResponse.ok("Student fetched successfully", student));
     }
