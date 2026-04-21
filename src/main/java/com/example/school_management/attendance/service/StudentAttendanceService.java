@@ -1,5 +1,6 @@
 package com.example.school_management.attendance.service;
 
+import com.example.school_management.attendance.dto.latemark.UpdateLateMarksRequestDto;
 import com.example.school_management.attendance.dto.studentAttendance.*;
 import com.example.school_management.attendance.entity.AttendanceConfig;
 import com.example.school_management.attendance.entity.SchoolHolidays;
@@ -38,6 +39,7 @@ import java.nio.file.AccessDeniedException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -131,6 +133,38 @@ public class StudentAttendanceService {
 
         // 6. Return response via Mapper
         return attendanceMapper.toMarkResponse(saved, validRollNumbers.size());
+    }
+
+    public void updateLateMarks(Long attendanceId, UpdateLateMarksRequestDto request) {
+
+        StudentAttendance attendance = studentAttendanceRepo.findById(attendanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Attendance", "id", attendanceId));
+
+        AttendanceConfig config = attendanceConfigRepo.findByAcademicYear(request.getAcademicYear())
+                .orElseThrow(() -> new ResourceNotFoundException("Config not found for year: " + request.getAcademicYear()));
+
+        if (!Boolean.TRUE.equals(config.getAllowLateMarks())) {
+            throw new IllegalStateException("Late marks are disabled in attendance config.");
+        }
+
+        LocalDateTime deadline = attendance.getCreatedAt()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime()
+                .plusMinutes(config.getLateMarksWindow());
+
+        if (LocalDateTime.now().isAfter(deadline)) {
+            throw new IllegalStateException(
+                    "Late mark window of " + config.getLateMarksWindow()
+                            + " minutes has expired. Window closed at: " + deadline
+            );
+        }
+        List<Integer> updatedAbsents = new ArrayList<>(attendance.getAbsentRollNumbers());
+        updatedAbsents.removeAll(request.getLateRollNumbers());
+        attendance.setAbsentRollNumbers(updatedAbsents);
+
+        attendance.setLateRollNumbers(request.getLateRollNumbers());
+        studentAttendanceRepo.save(attendance);
+
     }
 
     // ── Build monthly calendar — parent dashboard (single child) ────────────────────

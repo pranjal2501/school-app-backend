@@ -18,8 +18,6 @@ public class ConfigMapper {
                 .attendanceType(dto.getAttendanceType())
                 .studentWorkingDays(dto.getStudentWorkingDays())
                 .studentMinAttendancePct(dto.getStudentMinAttendancePct())
-                .teacherWorkingDays(dto.getTeacherWorkingDays())
-                .teacherMinAttendancePct(dto.getTeacherMinAttendancePct())
                 .allowLateMarks(dto.getAllowLateMarks())
                 .lateMarksWindow(dto.getLateMarksWindow())
                 .notifyParentOnAbsent(dto.getNotifyParentOnAbsent())
@@ -39,8 +37,6 @@ public class ConfigMapper {
                 .attendanceType(entity.getAttendanceType())
                 .studentWorkingDays(entity.getStudentWorkingDays())
                 .studentMinAttendancePct(entity.getStudentMinAttendancePct())
-                .teacherWorkingDays(entity.getTeacherWorkingDays())
-                .teacherMinAttendancePct(entity.getTeacherMinAttendancePct())
                 .allowLateMarks(entity.getAllowLateMarks())
                 .lateMarksWindow(entity.getLateMarksWindow())
                 .notifyParentOnAbsent(entity.getNotifyParentOnAbsent())
@@ -61,8 +57,6 @@ public class ConfigMapper {
         entity.setAttendanceType(dto.getAttendanceType());
         entity.setStudentWorkingDays(dto.getStudentWorkingDays());
         entity.setStudentMinAttendancePct(dto.getStudentMinAttendancePct());
-        entity.setTeacherWorkingDays(dto.getTeacherWorkingDays());
-        entity.setTeacherMinAttendancePct(dto.getTeacherMinAttendancePct());
         entity.setAllowLateMarks(dto.getAllowLateMarks());
         entity.setLateMarksWindow(dto.getLateMarksWindow());
         entity.setNotifyParentOnAbsent(dto.getNotifyParentOnAbsent());

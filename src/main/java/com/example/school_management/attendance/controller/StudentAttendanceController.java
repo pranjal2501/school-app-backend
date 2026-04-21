@@ -1,5 +1,6 @@
 package com.example.school_management.attendance.controller;
 
+import com.example.school_management.attendance.dto.latemark.UpdateLateMarksRequestDto;
 import com.example.school_management.attendance.dto.studentAttendance.*;
 import com.example.school_management.attendance.service.StudentAttendanceService;
 import com.example.school_management.common.ApiResponse;
@@ -27,6 +28,15 @@ public class StudentAttendanceController {
 
         MarkAttendanceResponseDto response = attendanceService.markAttendance(request, teacherId);
         return ResponseEntity.ok(ApiResponse.ok("Attendance marked successfully", response));
+    }
+
+    @PatchMapping("/{attendanceId}/late-marks")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<String>> updateLateMarks(
+            @PathVariable Long attendanceId,
+            @RequestBody UpdateLateMarksRequestDto request) {
+        attendanceService.updateLateMarks(attendanceId, request);
+        return ResponseEntity.ok(ApiResponse.ok("Late marks updated successfully", null));
     }
 
     //Get monthly calendar view for a specific student (Parent Dashboard).

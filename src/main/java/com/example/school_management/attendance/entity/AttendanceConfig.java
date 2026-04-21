@@ -32,13 +32,7 @@ public class AttendanceConfig extends BaseEntity {
     private Float studentMinAttendancePct;
 
     @Column(nullable = false)
-    private Float teacherMinAttendancePct;
-
-    @Column(nullable = false)
     private Integer studentWorkingDays;
-
-    @Column(nullable = false)
-    private Integer teacherWorkingDays;
 
     @Builder.Default
     private Boolean allowLateMarks = true;
