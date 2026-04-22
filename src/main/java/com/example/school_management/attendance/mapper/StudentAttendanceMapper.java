@@ -1,11 +1,10 @@
 package com.example.school_management.attendance.mapper;
 
-import com.example.school_management.attendance.dto.studentAttendance.MarkAttendanceRequestDto;
-import com.example.school_management.attendance.dto.studentAttendance.MarkAttendanceResponseDto;
-import com.example.school_management.attendance.dto.studentAttendance.StudentAttendanceReportResponseDto;
-import com.example.school_management.attendance.dto.studentAttendance.StudentMonthlyCalendarResponseDto;
+import com.example.school_management.attendance.dto.studentAttendance.*;
 import com.example.school_management.attendance.entity.AttendanceConfig;
 import com.example.school_management.attendance.entity.StudentAttendance;
+import com.example.school_management.common.enums.Gender;
+import com.example.school_management.common.enums.attendance.AttendanceStatus;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.subject.entity.Subject;
@@ -81,6 +80,8 @@ public class StudentAttendanceMapper {
                 .build();
     }
 
+
+
     public StudentAttendanceReportResponseDto toReportResponse(
             Student student,
             SchoolClass classEntity,
@@ -136,6 +137,51 @@ public class StudentAttendanceMapper {
                 .totalHolidays(totalHolidays)
                 .attendancePercentage(percentage)
                 .dailyRecords(dailyRecords)
+                .build();
+    }
+
+    public StudentAttendanceRecordDto toRecordDto(Student student, AttendanceStatus status, String className) {
+        return StudentAttendanceRecordDto.builder()
+                .studentId(student.getId())
+                .studentName(student.getFirstName() + " " + student.getLastName())
+                .rollNumber(String.valueOf(student.getRollNumber()))
+                .className(className)
+                .gender(student.getGender())
+                .status(status)
+                .build();
+    }
+    public SingleDayAttendanceResponseDto toSingleDayResponseDto(
+            LocalDate date,
+            List<StudentAttendanceRecordDto> records) {
+
+        long totalPresent = records.stream()
+                .filter(r -> r.getStatus() == AttendanceStatus.PRESENT).count();
+        long totalAbsent = records.stream()
+                .filter(r -> r.getStatus() == AttendanceStatus.ABSENT).count();
+        long totalLate = records.stream()
+                .filter(r -> r.getStatus() == AttendanceStatus.LATE).count();
+        long totalBoys = records.stream()
+                .filter(r -> r.getGender() == Gender.MALE).count();
+        long totalGirls = records.stream()
+                .filter(r -> r.getGender() == Gender.FEMALE).count();
+        long totalBoysPresent = records.stream()
+                .filter(r -> r.getGender() == Gender.MALE
+                        && r.getStatus() == AttendanceStatus.PRESENT).count();
+        long totalGirlsPresent = records.stream()
+                .filter(r -> r.getGender() == Gender.FEMALE
+                        && r.getStatus() == AttendanceStatus.PRESENT).count();
+
+        return SingleDayAttendanceResponseDto.builder()
+                .date(date)
+                .totalStudents(records.size())
+                .totalPresent((int) totalPresent)
+                .totalAbsent((int) totalAbsent)
+                .totalLate((int) totalLate)
+                .totalBoys((int) totalBoys)
+                .totalGirls((int) totalGirls)
+                .totalBoysPresent((int) totalBoysPresent)
+                .totalGirlsPresent((int) totalGirlsPresent)
+                .records(records)
                 .build();
     }
 }

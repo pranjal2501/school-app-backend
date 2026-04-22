@@ -2,6 +2,7 @@ package com.example.school_management.assignment.mapper;
 
 import com.example.school_management.academics.dto.response.AssignmentResponseDto;
 import com.example.school_management.academics.entity.ClassSubjectTeacher;
+import com.example.school_management.assignment.dto.request.AssignmentBulkRequestDto;
 import com.example.school_management.assignment.dto.request.AssignmentRequestDto;
 import com.example.school_management.assignment.dto.response.TeacherClassDropdownDto;
 import com.example.school_management.assignment.dto.response.TeacherSubjectDropdownDto;
@@ -14,8 +15,26 @@ import java.util.List;
 @Component
 public class AssignmentMapper {
 
-    public Assignment toEntity(AssignmentRequestDto dto, ClassSubjectTeacher allocation) {
-        if (dto == null || allocation == null) return null;
+    public Assignment toEntity(AssignmentBulkRequestDto dto, ClassSubjectTeacher allocation) {
+        if (dto == null || allocation == null) {
+            return null;
+        }
+
+        return Assignment.builder()
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .documentUrl(dto.getDocumentUrl())
+                .assignmentType(dto.getAssignmentType())
+                .dueDate(dto.getDueDate())
+                .totalMarks(dto.getTotalMarks())
+                .allocation(allocation)
+                .build();
+    }
+
+    public Assignment toIndividualEntity(AssignmentRequestDto dto, ClassSubjectTeacher allocation) {
+        if (dto == null || allocation == null) {
+            return null;
+        }
 
         return Assignment.builder()
                 .title(dto.getTitle())

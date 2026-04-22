@@ -6,7 +6,7 @@ import com.example.school_management.academics.dto.response.SubjectWithTeachersR
 import com.example.school_management.academics.entity.AcademicStructure;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.subject.entity.Subject;
-import com.example.school_management.teacher.dto.TeacherResponseDto;
+import com.example.school_management.teacher.dto.response.TeacherResponseDto;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

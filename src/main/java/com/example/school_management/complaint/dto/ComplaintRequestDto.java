@@ -2,9 +2,9 @@ package com.example.school_management.complaint.dto;
 
 import com.example.school_management.common.ValidationMessages;
 import com.example.school_management.common.enums.ComplaintCategory;
-import com.example.school_management.common.enums.ComplaintStatus;
 import com.example.school_management.common.enums.Priority;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -13,8 +13,8 @@ import java.util.List;
 @Data
 public class ComplaintRequestDto {
 
-    @NotNull(message = ValidationMessages.STUDENT_ID_REQUIRED)
-    private Long targetStudentId;
+    @NotEmpty(message = "At least one student must be selected.")
+    private List<Long> targetStudentIds;
 
     @NotBlank(message = ValidationMessages.TITLE_REQUIRED)
     @Size(max = 150, message = ValidationMessages.TITLE_MAX_LENGTH)
@@ -23,6 +23,8 @@ public class ComplaintRequestDto {
     @NotBlank(message = ValidationMessages.DESCRIPTION_REQUIRED)
     @Size(max = 1000, message = ValidationMessages.DESCRIPTION_MAX_LENGTH)
     private String description;
+
+    private Boolean isVisibleToParents = true;
 
     @NotNull(message = ValidationMessages.CATEGORY_REQUIRED)
     private ComplaintCategory category;

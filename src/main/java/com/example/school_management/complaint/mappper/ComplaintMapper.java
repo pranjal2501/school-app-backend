@@ -17,7 +17,8 @@ public class ComplaintMapper {
                 .category(dto.getCategory())
                 .priority(dto.getPriority())
                 .supportedMedia(dto.getSupportedMediaUrls())
-                // Student and Employee are strictly set in the Service layer
+                // 🚀 MAP THE NEW FIELD (Fallback to true just in case)
+                .isVisibleToParents(dto.getIsVisibleToParents() != null ? dto.getIsVisibleToParents() : true)
                 .build();
     }
 
@@ -39,12 +40,13 @@ public class ComplaintMapper {
         response.setPriority(entity.getPriority());
         response.setSupportedMedia(entity.getSupportedMedia());
 
+        // 🚀 MAP THE NEW FIELD TO RESPONSE
+        response.setVisibleToParents(entity.isVisibleToParents());
+
         // --- Map Target Student Safely ---
         if (entity.getTargetStudent() != null) {
             response.setTargetStudentId(entity.getTargetStudent().getId());
             response.setTargetStudentName(entity.getTargetStudent().getFirstName() + " " + entity.getTargetStudent().getLastName());
-
-            // Helpful for frontend grids/tables so they don't have to make a second API call
             response.setTargetStudentRollNumber(entity.getTargetStudent().getRollNumber());
         }
 
@@ -64,15 +66,23 @@ public class ComplaintMapper {
         response.setResolutionComment(entity.getResolutionComment());
         response.setResolvedAt(entity.getResolvedAt());
 
-        // 1. Check if a Teacher resolved it
         if (entity.getResolvedBy() != null) {
             response.setResolvedByName(entity.getResolvedBy().getFirstName() + " " + entity.getResolvedBy().getLastName());
-        }
-        // 2. Check if an Admin resolved it (MUST have the null check!)
-        else if (entity.getResolvedByAdmin() != null) {
+        } else if (entity.getResolvedByAdmin() != null) {
             response.setResolvedByName(entity.getResolvedByAdmin().getUsername());
         }
 
+        if (entity.getTargetStudent() != null) {
+            response.setTargetStudentId(entity.getTargetStudent().getId());
+            response.setTargetStudentName(entity.getTargetStudent().getFirstName() + " " + entity.getTargetStudent().getLastName());
+            response.setTargetStudentRollNumber(entity.getTargetStudent().getRollNumber());
+            if (entity.getTargetStudent().getAssignedClass() != null) {
+                response.setTargetStudentClass(
+                        entity.getTargetStudent().getAssignedClass().getAcademicStructure().getStandard() + "-" +
+                                entity.getTargetStudent().getAssignedClass().getAcademicStructure().getDivision()
+                );
+            }
+        }
         return response;
     }
 }

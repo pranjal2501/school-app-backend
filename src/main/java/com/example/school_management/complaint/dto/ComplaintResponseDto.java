@@ -40,4 +40,8 @@ public class ComplaintResponseDto {
     private String resolutionComment;
     private String resolvedByName;
     private Instant resolvedAt;
+
+    private boolean isVisibleToParents;
+
+    private String targetStudentClass;
 }

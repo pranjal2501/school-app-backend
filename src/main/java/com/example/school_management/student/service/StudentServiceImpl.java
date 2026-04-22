@@ -86,12 +86,12 @@ public class StudentServiceImpl implements StudentService {
 
         student = studentRepository.save(student);
 
-        emailService.sendAdmissionEmail(
-                parent.getEmail(),
-                student.getFirstName() + " " + student.getLastName(),
-                parent.getEmail(),
-                autoPassword
-        );
+//        emailService.sendAdmissionEmail(
+//                parent.getEmail(),
+//                student.getFirstName() + " " + student.getLastName(),
+//                parent.getEmail(),
+//                autoPassword
+//        );
 
         return studentMapper.toResponseDto(student);
     }
@@ -216,7 +216,7 @@ public class StudentServiceImpl implements StudentService {
     public List<StudentResponseDto> assignClassAndDivision(StudentClassAssignmentRequestDto request) {
         verifyAndGetAdminRecord(); // Enforcing Admin Role
 
-        List<Student> addedStudent=new ArrayList<>();
+        List<Student> addedStudent = new ArrayList<>();
         for(Long id: request.getStudentId()) {
             Student student = findById(id);
 
@@ -312,5 +312,35 @@ public class StudentServiceImpl implements StudentService {
         student.setAddedBy(admin);
         student.setActive(true);
         return student;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentResponseDto getStudentByRegId(String RegId) {
+        enforceAdminOrTeacherAccess();
+        return studentMapper.toResponseDto(studentRepository.findByRegId(RegId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UnassignedStudentResponseDto> getUnassignedStudentsByStandard(String standard) {
+
+        List<Student> unassignedStudents = studentRepository
+                .findByStandardAndAssignedClassIsNullAndIsActiveTrue(standard);
+
+        return unassignedStudents.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    private UnassignedStudentResponseDto mapToDto(Student student) {
+        return UnassignedStudentResponseDto.builder()
+                .id(student.getId())
+                .regId(student.getRegId())
+                .firstName(student.getFirstName())
+                .lastName(student.getLastName())
+                .standard(student.getStandard())
+                .gender(student.getGender())
+                .build();
     }
 }

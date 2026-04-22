@@ -18,4 +18,5 @@ public interface ClassService {
     List<String> assignRollNumberToStudents(Long classId);
 
     List<StudentRollNoResponseDto> getStudentListWithRollNum(Long classId);
+    ClassResponseDto getClassByStandardAndDivision(String standard, String division);
 }

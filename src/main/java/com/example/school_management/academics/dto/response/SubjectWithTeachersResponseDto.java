@@ -1,7 +1,7 @@
 package com.example.school_management.academics.dto.response;
 
 import com.example.school_management.common.enums.SubjectType;
-import com.example.school_management.teacher.dto.TeacherResponseDto;
+import com.example.school_management.teacher.dto.response.TeacherResponseDto;
 import lombok.Builder;
 import lombok.Data;
 

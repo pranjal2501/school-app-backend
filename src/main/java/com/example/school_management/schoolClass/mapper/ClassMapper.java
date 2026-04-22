@@ -25,6 +25,11 @@ public class ClassMapper {
         dto.setCurrentBoys(classEntity.getCurrentBoys());
         dto.setCurrentGirls(classEntity.getCurrentGirls());
         dto.setClassName(classEntity.getClassName());
+        dto.setVacantSeatsBoys(classEntity.getBoys()-classEntity.getCurrentBoys());
+        dto.setVacantSeatsGirls(classEntity.getGirls()-classEntity.getCurrentGirls());
+        dto.setTotalVacantSeats(classEntity.getTotalStudents()-(classEntity.getCurrentGirls()+classEntity.getCurrentBoys()));
+
+
 
         // Safely extract teacher info to prevent infinite recursion
         if (classEntity.getClassTeacher() != null) {

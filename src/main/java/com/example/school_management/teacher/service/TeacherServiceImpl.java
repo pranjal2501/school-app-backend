@@ -1,5 +1,6 @@
 package com.example.school_management.teacher.service;
 
+import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.enums.Role;
 import com.example.school_management.common.exception.DuplicateResourceException;
 import com.example.school_management.common.exception.ResourceNotFoundException;
@@ -9,13 +10,13 @@ import com.example.school_management.subject.entity.Subject;
 import com.example.school_management.subject.repository.SubjectRepository;
 import com.example.school_management.teacher.dto.TeacherFromAdminRequestDto;
 import com.example.school_management.teacher.dto.TeacherRemainingInfoDto;
-import com.example.school_management.teacher.dto.TeacherResponseDto;
+import com.example.school_management.teacher.dto.response.MyClassResponseDto;
+import com.example.school_management.teacher.dto.response.TeacherResponseDto;
 import com.example.school_management.teacher.entity.Teacher;
 import com.example.school_management.teacher.mapper.TeacherMapper;
 import com.example.school_management.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,22 +34,72 @@ public class TeacherServiceImpl implements TeacherService {
     private final PasswordEncoder passwordEncoder;
     private final SubjectRepository subjectRepository;
     private final EmailService emailService;
-
+    private final RoleVerifier roleVerifier;
+    /**
+     * Replaces manual SecurityContext verification.
+     * Allows access if the user is an ADMIN, OR if they are the specific Teacher.
+     */
     private void verifyAdminOrOwnerIdentity(Teacher targetTeacher) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new UnauthorizedAccessException("Authentication required to perform this action");
+        if (roleVerifier.hasRole(Role.ADMIN)) {
+            return; // Admins bypass all ownership checks
         }
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
 
-        // Check if the logged-in user's email matches the target teacher's email
-        boolean isOwner = authentication.getName().equalsIgnoreCase(targetTeacher.getEmail());
+        String currentUsername = roleVerifier.getCurrentUsername();
 
-        if (!isAdmin && !isOwner) {
-            throw new UnauthorizedAccessException("Access Denied: You do not have permission to modify this profile.");
+        // Utilizes the isIdentifiedBy domain logic from Employee.java
+        if (!targetTeacher.isIdentifiedBy(currentUsername)) {
+            throw new UnauthorizedAccessException("Access Denied: You do not have permission to view or modify this profile.");
         }
+    }
+
+    /**
+     * Strict verification for Admin-only routes
+     */
+    private void verifyAdminAccess() {
+        if (!roleVerifier.hasRole(Role.ADMIN)) {
+            throw new AccessDeniedException("Access Denied: Only Admins can perform this action.");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeacherResponseDto> getUnassignedTeachers() {
+        verifyAdminAccess(); // Strictly Admin only
+
+        return teacherRepository.findByAssignedClassIsNullAndIsActiveTrue().stream()
+                .map(teacherMapper::toResponseDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public TeacherResponseDto getTeacherByIdentifier(String identifier) {
+        Teacher teacher = teacherRepository.findByEmail(identifier)
+                .or(() -> teacherRepository.findByMobile(identifier))
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher", "identifier", identifier));
+
+        // No ownership check needed here because they are fetching the exact record attached to their login token
+        return teacherMapper.toResponseDto(teacher);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TeacherResponseDto getTeacherById(Long id) {
+        Teacher teacher = teacherRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", id));
+
+        verifyAdminOrOwnerIdentity(teacher); // Validates identity
+
+        return teacherMapper.toResponseDto(teacher);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeacherResponseDto> getAllTeachers() {
+        verifyAdminAccess(); // Secures the bulk fetch endpoint
+
+        return teacherRepository.findAll().stream()
+                .map(teacherMapper::toResponseDto)
+                .toList();
     }
 
     @Override
@@ -103,11 +153,11 @@ public class TeacherServiceImpl implements TeacherService {
 
         Teacher savedTeacher = teacherRepository.save(teacher);
 
-        emailService.sendTeacherOnboardingEmail(
-                savedTeacher.getEmail(),
-                savedTeacher.getFirstName() + " " + savedTeacher.getLastName(),
-                rawPassword
-        );
+//        emailService.sendTeacherOnboardingEmail(
+//                savedTeacher.getEmail(),
+//                savedTeacher.getFirstName() + " " + savedTeacher.getLastName(),
+//                rawPassword
+//        );
 
         return teacherMapper.toResponseDto(savedTeacher);
     }
@@ -173,10 +223,28 @@ public class TeacherServiceImpl implements TeacherService {
     }
 
     @Override
-    public List<TeacherResponseDto> getAllTeachers(String username) {
-        return teacherRepository.findAll().stream()
-                .map(teacherMapper::toResponseDto)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public MyClassResponseDto getMyAssignedClass() {
+        String currentUsername = roleVerifier.getCurrentUsername();
+
+        // Fetch the teacher (Adjust the repository call to match your exact method, e.g., findByEmail)
+        Teacher teacher = teacherRepository.findByEmail(currentUsername)
+                .orElseThrow(() -> new RuntimeException("Logged in teacher not found in database"));
+
+        // If the teacher is just a subject teacher and has no specific class, return null data
+        if (teacher.getAssignedClass() == null) {
+            return null;
+        }
+
+        String className = teacher.getAssignedClass().getAcademicStructure().getStandard() + "-" +
+                teacher.getAssignedClass().getAcademicStructure().getDivision();
+
+        return MyClassResponseDto.builder()
+                .classId(teacher.getAssignedClass().getId())
+                .className(className)
+                .teacherId(teacher.getId())
+                .teacherName(teacher.getFirstName() + " " + teacher.getLastName())
+                .build();
     }
 
     private String getSafeSubstring(String value, int length) {

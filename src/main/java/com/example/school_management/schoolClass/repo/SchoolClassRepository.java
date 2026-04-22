@@ -12,4 +12,6 @@ public interface SchoolClassRepository extends JpaRepository<SchoolClass, Long> 
     Optional<SchoolClass> findByClassName(String className);
     Optional<SchoolClass> findByClassTeacher(Teacher teacher);
     Optional<SchoolClass> findByAcademicStructureId(Long id);
+
+    Optional<SchoolClass> findByAcademicStructure_StandardAndAcademicStructure_Division(String standard, String division);
 }

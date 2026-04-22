@@ -21,7 +21,7 @@ import com.example.school_management.schoolClass.mapper.ClassMapper;
 import com.example.school_management.schoolClass.repo.SchoolClassRepository;
 import com.example.school_management.subject.entity.Subject;
 import com.example.school_management.subject.repository.SubjectRepository;
-import com.example.school_management.teacher.dto.TeacherResponseDto;
+import com.example.school_management.teacher.dto.response.TeacherResponseDto;
 import com.example.school_management.teacher.entity.Teacher;
 import com.example.school_management.teacher.mapper.TeacherMapper;
 import com.example.school_management.teacher.repository.TeacherRepository;

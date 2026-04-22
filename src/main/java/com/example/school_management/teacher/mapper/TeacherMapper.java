@@ -3,102 +3,104 @@ package com.example.school_management.teacher.mapper;
 import com.example.school_management.subject.entity.Subject;
 import com.example.school_management.teacher.dto.TeacherFromAdminRequestDto;
 import com.example.school_management.teacher.dto.TeacherRemainingInfoDto;
-import com.example.school_management.teacher.dto.TeacherResponseDto;
+import com.example.school_management.teacher.dto.response.TeacherResponseDto;
 import com.example.school_management.teacher.entity.Teacher;
 import org.springframework.stereotype.Component;
 
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Component
 public class TeacherMapper {
 
     /**
-     * Maps incoming DTO to Teacher Entity.
-     * Only handles raw data transfer; business logic remains in the service.
+     * Maps incoming DTO to Teacher Entity using SuperBuilder.
      */
     public Teacher toEntity(TeacherFromAdminRequestDto request) {
         if (request == null) {
             return null;
         }
 
-        Teacher teacher = new Teacher();
-
-        // Employee Base Fields
-        teacher.setFirstName(request.getFirstName());
-        teacher.setMiddleName(request.getMiddleName());
-        teacher.setLastName(request.getLastName());
-        teacher.setEmail(request.getEmail());
-        teacher.setMobile(request.getMobile());
-        teacher.setGender(request.getGender());
-        teacher.setDob(request.getDob());
-
-        // Teacher Specific Fields
-        teacher.setJoiningDate(request.getJoiningDate());
-        teacher.setYearsOfExperienceInCurrentSchool(request.getYearsOfExperienceInCurrentSchool());
-        teacher.setAadharNo(request.getAadharNo());
-        teacher.setPanNo(request.getPanNo());
-
-        return teacher;
+        return Teacher.builder()
+                // Employee Base Fields
+                .firstName(request.getFirstName())
+                .middleName(request.getMiddleName())
+                .lastName(request.getLastName())
+                .email(request.getEmail())
+                .mobile(request.getMobile())
+                .gender(request.getGender())
+                .dob(request.getDob())
+                // Teacher Specific Fields
+                .joiningDate(request.getJoiningDate())
+                .yearsOfExperienceInCurrentSchool(request.getYearsOfExperienceInCurrentSchool())
+                .aadharNo(request.getAadharNo())
+                .panNo(request.getPanNo())
+                .build();
     }
 
+    /**
+     * Maps Teacher Entity to Response DTO using Builder.
+     * Ensure TeacherResponseDto has the @Builder annotation!
+     */
     public TeacherResponseDto toResponseDto(Teacher teacher) {
         if (teacher == null) {
             return null;
         }
 
-        TeacherResponseDto response = new TeacherResponseDto();
-
-        // Base / Onboarding Fields
-        response.setId(teacher.getId());
-        response.setCreatedAt(teacher.getCreatedAt());
-        response.setUpdatedAt(teacher.getUpdatedAt());
-        response.setFirstName(teacher.getFirstName());
-        response.setMiddleName(teacher.getMiddleName());
-        response.setLastName(teacher.getLastName());
-        response.setEmail(teacher.getEmail());
-        response.setMobile(teacher.getMobile());
-        response.setGender(teacher.getGender());
-        response.setDob(teacher.getDob());
-        response.setJoiningDate(teacher.getJoiningDate());
-        response.setAadharNo(teacher.getAadharNo());
-        response.setPanNo(teacher.getPanNo());
-        response.setActive(teacher.isActive());
-        response.setRole(teacher.getRole());
-
-        // Address Fields
-        response.setAddressLine1(teacher.getAddressLine1());
-        response.setAddressLine2(teacher.getAddressLine2());
-        response.setCity(teacher.getCity());
-        response.setState(teacher.getState());
-        response.setPincode(teacher.getPincode());
-
-        // Education & Experience
-        response.setDegreeType(teacher.getDegreeType());
-        response.setCustomDegreeName(teacher.getCustomDegreeName());
-        response.setYearsOfExperienceInCurrentSchool(teacher.getYearsOfExperienceInCurrentSchool());
-        response.setPreviousSchool(teacher.getPreviousSchool());
-        response.setYearsOfExperienceInPreviousSchool(teacher.getYearsOfExperienceInPreviousSchool());
-
-        // URLs
-        response.setAadharPhotourl(teacher.getAadharPhotourl());
-        response.setPanPhotourl(teacher.getPanPhotourl());
-        response.setDegreeCertificateurl(teacher.getDegreeCertificateurl());
-        response.setResignationLetterurl(teacher.getResignationLetterurl());
-        response.setResumeurl(teacher.getResumeurl());
-
-        // Map Many-to-Many Subjects to a simple List of Strings for the DTO
+        // Map Many-to-Many Subjects to a simple List of Strings before building
+        List<String> mappedSubjects = null;
         if (teacher.getSubjects() != null && !teacher.getSubjects().isEmpty()) {
-            response.setSubjects(teacher.getSubjects().stream()
+            mappedSubjects = teacher.getSubjects().stream()
                     .map(Subject::getSubjectName)
-                    .collect(Collectors.toList()));
+                    .toList();
         }
 
-        // Map Specializations
-        response.setSpecializations(teacher.getSpecializations());
-
-        return response;
+        return TeacherResponseDto.builder()
+                // Base / System Fields
+                .id(teacher.getId())
+                .teacherId(teacher.getTeacherId())
+                .createdAt(teacher.getCreatedAt())
+                .updatedAt(teacher.getUpdatedAt())
+                .active(teacher.isActive())
+                .role(teacher.getRole())
+                // Personal Info
+                .firstName(teacher.getFirstName())
+                .middleName(teacher.getMiddleName())
+                .lastName(teacher.getLastName())
+                .email(teacher.getEmail())
+                .mobile(teacher.getMobile())
+                .gender(teacher.getGender())
+                .dob(teacher.getDob())
+                .joiningDate(teacher.getJoiningDate())
+                .aadharNo(teacher.getAadharNo())
+                .panNo(teacher.getPanNo())
+                // Address Fields
+                .addressLine1(teacher.getAddressLine1())
+                .addressLine2(teacher.getAddressLine2())
+                .city(teacher.getCity())
+                .state(teacher.getState())
+                .pincode(teacher.getPincode())
+                // Education & Experience
+                .degreeType(teacher.getDegreeType())
+                .customDegreeName(teacher.getCustomDegreeName())
+                .yearsOfExperienceInCurrentSchool(teacher.getYearsOfExperienceInCurrentSchool())
+                .previousSchool(teacher.getPreviousSchool())
+                .yearsOfExperienceInPreviousSchool(teacher.getYearsOfExperienceInPreviousSchool())
+                // URLs
+                .aadharPhotourl(teacher.getAadharPhotourl())
+                .panPhotourl(teacher.getPanPhotourl())
+                .degreeCertificateurl(teacher.getDegreeCertificateurl())
+                .resignationLetterurl(teacher.getResignationLetterurl())
+                .resumeurl(teacher.getResumeurl())
+                // Collections
+                .subjects(mappedSubjects)
+                .specializations(teacher.getSpecializations())
+                .build();
     }
 
+    /**
+     * Mutates an existing Hibernate-managed entity.
+     * Do NOT use a Builder here, otherwise Hibernate loses track of the entity state.
+     */
     public void updateTeacherFromRemainingInfoDto(TeacherRemainingInfoDto dto, Teacher teacher) {
         if (dto == null || teacher == null) {
             return;
@@ -123,13 +125,10 @@ public class TeacherMapper {
         if (dto.getResumeurl() != null) teacher.setResumeurl(dto.getResumeurl());
 
         // Experience
-        if (dto.getPreviousSchool() != null)
-            teacher.setPreviousSchool(dto.getPreviousSchool());
+        if (dto.getPreviousSchool() != null) teacher.setPreviousSchool(dto.getPreviousSchool());
+        if (dto.getYearsOfExperienceInPreviousSchool() != null) teacher.setYearsOfExperienceInPreviousSchool(dto.getYearsOfExperienceInPreviousSchool());
 
-        if (dto.getYearsOfExperienceInPreviousSchool() != null)
-            teacher.setYearsOfExperienceInPreviousSchool(dto.getYearsOfExperienceInPreviousSchool());
-
-        // Specializations (Enums can be mapped directly)
+        // Specializations
         if (dto.getSpecializations() != null) {
             teacher.setSpecializations(dto.getSpecializations());
         }

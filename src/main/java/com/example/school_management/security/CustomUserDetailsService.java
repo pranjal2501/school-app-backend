@@ -30,29 +30,32 @@ public class CustomUserDetailsService implements UserDetailsService {
         var adminOpt = adminRepository.findByUsername(identifier);
         if (adminOpt.isPresent()) {
             Admin admin = adminOpt.get();
-            return buildUser(admin.getUsername(), admin.getPassword(), "ADMIN");
+            // Pass the ID here
+            return buildUser(admin.getId(), admin.getUsername(), admin.getPassword(), "ADMIN");
         }
 
         var teacherOpt = teacherRepository.findByEmail(identifier)
                 .or(() -> teacherRepository.findByMobile(identifier));
         if (teacherOpt.isPresent()) {
             Teacher teacher = teacherOpt.get();
-            // Assuming your Teacher entity has a getRole() method returning an Enum (e.g., TEACHER)
-            return buildUser(identifier, teacher.getPassword(), teacher.getRole().name());
+            // Pass the ID here
+            return buildUser(teacher.getId(), identifier, teacher.getPassword(), teacher.getRole().name());
         }
 
         var parentOpt = parentRepository.findByEmail(identifier)
                 .or(() -> parentRepository.findByMobilePrimary(identifier));
         if (parentOpt.isPresent()) {
             Parent parent = parentOpt.get();
-            return buildUser(identifier, parent.getPassword(), "PARENT");
+            // Pass the ID here
+            return buildUser(parent.getId(), identifier, parent.getPassword(), "PARENT");
         }
 
         throw new UsernameNotFoundException("No user found: " + identifier);
     }
 
-    private UserDetails buildUser(String identifier, String password, String role) {
-        return new User(
+    private CustomUserDetails buildUser(Long id, String identifier, String password, String role) {
+        return new CustomUserDetails(
+                id,
                 identifier,
                 password,
                 List.of(new SimpleGrantedAuthority("ROLE_" + role))

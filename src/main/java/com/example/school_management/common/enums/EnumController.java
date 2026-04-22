@@ -73,10 +73,6 @@ public class EnumController {
         return ResponseEntity.ok(list);
     }
 
-
-
-
-
     @GetMapping("/blood-groups")
     public ResponseEntity<List<Map<String, String>>> getBloodGroups() {
         List<Map<String, String>> list = new ArrayList<>();
@@ -101,10 +97,46 @@ public class EnumController {
         return ResponseEntity.ok(list);
     }
 
+    @GetMapping("/assignment-types")
+    public ResponseEntity<List<Map<String, String>>> getAssignmentTypes() {
+        List<Map<String, String>> list = new ArrayList<>();
+        for (AssignmentType assignmentType : AssignmentType.values()) {
+            Map<String, String> map = new LinkedHashMap<>();
+            map.put("value", assignmentType.name());
+            map.put("displayName", assignmentType.getDisplayName());
+            list.add(map);
+        }
+        return ResponseEntity.ok(list);
+    }
+
     @GetMapping("/address-proof")
     public ResponseEntity<List<Map<String, String>>> getAddressProof() {
         List<Map<String, String>> list = new ArrayList<>();
         for (AddressProofDocument ap : AddressProofDocument.values()) {
+            Map<String, String> map = new LinkedHashMap<>();
+            map.put("value", ap.name());
+            map.put("displayName", ap.getDisplayName());
+            list.add(map);
+        }
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/complaint-category")
+    public ResponseEntity<List<Map<String, String>>> getComplaintCategory() {
+        List<Map<String, String>> list = new ArrayList<>();
+        for (ComplaintCategory ap : ComplaintCategory.values()) {
+            Map<String, String> map = new LinkedHashMap<>();
+            map.put("value", ap.name());
+            map.put("displayName", ap.getDisplayName());
+            list.add(map);
+        }
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/complaint-priority")
+    public ResponseEntity<List<Map<String, String>>> getComplaintPriority() {
+        List<Map<String, String>> list = new ArrayList<>();
+        for (Priority ap : Priority.values()) {
             Map<String, String> map = new LinkedHashMap<>();
             map.put("value", ap.name());
             map.put("displayName", ap.getDisplayName());

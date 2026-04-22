@@ -15,6 +15,7 @@ import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.common.exception.UnauthorizedAccessException;
 import com.example.school_management.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -169,7 +170,7 @@ public class ClassServiceImpl implements ClassService {
     @Transactional
     public List<String> assignRollNumberToStudents(Long classId)
     {
-        SchoolClass current_class=classRepository.findById(classId).orElseThrow(() -> new ResourceNotFoundException("Class not found"));;
+        SchoolClass current_class = classRepository.findById(classId).orElseThrow(() -> new ResourceNotFoundException("Class not found"));;
         List<Student> studentList=current_class.getStudents()
             .stream()
             .filter(Student::isActive)
@@ -189,22 +190,47 @@ public class ClassServiceImpl implements ClassService {
     }
 
     @Override
-    public List<StudentRollNoResponseDto> getStudentListWithRollNum(Long classId)
-    {
-        SchoolClass currentClass= classRepository.findById(classId).orElseThrow(()-> new ResourceNotFoundException("Class not found"));
+    @Transactional(readOnly = true)
+    public List<StudentRollNoResponseDto> getStudentListWithRollNum(Long classId) {
+        SchoolClass currentClass = classRepository.findById(classId)
+                .orElseThrow(() -> new ResourceNotFoundException("Class", "id", classId));
+
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+                .stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin) {
+            Teacher currentTeacher = teacherRepository.findByEmail(currentUserEmail)
+                    .orElseThrow(() -> new AccessDeniedException("Teacher profile not found."));
+
+            if (currentTeacher.getAssignedClass() == null || !currentTeacher.getAssignedClass().getId().equals(classId)) {
+                throw new AccessDeniedException("You are not authorized to view the student roster for this class.");
+            }
+        }
 
         return currentClass.getStudents()
                 .stream()
                 .filter(Student::isActive)
-                .filter(s -> s.getRollNumber() != null)  // only students with roll assigned
+                .filter(s -> s.getRollNumber() != null)
                 .sorted(Comparator.comparing(Student::getRollNumber))
                 .map(s -> new StudentRollNoResponseDto(
                         s.getRollNumber(),
                         s.getFirstName(),
                         s.getLastName(),
-                        s.getGender().name(),
+                        s.getGender() != null ? s.getGender().name() : "UNKNOWN",
                         s.getRegId()
                 ))
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClassResponseDto getClassByStandardAndDivision(String standard, String division) {
+
+        SchoolClass schoolClass = classRepository
+                .findByAcademicStructure_StandardAndAcademicStructure_Division(standard, division)
+                .orElseThrow(() -> new ResourceNotFoundException("Class not found for Standard: " + standard + " and Division: " + division));
+
+        return classMapper.toResponseDto(schoolClass);
     }
 }

@@ -2,6 +2,7 @@ package com.example.school_management.student.controller;
 
 import com.example.school_management.common.ApiResponse;
 import com.example.school_management.common.RoleVerifier;
+import com.example.school_management.student.repository.StudentRepository;
 import com.example.school_management.student.service.StudentService;
 import com.example.school_management.student.dto.*;
 import jakarta.validation.Valid;
@@ -21,6 +22,7 @@ public class StudentController {
 
     private final StudentService studentService;
     private final RoleVerifier roleVerifier;
+    private final StudentRepository studentRepository;
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -52,13 +54,14 @@ public class StudentController {
         return ResponseEntity.ok(ApiResponse.ok("Students fetched successfully", students));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{RegId}")
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
-    public ResponseEntity<ApiResponse<StudentResponseDto>> getStudentById(@PathVariable Long id) {
-        StudentResponseDto student = studentService.getStudentById(id);
+    public ResponseEntity<ApiResponse<StudentResponseDto>> getStudentByRegId(@PathVariable String RegId) {
+        StudentResponseDto student = studentService.getStudentByRegId(RegId);
 
         return ResponseEntity.ok(ApiResponse.ok("Student fetched successfully", student));
     }
+
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -113,15 +116,36 @@ public class StudentController {
         return ResponseEntity.ok(ApiResponse.ok("Dashboard fetched for: " + roleVerifier.getCurrentUsername(), "Student & Parent Dashboard"));
     }
 
+//    @GetMapping("/search")
+//    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+//    public ResponseEntity<ApiResponse<List<StudentDropdownDto>>> searchStudents(
+//            @RequestParam String standard,
+//            @RequestParam String division,
+//            @RequestParam String query) {
+//
+//        List<StudentDropdownDto> response = studentService.searchStudents(standard, division, query);
+//
+//        return ResponseEntity.ok(ApiResponse.ok("Students fetched successfully", response));
+//    }
+
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
-    public ResponseEntity<ApiResponse<List<StudentDropdownDto>>> searchStudents(
-            @RequestParam String standard,
-            @RequestParam String division,
-            @RequestParam String query) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<ApiResponse<List<StudentSearchDto>>> searchStudents(@RequestParam String query) {
+        // Prevent massive payloads on empty search
+        if (query == null || query.trim().length() < 2) {
+            return ResponseEntity.ok(ApiResponse.ok("Query too short", List.of()));
+        }
+        List<StudentSearchDto> results = studentRepository.searchActiveStudents(query.trim());
+        return ResponseEntity.ok(ApiResponse.ok("Search successful", results));
+    }
 
-        List<StudentDropdownDto> response = studentService.searchStudents(standard, division, query);
+    @GetMapping("/unassigned/{standard}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<UnassignedStudentResponseDto>>> getUnassignedStudents(
+            @PathVariable String standard) {
 
-        return ResponseEntity.ok(ApiResponse.ok("Students fetched successfully", response));
+        List<UnassignedStudentResponseDto> response = studentService.getUnassignedStudentsByStandard(standard);
+
+        return ResponseEntity.ok(ApiResponse.ok("Unassigned students fetched successfully", response));
     }
 }
