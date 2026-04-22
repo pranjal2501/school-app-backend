@@ -293,6 +293,19 @@ public class TeacherServiceImpl implements TeacherService {
     }
 
     @Override
+    public List<NotificationResponseDto> getMyNotifications() {
+        String username = roleVerifier.getCurrentUsername();
+
+        Teacher teacher = teacherRepository.findByEmail(username)
+                .orElseThrow(() -> new UnauthorizedAccessException("Teacher session invalid"));
+
+        return notificationRepository.findByCreatedByTeacher(teacher)
+                .stream()
+                .map(notificationMapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public TeacherDashboardResponseDto getDashboard(Long teacherId) {
 
         String currentUser = roleVerifier.getCurrentUsername();
@@ -376,6 +389,11 @@ public class TeacherServiceImpl implements TeacherService {
         Set<SchoolClass> targetClasses = new HashSet<>();
         targetClasses.add(schoolClass);
 
+        String currentUser= roleVerifier.getCurrentUsername();
+
+        Teacher teacher = teacherRepository.findByEmail(currentUser)
+                .orElseThrow(() -> new UnauthorizedAccessException("Teacher session invalid"));
+
         Notification notification = Notification.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
@@ -389,6 +407,7 @@ public class TeacherServiceImpl implements TeacherService {
                 .dispatched(false)
                 .targetClasses(targetClasses)
                 .teacherIds(new HashSet<>())
+                .createdByTeacher(teacher)
                 .build();
 
         notificationRepository.save(notification);

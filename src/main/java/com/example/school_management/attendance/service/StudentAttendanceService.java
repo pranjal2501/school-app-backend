@@ -491,41 +491,4 @@ public class StudentAttendanceService {
             userNotificationRepo.save(userNotification);
         }
     }
-
-    public SingleDayAttendanceResponseDto getSingleDayReport(SingleDayAttendanceRequestDto request) throws AccessDeniedException {
-
-        if(!verify.hasAnyRole(Role.ADMIN, Role.TEACHER)){
-            throw new AccessDeniedException("Only ADMIN and teacher can perform this action");
-        }
-
-        SchoolClass schoolClass = schoolClassRepository.findById(request.getClassId())
-                .orElseThrow(() -> new ResourceNotFoundException("Class", "id", request.getClassId()));
-
-        StudentAttendance attendance = studentAttendanceRepo
-                .findByClassEntityAndAttendanceDate(schoolClass, request.getDate())
-                .orElseThrow(() -> new ResourceNotFoundException("Attendance record not found for this class on " + request.getDate()));
-
-        List<Student> students = studentRepository.findByAssignedClass_Id(request.getClassId());
-        List<StudentAttendanceRecordDto> recordDtos = new ArrayList<>();
-
-        for (Student student : students) {
-            int roll = student.getRollNumber();
-
-            AttendanceStatus status;
-            if (attendance.getAbsentRollNumbers().contains(roll)) {
-                status = AttendanceStatus.ABSENT;
-            } else if (attendance.getLateRollNumbers().contains(roll)) {
-                status = AttendanceStatus.LATE;
-            } else if (attendance.getHalfDayRollNumbers().contains(roll)) {
-                status = AttendanceStatus.HALF_DAY;
-            } else {
-                status = AttendanceStatus.PRESENT;
-            }
-
-            recordDtos.add(attendanceMapper.toRecordDto(student, status, schoolClass.getClassName()));
-        }
-
-        return attendanceMapper.toSingleDayResponseDto(request.getDate(), recordDtos);
-
-    }
 }

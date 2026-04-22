@@ -2,6 +2,7 @@ package com.example.school_management.notify.repository;
 
 
 import com.example.school_management.notify.entity.UserNotification;
+import com.example.school_management.parent.entity.Parent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,4 +26,7 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
     List<UserNotification> findByTeacherIdAndIsReadFalse(Long teacherId);
 
     boolean existsByParentIdAndNotification_TitleContainingAndDeliveredAtAfter(Long id, String s, LocalDateTime localDateTime);
+
+    //Used in parent dasboard to show latest top 3 notifications
+    List<UserNotification> findTop3ByParentOrderByDeliveredAtDesc(Parent parent);
 }

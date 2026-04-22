@@ -1,12 +1,14 @@
 package com.example.school_management.notify.repository;
 
 import com.example.school_management.notify.entity.Notification;
+import com.example.school_management.teacher.entity.Teacher;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Repository
@@ -17,4 +19,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             "WHERE n.dispatched = false " +
             "AND n.scheduledDispatchTime < :now")
     List<Notification> findPendingNotifications(@Param("now") LocalDateTime now);
+
+    List<Notification> findByCreatedByTeacher(Teacher teacher);
 }

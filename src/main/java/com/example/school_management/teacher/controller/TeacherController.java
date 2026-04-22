@@ -117,6 +117,15 @@ public class TeacherController {
         return ResponseEntity.ok(ApiResponse.ok("Notification Sent", response));
     }
 
+    @GetMapping("/my-notifications")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<List<NotificationResponseDto>>> getMyNotifications()
+    {
+        return ResponseEntity.ok(ApiResponse.ok("Notifications fetched successfully", teacherService.getMyNotifications()));
+
+    }
+
+
     @GetMapping("/dashboard/{teacherId}")
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<ApiResponse<TeacherDashboardResponseDto>> getDashboard(@PathVariable Long teacherId)

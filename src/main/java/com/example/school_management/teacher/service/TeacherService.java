@@ -25,4 +25,6 @@ public interface TeacherService {
     NotificationResponseDto notifyParentsOfClass(long classId, @Valid CreateNotificationRequestDto notification) throws AccessDeniedException;
 
     TeacherDashboardResponseDto getDashboard(Long teacherId);
+
+    List<NotificationResponseDto> getMyNotifications();
 }

@@ -98,7 +98,6 @@ public interface StudentAttendanceRepo extends JpaRepository<StudentAttendance, 
     @Query(value = "SELECT COUNT(*) FROM student_attendances WHERE class_id = :classId AND academic_year = :year", nativeQuery = true)
     long countTotalSessionsConducted(@Param("classId") Long classId, @Param("year") String year);
 
-    // Add this to StudentAttendanceRepository
     List<StudentAttendance> findTop7ByClassEntityIdAndAttendanceDateLessThanEqualOrderByAttendanceDateDesc(Long classId, LocalDate date);
 
     Optional<StudentAttendance> findByClassEntityAndAttendanceDate(SchoolClass schoolClass, @NotNull LocalDate date);
