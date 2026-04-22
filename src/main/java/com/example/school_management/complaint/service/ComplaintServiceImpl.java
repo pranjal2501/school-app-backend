@@ -32,9 +32,11 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -255,4 +257,18 @@ public class ComplaintServiceImpl implements ComplaintService {
         userNotificationRepository.save(userNotification);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<ComplaintResponseDto> getComplaintsByClassId(Long classId) {
+        // Fetch complaints where the target student belongs to the specified classId
+        List<Complaint> complaints = complaintRepository.findByClassId(classId);
+
+        if (complaints.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return complaints.stream()
+                .map(complaintMapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
 }

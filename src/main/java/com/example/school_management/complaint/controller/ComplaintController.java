@@ -67,4 +67,13 @@ public class ComplaintController {
         ComplaintResponseDto response = complaintService.updateComplaintVisibility(ticketNumber, request);
         return ResponseEntity.ok(ApiResponse.ok("Parent visibility updated", response));
     }
+
+    // 6. Fetch complaints by Class ID
+    @GetMapping("/class/{classId}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> getComplaintsByClassId(
+            @PathVariable Long classId) {
+        List<ComplaintResponseDto> response = complaintService.getComplaintsByClassId(classId);
+        return ResponseEntity.ok(ApiResponse.ok("Complaints for class " + classId + " fetched successfully", response));
+    }
 }

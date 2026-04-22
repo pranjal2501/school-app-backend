@@ -67,7 +67,6 @@ public class StudentAttendanceService {
     private final AttendanceConfigRepo configRepo;
     private final AttendanceConfigRepo attendanceConfigRepo;
     private final StudentAttendanceMapper attendanceMapper;
-    private final NotificationService notificationService;
     private final RoleVerifier verify;
     private final SchoolClassRepository schoolClassRepository;
 
@@ -387,46 +386,7 @@ public class StudentAttendanceService {
         }).collect(Collectors.toList());
     }
 
-    public SingleDayAttendanceResponseDto getSingleDayReport(SingleDayAttendanceRequestDto request) throws AccessDeniedException {
-
-        if(!verify.hasAnyRole(Role.ADMIN, Role.TEACHER)){
-            throw new AccessDeniedException("Only ADMIN and teacher can perform this action");
-        }
-
-        SchoolClass schoolClass = classRepo.findById(request.getClassId())
-                .orElseThrow(() -> new ResourceNotFoundException("Class", "id", request.getClassId()));
-
-        StudentAttendance attendance  = attendanceRepo
-                .findByClassEntityAndAttendanceDate(schoolClass, request.getDate())
-                .orElseThrow(() -> new ResourceNotFoundException("Attendance record not found for this class on " + request.getDate()));
-
-        List<Student> students = studentRepo.findByAssignedClass_Id(request.getClassId());
-        List<StudentAttendanceRecordDto> recordDtos = new ArrayList<>();
-
-        for (Student student : students) {
-            int roll = student.getRollNumber();
-
-            AttendanceStatus status;
-            if (attendance.getAbsentRollNumbers().contains(roll)) {
-                status = AttendanceStatus.ABSENT;
-            } else if (attendance.getLateRollNumbers().contains(roll)) {
-                status = AttendanceStatus.LATE;
-            } else if (attendance.getHalfDayRollNumbers().contains(roll)) {
-                status = AttendanceStatus.HALF_DAY;
-            } else {
-                status = AttendanceStatus.PRESENT;
-            }
-
-            recordDtos.add(attendanceMapper.toRecordDto(student, status, schoolClass.getClassName()));
-        }
-
-        return attendanceMapper.toSingleDayResponseDto(request.getDate(), recordDtos);
-
-    }
-
 //    ============= HELPER METHODS ==============
-
-
     private void checkAndNotifyConsecutiveAbsence(@NotNull List<Integer> absentRollNumbers, @NotNull(message = "Class ID is required") Long classId) {
         AttendanceConfig config = attendanceConfigRepo.findTopByOrderByCreatedAtDesc();
 

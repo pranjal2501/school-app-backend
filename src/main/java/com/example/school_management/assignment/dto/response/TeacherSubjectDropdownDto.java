@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 @Builder
 public class TeacherSubjectDropdownDto {
+    private Long allocationId;
     private Long subjectId;
     private String subjectName;
 }

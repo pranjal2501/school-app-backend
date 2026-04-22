@@ -42,9 +42,7 @@ public class MarkController {
     public ResponseEntity<ApiResponse<List<MarkResponseDto>>> getMarks(
             @PathVariable Long allocationId,
             @PathVariable ExamTerm examTerm) {
-
         List<MarkResponseDto> response = markService.getMarksForAllocation(allocationId, examTerm);
-
         return ResponseEntity.ok(ApiResponse.ok("Marks fetched successfully.", response));
     }
 }

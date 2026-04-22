@@ -14,4 +14,6 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
 
     @Query("SELECT COUNT(a) FROM Assignment a WHERE a.allocation.teacher = :teacher AND a.dueDate > :now")
     int countActiveAssignmentsByTeacher(@Param("teacher") Teacher teacher, @Param("now") LocalDateTime now);
+
+    List<Assignment> findAllByAllocation_Teacher_IdOrderByCreatedAtDesc(Long teacherId);
 }
