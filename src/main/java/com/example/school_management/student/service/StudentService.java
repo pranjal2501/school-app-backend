@@ -13,9 +13,9 @@ public interface StudentService {
 
     List<StudentResponseDto> getAllStudents();
 
-    StudentResponseDto getStudentById(Long id);
-    StudentResponseDto getStudentByRegId(String RegId);
+//    StudentResponseDto getStudentById(Long id);
 
+    StudentResponseDto getStudentByRegId(String RegId);
 
     StudentResponseDto updateStudent(Long id, StudentRequestDto request);
 

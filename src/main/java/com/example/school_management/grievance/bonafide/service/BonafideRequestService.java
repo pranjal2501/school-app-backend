@@ -1,12 +1,20 @@
 package com.example.school_management.grievance.bonafide.service;
 
+import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.enums.BonafideStatus;
+import com.example.school_management.common.enums.Role;
+import com.example.school_management.common.enums.notify.AudienceType;
+import com.example.school_management.common.enums.notify.NotificationType;
 import com.example.school_management.grievance.bonafide.dto.*;
 import com.example.school_management.grievance.bonafide.entity.BonafideRequest;
 import com.example.school_management.grievance.bonafide.entity.BonafideTemplate;
 import com.example.school_management.grievance.bonafide.mapper.BonafideMapper;
 import com.example.school_management.grievance.bonafide.repository.BonafideRequestRepository;
 import com.example.school_management.mail.service.EmailService;
+import com.example.school_management.notify.entity.Notification;
+import com.example.school_management.notify.entity.UserNotification;
+import com.example.school_management.notify.repository.NotificationRepository;
+import com.example.school_management.notify.repository.UserNotificationRepository;
 import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.parent.repository.ParentRepository;
 import com.example.school_management.student.entity.Student;
@@ -16,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,16 +36,23 @@ public class BonafideRequestService {
 
     private final BonafideRequestRepository requestRepository;
     private final StudentRepository studentRepository;
+    private final UserNotificationRepository userNotificationRepository;
+    private final NotificationRepository notificationRepository;
     private final ParentRepository parentRepository;
     private final BonafideTemplateService templateService;
     private final BonafideImageService imageService;
     private final EmailService emailService;
     private final BonafideMapper bonafideMapper;
+    private final RoleVerifier roleVerifier;
 
     // ── PARENT ACTIONS ─────────────────────────────────────────────────────────
 
     @Transactional
-    public BonafideRequestResponse submitRequest(Long parentId, BonafideRequestCreate dto) {
+    public BonafideRequestResponse submitRequest(Long parentId, BonafideRequestCreate dto) throws AccessDeniedException {
+        if(!roleVerifier.hasRole(Role.PARENT))
+        {
+            throw new AccessDeniedException("Only admin can access");
+        }
 
         Parent parent = parentRepository.findById(parentId)
                 .orElseThrow(() -> new EntityNotFoundException("Parent not found"));
@@ -64,7 +80,12 @@ public class BonafideRequestService {
     }
 
     @Transactional(readOnly = true)
-    public List<BonafideRequestResponse> getMyRequests(Long parentId) {
+    public List<BonafideRequestResponse> getMyRequests(Long parentId) throws AccessDeniedException {
+
+        if(!roleVerifier.hasRole(Role.PARENT))
+        {
+            throw new AccessDeniedException("Only admin can access");
+        }
         return requestRepository.findByRequestedById(parentId)
                 .stream()
                 .map(bonafideMapper::toResponse)
@@ -74,7 +95,11 @@ public class BonafideRequestService {
     // ── ADMIN ACTIONS ──────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public List<BonafideRequestResponse> getAllPendingRequests() {
+    public List<BonafideRequestResponse> getAllPendingRequests() throws AccessDeniedException {
+        if(!roleVerifier.hasRole(Role.ADMIN))
+        {
+            throw new AccessDeniedException("Only admin can access");
+        }
         return requestRepository.findByStatus(BonafideStatus.PENDING)
                 .stream()
                 .map(bonafideMapper::toResponse)
@@ -83,7 +108,13 @@ public class BonafideRequestService {
 
 
     @Transactional(readOnly = true)
-    public List<BonafideRequestResponse> getAllRequests() {
+    public List<BonafideRequestResponse> getAllRequests() throws AccessDeniedException {
+
+        if(!roleVerifier.hasRole(Role.ADMIN))
+        {
+            throw new AccessDeniedException("Only admin can access");
+        }
+
         return requestRepository.findAll()
                 .stream()
                 .map(bonafideMapper::toResponse)
@@ -91,7 +122,12 @@ public class BonafideRequestService {
     }
 
     @Transactional
-    public BonafideRequestResponse approveRequest(Long requestId) {
+    public BonafideRequestResponse approveRequest(Long requestId) throws AccessDeniedException {
+
+        if(!roleVerifier.hasRole(Role.ADMIN))
+        {
+            throw new AccessDeniedException("Only admin can access");
+        }
 
         BonafideRequest request = getPendingRequestOrThrow(requestId);
         BonafideTemplate template = templateService.getActiveTemplateEntity();
@@ -109,12 +145,20 @@ public class BonafideRequestService {
         request.setStatus(BonafideStatus.APPROVED);
         request.setResolvedAt(LocalDateTime.now());
 
-        return bonafideMapper.toResponse(requestRepository.save(request));
+        BonafideRequest saved = requestRepository.save(request);
+        requestRepository.flush();
+
+        notifyParentsOnApprove(student);
+        return bonafideMapper.toResponse(saved);
     }
 
     @Transactional
-    public BonafideRequestResponse rejectRequest(Long requestId, BonafideRejectRequest dto) {
+    public BonafideRequestResponse rejectRequest(Long requestId, BonafideRejectRequest dto) throws AccessDeniedException {
 
+        if(!roleVerifier.hasRole(Role.ADMIN))
+        {
+            throw new AccessDeniedException("Only admin can access");
+        }
         BonafideRequest request = getPendingRequestOrThrow(requestId);
 
         request.setStatus(BonafideStatus.REJECTED);
@@ -155,5 +199,32 @@ public class BonafideRequestService {
                     "Cannot generate bonafide — student profile is incomplete. Missing: "
                             + String.join(", ", missing));
         }
+    }
+
+    private void notifyParentsOnApprove(Student student) {
+        Parent parent=student.getParent();
+        if (parent == null) return;
+
+        // 1. Create Notification
+        Notification notification = Notification.builder()
+                .title("Bonafide request approved")
+                .description("Attention :  ")
+                .shortInfo("We are pleased to inform you that the bonafide certificate request for your child ,"+ student.getFirstName() + " has been successfully approved.")
+                .audienceType(AudienceType.PARENT)
+                .notificationType(NotificationType.UPDATE)
+                .eventDateTime(LocalDateTime.now()) // immediate event
+                .scheduledDispatchTime(LocalDateTime.now())
+                .dispatched(true)
+                .build();
+
+        notificationRepository.save(notification);
+
+        UserNotification userNotification = UserNotification.builder()
+                .notification(notification)
+                .parent(parent)
+                .deliveredAt(LocalDateTime.now())
+                .build();
+
+        userNotificationRepository.save(userNotification);
     }
 }

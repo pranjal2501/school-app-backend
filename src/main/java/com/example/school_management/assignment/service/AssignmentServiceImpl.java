@@ -14,8 +14,17 @@ import com.example.school_management.assignment.repository.AssignmentRepository;
 import com.example.school_management.assignment.repository.AssignmentSubmissionRepository;
 import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.enums.Role;
+import com.example.school_management.common.enums.notify.AudienceType;
+import com.example.school_management.common.enums.notify.NotificationType;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.common.exception.UnauthorizedAccessException;
+import com.example.school_management.student.entity.Student;
+import com.example.school_management.student.repository.StudentRepository;
+import com.example.school_management.notify.entity.Notification;
+import com.example.school_management.notify.entity.UserNotification;
+import com.example.school_management.notify.repository.NotificationRepository;
+import com.example.school_management.notify.repository.UserNotificationRepository;
+import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.repository.StudentRepository;
 import com.example.school_management.teacher.entity.Teacher;
@@ -26,6 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,6 +46,8 @@ public class AssignmentServiceImpl implements AssignmentService{
 
     private final AssignmentRepository assignmentRepository;
     private final ClassSubjectTeacherRepository pivotRepository;
+    private final NotificationRepository notificationRepository;
+    private final UserNotificationRepository userNotificationRepository;
     private final TeacherRepository teacherRepository;
     private final AssignmentSubmissionRepository submissionRepository;
     private final StudentRepository studentRepository;
@@ -190,6 +202,9 @@ public class AssignmentServiceImpl implements AssignmentService{
         // 3. Map and Save
         Assignment assignment = assignmentMapper.toIndividualEntity(request, allocation);
         Assignment saved = assignmentRepository.save(assignment);
+        assignmentRepository.flush();
+
+        notifyParentsOnNewAssignment(saved);
 
         return assignmentMapper.toResponseDto(saved);
     }
@@ -245,5 +260,37 @@ public class AssignmentServiceImpl implements AssignmentService{
 
         // Delete associated files/submissions if necessary, then delete the assignment
         assignmentRepository.delete(assignment);
+    }
+
+    private void notifyParentsOnNewAssignment(Assignment assignment) {
+
+        // 1. Create Notification
+        Notification notification = Notification.builder()
+                .title(assignment.getTitle())
+                .description("Assignment : " +assignment.getDescription())
+                .shortInfo("New Assignment of "+assignment.getAssignmentType()+" is expected to be completed within "+ assignment.getDueDate())
+                .audienceType(AudienceType.PARENT)
+                .notificationType(NotificationType.UPDATE)
+                .eventDateTime(LocalDateTime.now()) // immediate event
+                .scheduledDispatchTime(LocalDateTime.now())
+                .dispatched(true)
+                .build();
+
+        notificationRepository.save(notification);
+
+        List<Student> studentsInClass = assignment.getAllocation().getSchoolClass().getStudents();
+
+        for (Student student : studentsInClass) {
+            Parent parent = student.getParent();
+            if (parent == null) continue;  // skip if student has no parent linked
+
+            UserNotification userNotification = UserNotification.builder()
+                    .notification(notification)
+                    .parent(parent)
+                    .deliveredAt(LocalDateTime.now())
+                    .build();
+
+            userNotificationRepository.save(userNotification);
+        }
     }
 }

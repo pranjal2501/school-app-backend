@@ -1,6 +1,7 @@
 package com.example.school_management.attendance.service;
 
 import com.example.school_management.attendance.dto.ClassWeeklyStatDto;
+import com.example.school_management.attendance.dto.latemark.UpdateLateMarksRequestDto;
 import com.example.school_management.attendance.dto.studentAttendance.*;
 import com.example.school_management.attendance.entity.AttendanceConfig;
 import com.example.school_management.attendance.entity.SchoolHolidays;
@@ -10,10 +11,20 @@ import com.example.school_management.attendance.repository.AttendanceConfigRepo;
 import com.example.school_management.attendance.repository.SchoolHolidaysRepository;
 import com.example.school_management.attendance.repository.StudentAttendanceRepo;
 import com.example.school_management.common.RoleVerifier;
+import com.example.school_management.common.enums.Gender;
 import com.example.school_management.common.enums.Role;
 import com.example.school_management.common.enums.attendance.AttendanceStatus;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.notify.service.NotificationService;
+import com.example.school_management.common.enums.attendance.AttendanceStatus;
+import com.example.school_management.common.enums.notify.AudienceType;
+import com.example.school_management.common.enums.notify.NotificationType;
+import com.example.school_management.common.exception.ResourceNotFoundException;
+import com.example.school_management.notify.entity.Notification;
+import com.example.school_management.notify.entity.UserNotification;
+import com.example.school_management.notify.repository.NotificationRepository;
+import com.example.school_management.notify.repository.UserNotificationRepository;
+import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.schoolClass.repo.SchoolClassRepository;
 import com.example.school_management.student.entity.Student;
@@ -22,12 +33,17 @@ import com.example.school_management.teacher.entity.Teacher;
 import com.example.school_management.teacher.repository.TeacherRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,13 +57,19 @@ public class StudentAttendanceService {
 
     private final StudentAttendanceRepo attendanceRepo;
     private final SchoolHolidaysRepository holidayRepo;
+    private final StudentRepository studentRepository;
+    private final UserNotificationRepository userNotificationRepo;
+    private final NotificationRepository notificationRepository;
+    private final StudentAttendanceRepo studentAttendanceRepo;
     private final SchoolClassRepository classRepo;
     private final TeacherRepository teacherRepo;
     private final StudentRepository studentRepo;
     private final AttendanceConfigRepo configRepo;
+    private final AttendanceConfigRepo attendanceConfigRepo;
     private final StudentAttendanceMapper attendanceMapper;
     private final NotificationService notificationService;
     private final RoleVerifier verify;
+    private final SchoolClassRepository schoolClassRepository;
 
     // ── Mark attendance for entire class ────────────────────────────
 
@@ -110,16 +132,9 @@ public class StudentAttendanceService {
         // 5. Map to Entity and Save (Cleaned up via Mapper)
         StudentAttendance attendance = attendanceMapper.toEntity(request, classEntity, markedBy, null);
         StudentAttendance saved = attendanceRepo.save(attendance);
+        attendanceRepo.flush();
 
-//        if (!request.getAbsentRollNumbers().isEmpty() || !request.getLateRollNumbers().isEmpty()) {
-//            notificationService.notifyParentsForUnattendedClass(
-//                    request.getClassId(),
-//                    request.getAttendanceDate(),
-//                    request.getAbsentRollNumbers(),
-//                    request.getLateRollNumbers(),
-//                    request.getHalfDayRollNumbers()
-//            );
-//        }
+        checkAndNotifyConsecutiveAbsence(request.getAbsentRollNumbers(), request.getClassId());
 
         // 6. Return response via Mapper
         return attendanceMapper.toMarkResponse(saved, validRollNumbers.size());
@@ -136,6 +151,38 @@ public class StudentAttendanceService {
 
         // 2. Pass both the entity and the count to your existing mapper method
         return attendanceMapper.toMarkResponse(savedAttendance, totalStudents);
+    }
+
+    public void updateLateMarks(Long attendanceId, UpdateLateMarksRequestDto request) {
+
+        StudentAttendance attendance = studentAttendanceRepo.findById(attendanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Attendance", "id", attendanceId));
+
+        AttendanceConfig config = attendanceConfigRepo.findByAcademicYear(request.getAcademicYear())
+                .orElseThrow(() -> new ResourceNotFoundException("Config not found for year: " + request.getAcademicYear()));
+
+        if (!Boolean.TRUE.equals(config.getAllowLateMarks())) {
+            throw new IllegalStateException("Late marks are disabled in attendance config.");
+        }
+
+        LocalDateTime deadline = attendance.getCreatedAt()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime()
+                .plusMinutes(config.getLateMarksWindow());
+
+        if (LocalDateTime.now().isAfter(deadline)) {
+            throw new IllegalStateException(
+                    "Late mark window of " + config.getLateMarksWindow()
+                            + " minutes has expired. Window closed at: " + deadline
+            );
+        }
+        List<Integer> updatedAbsents = new ArrayList<>(attendance.getAbsentRollNumbers());
+        updatedAbsents.removeAll(request.getLateRollNumbers());
+        attendance.setAbsentRollNumbers(updatedAbsents);
+
+        attendance.setLateRollNumbers(request.getLateRollNumbers());
+        studentAttendanceRepo.save(attendance);
+
     }
 
     // ── Build monthly calendar — parent dashboard (single child) ────────────────────
@@ -354,6 +401,111 @@ public class StudentAttendanceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Attendance record not found for this class on " + request.getDate()));
 
         List<Student> students = studentRepo.findByAssignedClass_Id(request.getClassId());
+        List<StudentAttendanceRecordDto> recordDtos = new ArrayList<>();
+
+        for (Student student : students) {
+            int roll = student.getRollNumber();
+
+            AttendanceStatus status;
+            if (attendance.getAbsentRollNumbers().contains(roll)) {
+                status = AttendanceStatus.ABSENT;
+            } else if (attendance.getLateRollNumbers().contains(roll)) {
+                status = AttendanceStatus.LATE;
+            } else if (attendance.getHalfDayRollNumbers().contains(roll)) {
+                status = AttendanceStatus.HALF_DAY;
+            } else {
+                status = AttendanceStatus.PRESENT;
+            }
+
+            recordDtos.add(attendanceMapper.toRecordDto(student, status, schoolClass.getClassName()));
+        }
+
+        return attendanceMapper.toSingleDayResponseDto(request.getDate(), recordDtos);
+
+    }
+
+//    ============= HELPER METHODS ==============
+
+
+    private void checkAndNotifyConsecutiveAbsence(@NotNull List<Integer> absentRollNumbers, @NotNull(message = "Class ID is required") Long classId) {
+        AttendanceConfig config = attendanceConfigRepo.findTopByOrderByCreatedAtDesc();
+
+        if (config == null
+                || !Boolean.TRUE.equals(config.getNotifyParentOnAbsent())
+                || config.getAbsentNotifyThreshold() == null
+                || absentRollNumbers == null
+                || absentRollNumbers.isEmpty()) return;
+
+        int threshold = config.getAbsentNotifyThreshold();
+
+        List<StudentAttendance> recentRecords =
+                attendanceRepo.findByClassEntityIdOrderByAttendanceDateDesc(
+                        classId, PageRequest.of(0, threshold));
+
+        if (recentRecords.size() < threshold) return;
+
+        for (Integer rollNumber : absentRollNumbers) {
+
+            boolean consecutivelyAbsent = recentRecords.stream()
+                    .allMatch(record -> record.getAbsentRollNumbers() != null
+                            && record.getAbsentRollNumbers().contains(rollNumber));
+
+            if (!consecutivelyAbsent) continue;
+
+            Student student = studentRepo
+                    .findByAssignedClass_IdAndRollNumber(classId, rollNumber)
+                    .orElse(null);
+
+            if (student == null || student.getParent() == null) continue;
+
+            Parent parent = student.getParent();
+
+            boolean alreadyNotifiedToday = userNotificationRepo
+                    .existsByParentIdAndNotification_TitleContainingAndDeliveredAtAfter(
+                            parent.getId(),
+                            "Consecutive Absence – " + student.getFirstName(),
+                            LocalDateTime.now().toLocalDate().atStartOfDay()
+                    );
+
+            if (alreadyNotifiedToday) continue;
+
+            Notification notification = notificationRepository.save(Notification.builder()
+                    .title("Consecutive Absence – " + student.getFirstName())
+                    .description("Attendance Alert")
+                    .shortInfo(student.getFirstName() + " " + student.getLastName()
+                            + " has been absent for " + threshold
+                            + " consecutive days. Please take note.")
+                    .audienceType(AudienceType.PARENT)
+                    .notificationType(NotificationType.UPDATE)
+                    .eventDateTime(LocalDateTime.now())
+                    .scheduledDispatchTime(LocalDateTime.now())
+                    .dispatched(true)
+                    .build());
+
+            UserNotification userNotification = UserNotification.builder()
+                    .notification(notification)
+                    .parent(parent)
+                    .deliveredAt(LocalDateTime.now())
+                    .build();
+
+            userNotificationRepo.save(userNotification);
+        }
+    }
+
+    public SingleDayAttendanceResponseDto getSingleDayReport(SingleDayAttendanceRequestDto request) throws AccessDeniedException {
+
+        if(!verify.hasAnyRole(Role.ADMIN, Role.TEACHER)){
+            throw new AccessDeniedException("Only ADMIN and teacher can perform this action");
+        }
+
+        SchoolClass schoolClass = schoolClassRepository.findById(request.getClassId())
+                .orElseThrow(() -> new ResourceNotFoundException("Class", "id", request.getClassId()));
+
+        StudentAttendance attendance = studentAttendanceRepo
+                .findByClassEntityAndAttendanceDate(schoolClass, request.getDate())
+                .orElseThrow(() -> new ResourceNotFoundException("Attendance record not found for this class on " + request.getDate()));
+
+        List<Student> students = studentRepository.findByAssignedClass_Id(request.getClassId());
         List<StudentAttendanceRecordDto> recordDtos = new ArrayList<>();
 
         for (Student student : students) {

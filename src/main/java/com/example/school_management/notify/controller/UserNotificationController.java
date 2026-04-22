@@ -1,6 +1,7 @@
 package com.example.school_management.notify.controller;
 
 import com.example.school_management.common.ApiResponse;
+import com.example.school_management.notify.dto.GeneralParentNotificationResponseDto;
 import com.example.school_management.notify.dto.ParentNotificationResponseDto;
 import com.example.school_management.notify.dto.TeacherNotificationResponseDto;
 import com.example.school_management.notify.service.UserNotificationService;

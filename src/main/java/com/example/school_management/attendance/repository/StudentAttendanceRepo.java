@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -100,4 +102,7 @@ public interface StudentAttendanceRepo extends JpaRepository<StudentAttendance, 
     List<StudentAttendance> findTop7ByClassEntityIdAndAttendanceDateLessThanEqualOrderByAttendanceDateDesc(Long classId, LocalDate date);
 
     Optional<StudentAttendance> findByClassEntityAndAttendanceDate(SchoolClass schoolClass, @NotNull LocalDate date);
+    //List<StudentAttendance> findTopNByClassEntityIdOrderByAttendanceDateDesc(@NotNull(message = "Class ID is required") Long classId, int threshold);
+    List<StudentAttendance> findByClassEntityIdOrderByAttendanceDateDesc(Long classId, Pageable pageable);
+    List<StudentAttendance> findByClassEntity(SchoolClass assignedClass);
 }

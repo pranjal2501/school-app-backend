@@ -1,13 +1,35 @@
 package com.example.school_management.teacher.service;
 
 import com.example.school_management.common.RoleVerifier;
+import com.example.school_management.assignment.repository.AssignmentRepository;
+import com.example.school_management.attendance.entity.StudentAttendance;
+import com.example.school_management.attendance.repository.StudentAttendanceRepo;
+import com.example.school_management.common.enums.ComplaintStatus;
 import com.example.school_management.common.enums.Role;
+import com.example.school_management.common.enums.notify.AudienceType;
+import com.example.school_management.common.enums.notify.NotificationType;
 import com.example.school_management.common.exception.DuplicateResourceException;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.common.exception.UnauthorizedAccessException;
+import com.example.school_management.complaint.entity.Complaint;
+import com.example.school_management.complaint.mappper.ComplaintMapper;
+import com.example.school_management.complaint.repository.ComplaintRepository;
 import com.example.school_management.mail.service.EmailService;
+import com.example.school_management.notify.dto.CreateNotificationRequestDto;
+import com.example.school_management.notify.dto.NotificationResponseDto;
+import com.example.school_management.notify.entity.Notification;
+import com.example.school_management.notify.entity.UserNotification;
+import com.example.school_management.notify.mapper.NotificationMapper;
+import com.example.school_management.notify.repository.NotificationRepository;
+import com.example.school_management.notify.repository.UserNotificationRepository;
+import com.example.school_management.parent.entity.Parent;
+import com.example.school_management.schoolClass.entity.SchoolClass;
+import com.example.school_management.schoolClass.repo.SchoolClassRepository;
+import com.example.school_management.student.entity.Student;
+import com.example.school_management.student.repository.StudentRepository;
 import com.example.school_management.subject.entity.Subject;
 import com.example.school_management.subject.repository.SubjectRepository;
+import com.example.school_management.teacher.dto.TeacherDashboardResponseDto;
 import com.example.school_management.teacher.dto.TeacherFromAdminRequestDto;
 import com.example.school_management.teacher.dto.TeacherRemainingInfoDto;
 import com.example.school_management.teacher.dto.response.MyClassResponseDto;
@@ -24,6 +46,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +58,15 @@ public class TeacherServiceImpl implements TeacherService {
     private final TeacherMapper teacherMapper;
     private final PasswordEncoder passwordEncoder;
     private final SubjectRepository subjectRepository;
+    private final StudentRepository studentRepository;
+    private final NotificationRepository notificationRepository;
+    private final UserNotificationRepository userNotificationRepository;
+    private final SchoolClassRepository schoolClassRepository;
+    private final StudentAttendanceRepo studentAttendanceRepo;
+    private final NotificationMapper notificationMapper;
+    private final AssignmentRepository assignmentRepository;
+    private final ComplaintRepository complaintRepository;
+    private final ComplaintMapper complaintMapper;
     private final EmailService emailService;
     private final RoleVerifier roleVerifier;
     /**
@@ -245,6 +279,144 @@ public class TeacherServiceImpl implements TeacherService {
                 .teacherId(teacher.getId())
                 .teacherName(teacher.getFirstName() + " " + teacher.getLastName())
                 .build();
+    }
+
+
+    @Override
+    public NotificationResponseDto notifyParentsOfClass(long classId, CreateNotificationRequestDto notification) throws AccessDeniedException{
+
+        if(!roleVerifier.hasRole(Role.TEACHER))
+        {
+            throw new AccessDeniedException("Only teachers can access this service");
+        }
+        return notifyParents(classId, notification);
+    }
+
+    @Override
+    public TeacherDashboardResponseDto getDashboard(Long teacherId) {
+
+        String currentUser = roleVerifier.getCurrentUsername();
+
+        Teacher teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", teacherId));
+
+        if (!teacher.isIdentifiedBy(currentUser)) {
+            throw new UnauthorizedAccessException("You can only view your own dashboard");
+        }
+
+        SchoolClass assignedClass = teacher.getAssignedClass();
+        Float attendancePercent = null;
+        if (assignedClass != null) {
+            List<StudentAttendance> attendances = studentAttendanceRepo
+                    .findByClassEntity(assignedClass);
+            int totalDays = attendances.size();
+            int totalStudents = assignedClass.getTotalStudents();
+
+            if (totalDays > 0 && totalStudents > 0) {
+                int totalAbsences = attendances.stream()
+                        .mapToInt(a -> a.getAbsentRollNumbers().size())
+                        .sum();
+                int totalPossible = totalDays * totalStudents;
+                attendancePercent = ((totalPossible - totalAbsences) * 100.0f) / totalPossible;
+            }
+        }
+
+        int activeAssignments = assignmentRepository
+                .countActiveAssignmentsByTeacher(teacher, LocalDateTime.now());
+
+        List<Complaint> openComplaints = complaintRepository
+                .findByReportedByEmployeeAndStatus(teacher, ComplaintStatus.PENDING);
+
+        int subjectsTaught = teacher.getSubjects() != null
+                ? teacher.getSubjects().size()
+                : 0;
+
+        return TeacherDashboardResponseDto.builder()
+                .attendancePercent(attendancePercent)
+                .activeAssignments(activeAssignments)
+                .openComplaints(openComplaints.size())
+                .subjectsTaught(subjectsTaught)
+                .complaints(openComplaints.stream()
+                        .map(complaintMapper::toResponseDto)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+// ===================== HELPER METHODS ===========================
+
+    private void notifyToCompleteProfile(Teacher savedTeacher) {
+
+        Notification notification = Notification.builder()
+                .title("Complete Profile")
+                .description("Attention "+ savedTeacher.getFirstName() +" complete the remaining profile from your login")
+                .shortInfo("Complete the profile")
+                .audienceType(AudienceType.TEACHER)
+                .notificationType(NotificationType.UPDATE)
+                .eventDateTime(LocalDateTime.now()) // immediate event
+                .scheduledDispatchTime(LocalDateTime.now())
+                .dispatched(true)
+                .build();
+
+        notificationRepository.save(notification);
+
+        UserNotification userNotification = UserNotification.builder()
+                .notification(notification)
+                .teacher(savedTeacher)
+                .deliveredAt(LocalDateTime.now())
+                .build();
+
+        userNotificationRepository.save(userNotification);
+    }
+
+    private NotificationResponseDto notifyParents(long classId, CreateNotificationRequestDto request) {
+
+        SchoolClass schoolClass = schoolClassRepository.findById(classId)
+                .orElseThrow(() -> new ResourceNotFoundException("Class", "id", classId));
+
+        Set<SchoolClass> targetClasses = new HashSet<>();
+        targetClasses.add(schoolClass);
+
+        Notification notification = Notification.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .shortInfo(request.getShortInfo())
+                .audienceType(AudienceType.PARENT)
+                .notificationType(request.getNotificationType())
+                .eventDateTime(request.getEventDateTime())
+                .scheduledDispatchTime(Boolean.TRUE.equals(request.getDispatchNow())
+                        ? LocalDateTime.now()
+                        : null)
+                .dispatched(false)
+                .targetClasses(targetClasses)
+                .teacherIds(new HashSet<>())
+                .build();
+
+        notificationRepository.save(notification);
+
+        if (Boolean.TRUE.equals(request.getDispatchNow())) {
+
+            List<Student> students = studentRepository.findByAssignedClass_Id(classId);
+
+            for (Student student : students) {
+                Parent parent = student.getParent();
+
+                if (parent == null) continue;
+
+                UserNotification userNotification = UserNotification.builder()
+                        .notification(notification)
+                        .parent(parent)
+                        .isRead(false)
+                        .deliveredAt(LocalDateTime.now())
+                        .build();
+
+                userNotificationRepository.save(userNotification);
+            }
+
+            notification.setDispatched(true);
+            notificationRepository.save(notification);
+        }
+
+        return notificationMapper.toResponseDto(notification);
     }
 
     private String getSafeSubstring(String value, int length) {

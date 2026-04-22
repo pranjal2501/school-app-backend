@@ -1,6 +1,7 @@
 package com.example.school_management.attendance.controller;
 
 import com.example.school_management.attendance.dto.ClassWeeklyStatDto;
+import com.example.school_management.attendance.dto.latemark.UpdateLateMarksRequestDto;
 import com.example.school_management.attendance.dto.studentAttendance.*;
 import com.example.school_management.attendance.service.StudentAttendanceService;
 import com.example.school_management.common.ApiResponse;
@@ -30,6 +31,15 @@ public class StudentAttendanceController {
 
         MarkAttendanceResponseDto response = attendanceService.markAttendance(request, teacherId);
         return ResponseEntity.ok(ApiResponse.ok("Attendance marked successfully", response));
+    }
+
+    @PatchMapping("/{attendanceId}/late-marks")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<String>> updateLateMarks(
+            @PathVariable Long attendanceId,
+            @RequestBody UpdateLateMarksRequestDto request) {
+        attendanceService.updateLateMarks(attendanceId, request);
+        return ResponseEntity.ok(ApiResponse.ok("Late marks updated successfully", null));
     }
 
     //Get monthly calendar view for a specific student (Parent Dashboard).
@@ -86,4 +96,13 @@ public class StudentAttendanceController {
     ) throws AccessDeniedException {
         return ResponseEntity.ok(ApiResponse.ok("Attendance for date "+request.getDate()+"Fetched successfully", attendanceService.getSingleDayReport(request)));
     }
+
+//    @GetMapping("/daily-report")
+//    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
+//    public ResponseEntity<ApiResponse<SingleDayAttendanceResponseDto>> fetchSingleDayRecord(
+//            @RequestBody SingleDayAttendanceRequestDto request
+//    ) throws AccessDeniedException {
+//        return ResponseEntity.ok(ApiResponse.ok("Attendance for date "+request.getDate()+"Fetched successfully", attendanceService.getSingleDayReport(request)));
+//    }
+
 }

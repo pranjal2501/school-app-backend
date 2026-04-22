@@ -183,7 +183,7 @@ public class ClassServiceImpl implements ClassService {
         List<String> response= new ArrayList<>();
         for (int i = 0; i < studentList.size(); i++) {
             studentList.get(i).setRollNumber(i + 1);
-            response.add(studentList.get(i).getFirstName()+" is assigned with "+ i+1);
+            response.add(studentList.get(i).getFirstName()+" is assigned with "+ (i+1));
         }
 
         return response;

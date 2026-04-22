@@ -5,5 +5,7 @@ public enum NotificationType {
     EXAM,
     RESULT,
     MEETING,
-    INSPECTION
+    INSPECTION,
+    COMPLAINT,
+    UPDATE
 }

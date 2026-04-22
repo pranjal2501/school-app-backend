@@ -1,8 +1,8 @@
 package com.example.school_management.notify.service;
 
+import com.example.school_management.notify.dto.GeneralParentNotificationResponseDto;
 import com.example.school_management.notify.dto.ParentNotificationResponseDto;
 import com.example.school_management.notify.dto.TeacherNotificationResponseDto;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 

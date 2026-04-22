@@ -24,18 +24,16 @@ public class AttendanceConfigService {
     // Create or Update rules for the year (e.g., 220 days, 75% required)
     public AttendanceConfigResponseDto saveConfig(AttendanceConfigRequestDto request) throws AccessDeniedException {
 
-        if(!verify.hasRole(Role.ADMIN)){
+        if (!verify.hasRole(Role.ADMIN)) {
             throw new AccessDeniedException("Only ADMIN can perform this action");
         }
 
-            AttendanceConfig config = configRepo.findByAcademicYear(request.getAcademicYear())
-                    .orElse(new AttendanceConfig());
+        AttendanceConfig config = configRepo.findByAcademicYear(request.getAcademicYear())
+                .orElse(new AttendanceConfig());
 
-            config.setAcademicYear(request.getAcademicYear());
-            config.setStudentWorkingDays(request.getStudentWorkingDays());
-            config.setStudentMinAttendancePct(request.getStudentMinAttendancePct());
+        configMapper.mapDtoToEntity(request, config);  // maps all 11 fields
 
-            return configMapper.toResponseDto(configRepo.save(config));
+        return configMapper.toResponseDto(configRepo.save(config));
 
     }
 

@@ -5,6 +5,8 @@ import com.example.school_management.admin.repository.AdminRepository;
 import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.enums.ComplaintStatus;
 import com.example.school_management.common.enums.Role;
+import com.example.school_management.common.enums.notify.AudienceType;
+import com.example.school_management.common.enums.notify.NotificationType;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.common.exception.UnauthorizedAccessException;
 import com.example.school_management.complaint.dto.*;
@@ -13,6 +15,13 @@ import com.example.school_management.complaint.mappper.ComplaintMapper;
 import com.example.school_management.complaint.repository.ComplaintRepository;
 import com.example.school_management.employee.entity.Employee;
 import com.example.school_management.employee.repository.EmployeeRepository;
+import com.example.school_management.notify.dto.CreateNotificationRequestDto;
+import com.example.school_management.notify.entity.Notification;
+import com.example.school_management.notify.entity.UserNotification;
+import com.example.school_management.notify.repository.NotificationRepository;
+import com.example.school_management.notify.repository.UserNotificationRepository;
+import com.example.school_management.notify.service.impl.NotificationServiceImpl;
+import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.repository.StudentRepository;
 import com.example.school_management.teacher.entity.Teacher;
@@ -25,6 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class ComplaintServiceImpl implements ComplaintService {
@@ -35,7 +46,9 @@ public class ComplaintServiceImpl implements ComplaintService {
     private final EmployeeRepository employeeRepository;
     private final TeacherRepository teacherRepository;
     private final ComplaintMapper complaintMapper;
-    private final RoleVerifier roleVerifier; // Assuming you have this utility
+    private final RoleVerifier roleVerifier; // Injected for strict security context checks
+    private final NotificationRepository notificationRepository;
+    private final UserNotificationRepository userNotificationRepository;
 
     // ── 1. RAISE COMPLAINT (BULK SUPPORT) ────────────────────────────────────
     @Override
@@ -79,8 +92,18 @@ public class ComplaintServiceImpl implements ComplaintService {
             complaintsToSave.add(complaint);
         }
 
-        // 3. Batch Save for performance
-        List<Complaint> savedComplaints = complaintRepository.saveAll(complaintsToSave);
+        // 3. Batch Save and Flush (Ensures IDs and Ticket Numbers are generated in the DB)
+        List<Complaint> savedComplaints = complaintRepository.saveAllAndFlush(complaintsToSave);
+
+        // 4. Send Notifications safely AFTER everything is successfully saved
+        for (Complaint savedComplaint : savedComplaints) {
+            // Only notify if the complaint is marked as visible to parents!
+            if (savedComplaint.isVisibleToParents()) {
+                notifyParentsOnComplaint(savedComplaint, savedComplaint.getTargetStudent());
+            }
+        }
+
+        // 5. Map to DTOs and Return
         return savedComplaints.stream().map(complaintMapper::toResponseDto).toList();
     }
 
@@ -203,4 +226,33 @@ public class ComplaintServiceImpl implements ComplaintService {
         complaint.setVisibleToParents(request.getIsVisibleToParents());
         return complaintMapper.toResponseDto(complaintRepository.save(complaint));
     }
+//   ===============================Helper methods=========================
+
+    private void notifyParentsOnComplaint(Complaint complaint, Student targetStudent) {
+        Parent parent=targetStudent.getParent();
+        if (parent == null) return;
+
+        // 1. Create Notification
+        Notification notification = Notification.builder()
+                .title(complaint.getTitle())
+                .description("Complaint : " +complaint.getDescription())
+                .shortInfo("Complaint raised for your child"+complaint.getTargetStudent().getFirstName())
+                .audienceType(AudienceType.PARENT)
+                .notificationType(NotificationType.COMPLAINT)
+                .eventDateTime(LocalDateTime.now()) // immediate event
+                .scheduledDispatchTime(LocalDateTime.now())
+                .dispatched(true)
+                .build();
+
+        notificationRepository.save(notification);
+
+        UserNotification userNotification = UserNotification.builder()
+                .notification(notification)
+                .parent(parent)
+                .deliveredAt(LocalDateTime.now())
+                .build();
+
+        userNotificationRepository.save(userNotification);
+    }
+
 }
