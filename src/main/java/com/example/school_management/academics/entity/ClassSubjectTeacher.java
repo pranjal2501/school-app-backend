@@ -1,10 +1,14 @@
 package com.example.school_management.academics.entity;
 
 import com.example.school_management.schoolClass.entity.SchoolClass;
+import com.example.school_management.studyMaterial.entity.StudyMaterial;
 import com.example.school_management.subject.entity.Subject;
 import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "class_subject_teachers", uniqueConstraints = {
@@ -33,4 +37,7 @@ public class ClassSubjectTeacher {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id", nullable = false)
     private Teacher teacher;
+
+    @OneToMany(mappedBy = "classTeacher")
+    private List<StudyMaterial> studyMaterials = new ArrayList<>();
 }

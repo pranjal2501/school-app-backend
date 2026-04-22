@@ -1,11 +1,12 @@
 package com.example.school_management.parent.mapper;
 
 
-import com.example.school_management.parent.dto.ParentCreateRequestDto;
-import com.example.school_management.parent.dto.ParentResponseDto;
-import com.example.school_management.parent.dto.StudentLiteDto;
+import com.example.school_management.notify.dto.ParentNotificationResponseDto;
+import com.example.school_management.parent.dto.*;
 import com.example.school_management.parent.entity.Parent;
+import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.student.entity.Student;
+import com.example.school_management.teacher.entity.Teacher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -75,26 +76,6 @@ public class ParentMapper {
         return dto;
     }
 
-    public static ParentCreateRequestDto toCreateRequestDto(Parent parent) {
-        if (parent == null) return null;
-
-        return new ParentCreateRequestDto(
-                parent.getFatherFirstName(),
-                parent.getFatherMiddleName(),
-                parent.getFatherLastName(),
-                parent.getFatherOccupation(),
-                parent.getMotherFirstName(),
-                parent.getMotherMiddleName(),
-                parent.getMotherLastName(),
-                parent.getMotherOccupation(),
-                parent.getMobilePrimary(),
-                parent.getEmail(),
-                parent.getPassword(),
-                parent.getAadharNo(),
-                parent.getAadharOwnerType()
-        );
-    }
-
     public static StudentLiteDto toLiteDto(Student student) {
         if (student == null) return null;
 
@@ -114,4 +95,48 @@ public class ParentMapper {
                 .collect(Collectors.toList());
     }
 
+    public ChildDetailsResponseDto toChildDetailsResponseDto(Student child, float attendancePercent, String academicYear) {
+
+        SchoolClass assignedClass = child.getAssignedClass();
+        Teacher classTeacher = assignedClass != null ? assignedClass.getClassTeacher() : null;
+
+        return ChildDetailsResponseDto.builder()
+                .name(child.getFirstName() + " " + child.getLastName())
+                .schoolClass(assignedClass != null ? assignedClass.getClassName() : "N/A")
+                .rollNo(child.getRollNumber())
+                .classTeacher(classTeacher != null
+                        ? classTeacher.getFirstName() + " " + classTeacher.getLastName()
+                        : "N/A")
+                .academicYear(academicYear)
+                .attendancePercent(attendancePercent)
+                .build();
+    }
+
+    public ChildSummaryResponseDto toSummaryDto(Student child) {
+        return ChildSummaryResponseDto.builder()
+                .registrationId(child.getRegId())
+                .name(child.getFirstName() + " " + child.getLastName())
+                .schoolClass(child.getAssignedClass() != null
+                        ? child.getAssignedClass().getClassName()
+                        : "N/A")
+                .rollNo(child.getRollNumber())
+                .build();
+    }
+
+    public ParentsDashboardResponseDto toDashboardResponseDto(
+            Student child,
+            Float attendancePercent,
+            Integer pendingAssignments,
+            List<ParentNotificationResponseDto> recentNotifications) {
+
+        SchoolClass assignedClass = child.getAssignedClass();
+
+        return ParentsDashboardResponseDto.builder()
+                .studentName(child.getFirstName() + " " + child.getLastName())
+                .schoolClass(assignedClass != null ? assignedClass.getClassName() : "N/A")
+                .attendancePercent(attendancePercent)
+                .pendingAssignments(pendingAssignments)
+                .recentNotifications(recentNotifications)
+                .build();
+    }
 }

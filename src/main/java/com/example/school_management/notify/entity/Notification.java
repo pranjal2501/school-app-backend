@@ -69,6 +69,10 @@ public class Notification {
     @Column(name = "teacher_id")
     private Set<Long> teacherIds = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_teacher_id")
+    private Teacher createdByTeacher;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();

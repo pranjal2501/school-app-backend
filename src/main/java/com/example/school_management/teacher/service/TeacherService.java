@@ -28,4 +28,6 @@ public interface TeacherService {
     TeacherDashboardResponseDto getDashboard(Long teacherId);
 
     List<TeacherClassDropdownDto> getMyAllocations();
+
+    List<NotificationResponseDto> getMyNotifications();
 }
