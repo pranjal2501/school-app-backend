@@ -1,34 +1,36 @@
 package com.example.school_management.complaint.controller;
 
 import com.example.school_management.common.ApiResponse;
+import com.example.school_management.complaint.dto.*;
 import com.example.school_management.complaint.service.ComplaintService;
-import com.example.school_management.complaint.dto.ComplaintRequestDto;
-import com.example.school_management.complaint.dto.ComplaintResponseDto;
-import com.example.school_management.complaint.dto.ComplaintStatusUpdateDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/complaints")
 @RequiredArgsConstructor
 public class ComplaintController {
+
     private final ComplaintService complaintService;
 
+    // 1. Raise Complaint (Returns a list since multiple students can be selected)
     @PostMapping("/raise")
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
-    public ResponseEntity<ApiResponse<ComplaintResponseDto>> raiseComplaint(
+    public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> raiseComplaint(
             @Valid @RequestBody ComplaintRequestDto request) {
-        ComplaintResponseDto response = complaintService.raiseComplaint(request);
+
+        List<ComplaintResponseDto> response = complaintService.raiseComplaint(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Complaint registered successfully", response));
+                .body(ApiResponse.ok("Complaints registered successfully", response));
     }
 
+    // 2. Resolve/Update Complaint
     @PatchMapping("/{ticketNumber}/status")
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ApiResponse<ComplaintResponseDto>> updateStatus(
@@ -36,7 +38,33 @@ public class ComplaintController {
             @Valid @RequestBody ComplaintStatusUpdateDto request) {
 
         ComplaintResponseDto response = complaintService.updateComplaintStatus(ticketNumber, request);
-
         return ResponseEntity.ok(ApiResponse.ok("Complaint status updated", response));
+    }
+
+    // 3. Fetch complaints raised BY the logged-in teacher
+    @GetMapping("/my-raised")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> getMyRaisedComplaints() {
+        List<ComplaintResponseDto> response = complaintService.getMyRaisedComplaints();
+        return ResponseEntity.ok(ApiResponse.ok("Your raised complaints fetched successfully", response));
+    }
+
+    // 4. Fetch complaints raised AGAINST the teacher's class (for resolution)
+    @GetMapping("/my-class")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> getComplaintsForMyClass() {
+        List<ComplaintResponseDto> response = complaintService.getComplaintsForMyClass();
+        return ResponseEntity.ok(ApiResponse.ok("Class complaints fetched successfully", response));
+    }
+
+    // 5. Toggle Parent Visibility
+    @PatchMapping("/{ticketNumber}/visibility")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<ComplaintResponseDto>> updateVisibility(
+            @PathVariable String ticketNumber,
+            @Valid @RequestBody VisibilityUpdateDto request) {
+
+        ComplaintResponseDto response = complaintService.updateComplaintVisibility(ticketNumber, request);
+        return ResponseEntity.ok(ApiResponse.ok("Parent visibility updated", response));
     }
 }

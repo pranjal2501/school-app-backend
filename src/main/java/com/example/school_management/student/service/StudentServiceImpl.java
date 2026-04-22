@@ -352,4 +352,34 @@ public class StudentServiceImpl implements StudentService {
         userNotificationRepository.save(userNotification);
 
     }
+
+//    @Override
+//    @Transactional(readOnly = true)
+//    public StudentResponseDto getStudentByRegId(String RegId) {
+//        enforceAdminOrTeacherAccess();
+//        return studentMapper.toResponseDto(studentRepository.findByRegId(RegId));
+//    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UnassignedStudentResponseDto> getUnassignedStudentsByStandard(String standard) {
+
+        List<Student> unassignedStudents = studentRepository
+                .findByStandardAndAssignedClassIsNullAndIsActiveTrue(standard);
+
+        return unassignedStudents.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    private UnassignedStudentResponseDto mapToDto(Student student) {
+        return UnassignedStudentResponseDto.builder()
+                .id(student.getId())
+                .regId(student.getRegId())
+                .firstName(student.getFirstName())
+                .lastName(student.getLastName())
+                .standard(student.getStandard())
+                .gender(student.getGender())
+                .build();
+    }
 }

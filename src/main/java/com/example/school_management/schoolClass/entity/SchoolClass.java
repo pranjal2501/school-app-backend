@@ -34,7 +34,6 @@ public class SchoolClass {
 
     @Min(0)
     @Column(name = "boys")
-
     private Integer boys;
 
     @Min(0)

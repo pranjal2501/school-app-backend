@@ -1,13 +1,14 @@
 package com.example.school_management.teacher.controller;
 
 import com.example.school_management.common.ApiResponse;
+import com.example.school_management.teacher.dto.response.MyClassResponseDto;
 import com.example.school_management.notify.dto.CreateNotificationRequestDto;
 import com.example.school_management.notify.dto.NotificationResponseDto;
 import com.example.school_management.teacher.dto.TeacherDashboardResponseDto;
 import com.example.school_management.teacher.service.TeacherService;
 import com.example.school_management.teacher.dto.TeacherFromAdminRequestDto;
 import com.example.school_management.teacher.dto.TeacherRemainingInfoDto;
-import com.example.school_management.teacher.dto.TeacherResponseDto;
+import com.example.school_management.teacher.dto.response.TeacherResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -49,16 +50,48 @@ public class TeacherController {
                 .body(ApiResponse.ok("Teachers successfully onboarded in bulk", responses));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<TeacherResponseDto>>> getAllTeachers(
+    // 1. Get specific teacher (Admin or the Teacher themselves)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<ApiResponse<TeacherResponseDto>> getTeacherById(@PathVariable Long id) {
+        TeacherResponseDto response = teacherService.getTeacherById(id);
+        return ResponseEntity.ok(ApiResponse.ok("Teacher details fetched successfully", response));
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<TeacherResponseDto>> getCurrentTeacherProfile(
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        List<TeacherResponseDto> response = teacherService.getAllTeachers(userDetails.getUsername());
+        // userDetails.getUsername() holds the identifier (email/mobile) from the JWT
+        TeacherResponseDto response = teacherService.getTeacherByIdentifier(userDetails.getUsername());
 
-        return ResponseEntity.ok(
-                ApiResponse.ok("Teachers fetched successfully", response)
-        );
+        return ResponseEntity.ok(ApiResponse.ok("Your profile fetched successfully", response));
+    }
+
+    // 2. Get all teachers (Admin strictly)
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<TeacherResponseDto>>> getAllTeachers() {
+        List<TeacherResponseDto> responses = teacherService.getAllTeachers();
+        return ResponseEntity.ok(ApiResponse.ok("All teachers fetched successfully", responses));
+    }
+
+    // Fetch all teachers not assigned as a Class Teacher
+    @GetMapping("/unassigned")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<TeacherResponseDto>>> getUnassignedTeachers() {
+
+        List<TeacherResponseDto> responses = teacherService.getUnassignedTeachers();
+
+        return ResponseEntity.ok(ApiResponse.ok("Unassigned teachers fetched successfully", responses));
+    }
+
+    @GetMapping("/my-class")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<MyClassResponseDto>> getMyClass() {
+        MyClassResponseDto response = teacherService.getMyAssignedClass();
+        return ResponseEntity.ok(ApiResponse.ok("Class details fetched successfully", response));
     }
 
     @PutMapping("/{id}/details")

@@ -89,16 +89,6 @@ public class DatabaseSeederService {
             }
             log.info("Step 7 Complete: Assignments created.");
 
-            // Step 8: Raise Complaints (Switching back to ADMIN context)
-            setSecurityContext(data.getAdmin().getUsername(), "ADMIN");
-
-            // 🚀 DYNAMICALLY INJECT STUDENT IDs FOR COMPLAINTS
-            data.getComplaints().get(0).setTargetStudentId(admittedStudents.get(0).getId());  // First student (Div A)
-            data.getComplaints().get(1).setTargetStudentId(admittedStudents.get(15).getId()); // Sixteenth student (Div C)
-
-            data.getComplaints().forEach(complaintService::raiseComplaint);
-            log.info("Step 8 Complete: Complaints dynamically raised.");
-
             log.info("Database Seeding Completed Successfully!");
 
             log.info("Database Seeding Completed Successfully!");

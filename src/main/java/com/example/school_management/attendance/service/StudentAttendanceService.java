@@ -1,5 +1,6 @@
 package com.example.school_management.attendance.service;
 
+import com.example.school_management.attendance.dto.ClassWeeklyStatDto;
 import com.example.school_management.attendance.dto.latemark.UpdateLateMarksRequestDto;
 import com.example.school_management.attendance.dto.studentAttendance.*;
 import com.example.school_management.attendance.entity.AttendanceConfig;
@@ -12,6 +13,9 @@ import com.example.school_management.attendance.repository.StudentAttendanceRepo
 import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.enums.Gender;
 import com.example.school_management.common.enums.Role;
+import com.example.school_management.common.enums.attendance.AttendanceStatus;
+import com.example.school_management.common.exception.ResourceNotFoundException;
+import com.example.school_management.notify.service.NotificationService;
 import com.example.school_management.common.enums.attendance.AttendanceStatus;
 import com.example.school_management.common.enums.notify.AudienceType;
 import com.example.school_management.common.enums.notify.NotificationType;
@@ -63,6 +67,7 @@ public class StudentAttendanceService {
     private final AttendanceConfigRepo configRepo;
     private final AttendanceConfigRepo attendanceConfigRepo;
     private final StudentAttendanceMapper attendanceMapper;
+    private final NotificationService notificationService;
     private final RoleVerifier verify;
     private final SchoolClassRepository schoolClassRepository;
 
@@ -133,6 +138,19 @@ public class StudentAttendanceService {
 
         // 6. Return response via Mapper
         return attendanceMapper.toMarkResponse(saved, validRollNumbers.size());
+    }
+
+    /**
+     * Helper method to bridge the saved entity and your existing mapper.
+     */
+    private MarkAttendanceResponseDto mapToResponseDto(StudentAttendance savedAttendance) {
+        // 1. Get the total number of active students for this class
+        int totalStudents = studentRepo
+                .findAllByAssignedClassIdAndIsActiveTrue(savedAttendance.getClassEntity().getId())
+                .size();
+
+        // 2. Pass both the entity and the count to your existing mapper method
+        return attendanceMapper.toMarkResponse(savedAttendance, totalStudents);
     }
 
     public void updateLateMarks(Long attendanceId, UpdateLateMarksRequestDto request) {
@@ -301,6 +319,110 @@ public class StudentAttendanceService {
         );
     }
 
+    // service to get today's or any specific date attendance
+    @Transactional
+    public MarkAttendanceResponseDto getClassAttendanceByDate(Long classId, LocalDate date) {
+        return attendanceRepo.findByClassEntityIdAndAttendanceDate(classId, date)
+                .map(attendance -> MarkAttendanceResponseDto.builder()
+                        .id(attendance.getId())
+                        .attendanceDate(attendance.getAttendanceDate())
+                        .academicYear(attendance.getAcademicYear())
+                        .classId(attendance.getClassEntity().getId())
+                        .className(attendance.getClassEntity().getClassName())
+                        .absentRollNumbers(attendance.getAbsentRollNumbers())
+                        .lateRollNumbers(attendance.getLateRollNumbers())
+                        .halfDayRollNumbers(attendance.getHalfDayRollNumbers())
+                        .build())
+                .orElse(null); // Return null so frontend knows no attendance was marked yet
+    }
+
+    @Transactional
+    public MarkAttendanceResponseDto updateAttendance(MarkAttendanceRequestDto request, Long teacherId) {
+        // 1. Fetch the existing record
+        StudentAttendance existingAttendance = attendanceRepo.findByClassEntityIdAndAttendanceDate(request.getClassId(), request.getAttendanceDate())
+                .orElseThrow(() -> new ResourceNotFoundException("Attendance", "date", request.getAttendanceDate()));
+
+        // 2. Safely overwrite the arrays
+        existingAttendance.setAbsentRollNumbers(request.getAbsentRollNumbers());
+        existingAttendance.setLateRollNumbers(request.getLateRollNumbers());
+        existingAttendance.setHalfDayRollNumbers(request.getHalfDayRollNumbers());
+
+        // Optional: Update the "markedBy" if another teacher modifies it,
+        // or just leave it as the original teacher.
+
+        // 3. Save the updated entity
+        StudentAttendance updated = attendanceRepo.save(existingAttendance);
+
+        // Map back to response DTO (Use your existing mapping logic here)
+        return mapToResponseDto(updated);
+    }
+
+    @Transactional
+    public List<ClassWeeklyStatDto> getWeeklyClassStats(Long classId) {
+        // Get the total active students in the class
+        int totalStudents = studentRepo.findAllByAssignedClassIdAndIsActiveTrue(classId).size();
+
+        if (totalStudents == 0) return new ArrayList<>();
+
+        // Get the last 7 marked attendances
+        List<StudentAttendance> recentAttendances = attendanceRepo
+                .findTop7ByClassEntityIdAndAttendanceDateLessThanEqualOrderByAttendanceDateDesc(classId, LocalDate.now());
+
+        return recentAttendances.stream().map(att -> {
+            int absent = att.getAbsentRollNumbers() != null ? att.getAbsentRollNumbers().size() : 0;
+            int late = att.getLateRollNumbers() != null ? att.getLateRollNumbers().size() : 0;
+            int half = att.getHalfDayRollNumbers() != null ? att.getHalfDayRollNumbers().size() : 0;
+            int present = totalStudents - absent - late - half;
+
+            return ClassWeeklyStatDto.builder()
+                    .date(att.getAttendanceDate())
+                    .dayOfWeek(att.getAttendanceDate().getDayOfWeek().name())
+                    .totalStudents(totalStudents)
+                    .presentCount(present)
+                    .absentCount(absent)
+                    .lateCount(late)
+                    .halfDayCount(half)
+                    .presentPercentage(Math.round(((double) present / totalStudents) * 100.0))
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
+    public SingleDayAttendanceResponseDto getSingleDayReport(SingleDayAttendanceRequestDto request) throws AccessDeniedException {
+
+        if(!verify.hasAnyRole(Role.ADMIN, Role.TEACHER)){
+            throw new AccessDeniedException("Only ADMIN and teacher can perform this action");
+        }
+
+        SchoolClass schoolClass = classRepo.findById(request.getClassId())
+                .orElseThrow(() -> new ResourceNotFoundException("Class", "id", request.getClassId()));
+
+        StudentAttendance attendance  = attendanceRepo
+                .findByClassEntityAndAttendanceDate(schoolClass, request.getDate())
+                .orElseThrow(() -> new ResourceNotFoundException("Attendance record not found for this class on " + request.getDate()));
+
+        List<Student> students = studentRepo.findByAssignedClass_Id(request.getClassId());
+        List<StudentAttendanceRecordDto> recordDtos = new ArrayList<>();
+
+        for (Student student : students) {
+            int roll = student.getRollNumber();
+
+            AttendanceStatus status;
+            if (attendance.getAbsentRollNumbers().contains(roll)) {
+                status = AttendanceStatus.ABSENT;
+            } else if (attendance.getLateRollNumbers().contains(roll)) {
+                status = AttendanceStatus.LATE;
+            } else if (attendance.getHalfDayRollNumbers().contains(roll)) {
+                status = AttendanceStatus.HALF_DAY;
+            } else {
+                status = AttendanceStatus.PRESENT;
+            }
+
+            recordDtos.add(attendanceMapper.toRecordDto(student, status, schoolClass.getClassName()));
+        }
+
+        return attendanceMapper.toSingleDayResponseDto(request.getDate(), recordDtos);
+
+    }
 
 //    ============= HELPER METHODS ==============
 

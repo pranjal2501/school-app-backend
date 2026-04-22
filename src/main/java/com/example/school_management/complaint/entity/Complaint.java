@@ -86,6 +86,10 @@ public class Complaint extends BaseEntity {
     @Column(name = "resolved_at")
     private Instant resolvedAt;
 
+    @Column(name = "is_visible_to_parents", nullable = false)
+    @Builder.Default
+    private boolean isVisibleToParents = true;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resolved_by_employee_id")
     @ToString.Exclude

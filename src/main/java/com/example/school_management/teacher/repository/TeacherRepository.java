@@ -3,6 +3,7 @@ package com.example.school_management.teacher.repository;
 import com.example.school_management.teacher.entity.Teacher;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface TeacherRepository extends JpaRepository<Teacher, Long> {
@@ -12,4 +13,7 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
     boolean existsByPanNo(String mobile);
     Optional<Teacher> findByEmail(String email);
     Optional<Teacher> findByMobile(String mobile);
+
+    // Fetch teachers who do not have an assigned class
+    List<Teacher> findByAssignedClassIsNullAndIsActiveTrue();
 }

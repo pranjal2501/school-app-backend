@@ -1,14 +1,15 @@
 package com.example.school_management.student.repository;
 
+import com.example.school_management.student.dto.StudentSearchDto;
 import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.student.entity.Student;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -32,7 +33,22 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     Optional<Student> findByAssignedClass_IdAndRollNumber(Long classId, Integer rollNumber);
 
-    List<Student> findByAssignedClassIdIn(List<Long> targetClasses);
+    List<Student> findAllByAssignedClassIdAndIsActiveTrue(Long classId);
 
     Student findByRegId(String RegId);
+
+    @Query("SELECT new com.example.school_management.student.dto.StudentSearchDto(" +
+            "s.id, CONCAT(s.firstName, ' ', s.lastName), s.regId, " +
+            "CONCAT(c.academicStructure.standard, '-', c.academicStructure.division), s.rollNumber) " +
+            "FROM Student s LEFT JOIN s.assignedClass c " +
+            "WHERE s.isActive = true AND (" +
+            "LOWER(s.firstName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(s.lastName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(s.regId) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "CAST(s.rollNumber AS string) LIKE CONCAT('%', :query, '%'))")
+    List<StudentSearchDto> searchActiveStudents(@Param("query") String query);
+
+    List<Student> findByStandardAndAssignedClassIsNullAndIsActiveTrue(String standard);
+
+    List<Student> findByAssignedClassIdIn(List<Long> targetClasses);
 }

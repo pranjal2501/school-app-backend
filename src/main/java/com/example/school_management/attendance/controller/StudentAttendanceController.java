@@ -1,5 +1,6 @@
 package com.example.school_management.attendance.controller;
 
+import com.example.school_management.attendance.dto.ClassWeeklyStatDto;
 import com.example.school_management.attendance.dto.latemark.UpdateLateMarksRequestDto;
 import com.example.school_management.attendance.dto.studentAttendance.*;
 import com.example.school_management.attendance.service.StudentAttendanceService;
@@ -11,6 +12,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/student/attendance")
@@ -58,6 +61,34 @@ public class StudentAttendanceController {
         return ResponseEntity.ok(ApiResponse.ok("Yearwise report",attendanceService.getYearlyReport(request)));
     }
 
+    @GetMapping("/class/{classId}/date/{date}")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<MarkAttendanceResponseDto>> getAttendanceByDate(
+            @PathVariable Long classId,
+            @PathVariable LocalDate date) {
+
+        MarkAttendanceResponseDto response = attendanceService.getClassAttendanceByDate(classId, date);
+        return ResponseEntity.ok(ApiResponse.ok("Record fetched", response));
+    }
+
+    // Update attendance for a whole class
+    @PutMapping("/update")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<MarkAttendanceResponseDto>> updateAttendance(
+            @Valid @RequestBody MarkAttendanceRequestDto request,
+            @RequestParam Long teacherId) {
+
+        MarkAttendanceResponseDto response = attendanceService.updateAttendance(request, teacherId);
+        return ResponseEntity.ok(ApiResponse.ok("Attendance updated successfully", response));
+    }
+
+    @GetMapping("/class/{classId}/weekly-trends")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<List<ClassWeeklyStatDto>>> getWeeklyTrends(@PathVariable Long classId) {
+        List<ClassWeeklyStatDto> response = attendanceService.getWeeklyClassStats(classId);
+        return ResponseEntity.ok(ApiResponse.ok("Weekly trends fetched successfully", response));
+    }
+
     @GetMapping("/daily-report")
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     public ResponseEntity<ApiResponse<SingleDayAttendanceResponseDto>> fetchSingleDayRecord(
@@ -65,5 +96,13 @@ public class StudentAttendanceController {
     ) throws AccessDeniedException {
         return ResponseEntity.ok(ApiResponse.ok("Attendance for date "+request.getDate()+"Fetched successfully", attendanceService.getSingleDayReport(request)));
     }
+
+//    @GetMapping("/daily-report")
+//    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
+//    public ResponseEntity<ApiResponse<SingleDayAttendanceResponseDto>> fetchSingleDayRecord(
+//            @RequestBody SingleDayAttendanceRequestDto request
+//    ) throws AccessDeniedException {
+//        return ResponseEntity.ok(ApiResponse.ok("Attendance for date "+request.getDate()+"Fetched successfully", attendanceService.getSingleDayReport(request)));
+//    }
 
 }

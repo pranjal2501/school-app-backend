@@ -80,6 +80,8 @@ public class StudentAttendanceMapper {
                 .build();
     }
 
+
+
     public StudentAttendanceReportResponseDto toReportResponse(
             Student student,
             SchoolClass classEntity,

@@ -17,8 +17,10 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "teachers")
@@ -27,6 +29,9 @@ import java.util.List;
 @SuperBuilder
 @NoArgsConstructor
 public class Teacher extends Employee {
+
+    @Column(name = "teacher_id", unique = true, updatable = false)
+    private String teacherId;
 
     @Size(max = 100)
     @Column(name = "previous_school", length = 100)
@@ -74,4 +79,17 @@ public class Teacher extends Employee {
 
     @OneToMany(mappedBy = "teacher")
     private List<LeaveRequests> leaveRequests;
+
+    @PrePersist
+    protected void generateTeacherId() {
+        if (this.teacherId == null || this.teacherId.trim().isEmpty()) {
+            int currentYear = Year.now().getValue();
+
+            // Extract an 8-character block from a fresh UUID for high collision resistance
+            String uniqueHash = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+
+            // Format: TCH-2026-A1B2C3D4
+            this.teacherId = String.format("TCH-%d-%s", currentYear, uniqueHash);
+        }
+    }
 }

@@ -96,10 +96,20 @@ public class ClassController {
 
     @GetMapping("/student-list/{classId}")
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
-    public ResponseEntity<ApiResponse<List<StudentRollNoResponseDto>>> getStudentListWithRollNum(@PathVariable Long classId)
-    {
+    public ResponseEntity<ApiResponse<List<StudentRollNoResponseDto>>> getStudentListWithRollNum(@PathVariable Long classId)    {
         List<StudentRollNoResponseDto> response = classService.getStudentListWithRollNum(classId);
 
         return ResponseEntity.ok(ApiResponse.ok("Students list fetched successfully", response));
+    }
+
+    @GetMapping("/{standard}/{division}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<ApiResponse<ClassResponseDto>> getClassByStandardAndDivision(
+            @PathVariable String standard,
+            @PathVariable String division) {
+
+        ClassResponseDto response = classService.getClassByStandardAndDivision(standard, division);
+
+        return ResponseEntity.ok(ApiResponse.ok("Class fetched successfully", response));
     }
 }

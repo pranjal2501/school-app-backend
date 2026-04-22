@@ -25,10 +25,14 @@ import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.repository.StudentRepository;
 import com.example.school_management.teacher.entity.Teacher;
+import com.example.school_management.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import java.time.LocalDateTime;
 
@@ -38,45 +42,101 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     private final ComplaintRepository complaintRepository;
     private final StudentRepository studentRepository;
-    private final EmployeeRepository employeeRepository;
-    private final ComplaintMapper complaintMapper;
     private final AdminRepository adminRepository;
+    private final EmployeeRepository employeeRepository;
+    private final TeacherRepository teacherRepository;
+    private final ComplaintMapper complaintMapper;
     private final RoleVerifier roleVerifier; // Injected for strict security context checks
     private final NotificationRepository notificationRepository;
     private final UserNotificationRepository userNotificationRepository;
 
+    // ── 1. RAISE COMPLAINT (BULK SUPPORT) ────────────────────────────────────
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public ComplaintResponseDto raiseComplaint(ComplaintRequestDto request) {
-
-        // Securely retrieve the current session details
+    public List<ComplaintResponseDto> raiseComplaint(ComplaintRequestDto request) {
         String currentUser = roleVerifier.getCurrentUsername();
         boolean isAdmin = roleVerifier.hasRole(Role.ADMIN);
 
-        // 1. Strict Validation: Target student
-        Student targetStudent = studentRepository.findById(request.getTargetStudentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", request.getTargetStudentId()));
+        // 1. Resolve Raiser Identity ONCE to save DB calls
+        Admin adminRaiser = null;
+        Employee empRaiser = null;
 
-        // 2. Mapping
-        Complaint complaint = complaintMapper.toEntity(request);
-        complaint.setTargetStudent(targetStudent);
-
-        // 3. Smart Raiser Resolution based on Role
         if (isAdmin) {
-            Admin adminRaiser = adminRepository.findByUsername(currentUser)
+            adminRaiser = adminRepository.findByUsername(currentUser)
                     .orElseThrow(() -> new UnauthorizedAccessException("Admin session is invalid."));
-            complaint.setReportedByAdmin(adminRaiser);
         } else {
-            Employee empRaiser = employeeRepository.findByIdentifier(currentUser)
+            empRaiser = employeeRepository.findByEmail(currentUser) // Or findByIdentifier
                     .orElseThrow(() -> new UnauthorizedAccessException("Teacher session is invalid."));
-            complaint.setReportedByEmployee(empRaiser);
         }
 
-        Complaint saved=complaintRepository.save(complaint);
-        complaintRepository.flush();
-        notifyParentsOnComplaint(complaint, targetStudent);
-        // 4. Save and Return
-        return complaintMapper.toResponseDto(saved);
+        List<Complaint> complaintsToSave = new ArrayList<>();
+
+        // 2. Loop through selected students and create individual tickets
+        for (Long studentId : request.getTargetStudentIds()) {
+            Student targetStudent = studentRepository.findById(studentId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
+
+            Complaint complaint = complaintMapper.toEntity(request);
+            complaint.setTargetStudent(targetStudent);
+
+            if (request.getSupportedMediaUrls() != null) {
+                complaint.setSupportedMedia(request.getSupportedMediaUrls());
+            }
+
+            if (isAdmin) {
+                complaint.setReportedByAdmin(adminRaiser);
+            } else {
+                complaint.setReportedByEmployee(empRaiser);
+            }
+
+            complaintsToSave.add(complaint);
+        }
+
+        // 3. Batch Save and Flush (Ensures IDs and Ticket Numbers are generated in the DB)
+        List<Complaint> savedComplaints = complaintRepository.saveAllAndFlush(complaintsToSave);
+
+        // 4. Send Notifications safely AFTER everything is successfully saved
+        for (Complaint savedComplaint : savedComplaints) {
+            // Only notify if the complaint is marked as visible to parents!
+            if (savedComplaint.isVisibleToParents()) {
+                notifyParentsOnComplaint(savedComplaint, savedComplaint.getTargetStudent());
+            }
+        }
+
+        // 5. Map to DTOs and Return
+        return savedComplaints.stream().map(complaintMapper::toResponseDto).toList();
+    }
+
+    // ── 2. VIEW COMPLAINTS RAISED BY ME ──────────────────────────────────────
+    @Override
+    @Transactional(readOnly = true)
+    public List<ComplaintResponseDto> getMyRaisedComplaints() {
+        String currentUser = roleVerifier.getCurrentUsername();
+
+        List<Complaint> myComplaints = complaintRepository
+                .findByReportedByEmployee_EmailOrderByCreatedAtDesc(currentUser);
+
+        return myComplaints.stream().map(complaintMapper::toResponseDto).toList();
+    }
+
+    // ── 3. VIEW COMPLAINTS TO RESOLVE (CLASS TEACHER VIEW) ───────────────────
+    @Override
+    @Transactional(readOnly = true)
+    public List<ComplaintResponseDto> getComplaintsForMyClass() {
+        String currentUser = roleVerifier.getCurrentUsername();
+
+        Teacher currentTeacher = teacherRepository.findByEmail(currentUser)
+                .orElseThrow(() -> new UnauthorizedAccessException("Teacher identity not found."));
+
+        if (currentTeacher.getAssignedClass() == null) {
+            // Subject teachers don't have a specific class to manage complaints for
+            return new ArrayList<>();
+        }
+
+        List<Complaint> classComplaints = complaintRepository
+                .findByTargetStudent_AssignedClass_IdOrderByCreatedAtDesc(currentTeacher.getAssignedClass().getId());
+
+        return classComplaints.stream().map(complaintMapper::toResponseDto).toList();
     }
 
     @Override
@@ -148,6 +208,23 @@ public class ComplaintServiceImpl implements ComplaintService {
             }
         }
         return false;
+    }
+    @Override
+    @Transactional
+    public ComplaintResponseDto updateComplaintVisibility(String ticketNumber, VisibilityUpdateDto request) {
+        String currentUser = roleVerifier.getCurrentUsername();
+        boolean isAdmin = roleVerifier.hasRole(Role.ADMIN);
+
+        Complaint complaint = complaintRepository.findByTicketNumber(ticketNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint", "ticketNumber", ticketNumber));
+
+        // Ensure only Admin or the Class Teacher can toggle this
+        if (!isAdmin && !isClassTeacher(currentUser, complaint)) {
+            throw new UnauthorizedAccessException("Access Denied: Only an Administrator or the Class Teacher can alter visibility.");
+        }
+
+        complaint.setVisibleToParents(request.getIsVisibleToParents());
+        return complaintMapper.toResponseDto(complaintRepository.save(complaint));
     }
 //   ===============================Helper methods=========================
 

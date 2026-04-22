@@ -13,6 +13,8 @@ public interface StudentService {
 
     List<StudentResponseDto> getAllStudents();
 
+//    StudentResponseDto getStudentById(Long id);
+
     StudentResponseDto getStudentByRegId(String RegId);
 
     StudentResponseDto updateStudent(Long id, StudentRequestDto request);
@@ -24,4 +26,5 @@ public interface StudentService {
     List<StudentDropdownDto> searchStudents(String standard, String division, String query);
 
     List<StudentResponseDto> assignClassAndDivision(StudentClassAssignmentRequestDto request);
+    List<UnassignedStudentResponseDto> getUnassignedStudentsByStandard(String standard);
 }
