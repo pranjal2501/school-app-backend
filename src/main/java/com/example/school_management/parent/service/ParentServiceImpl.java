@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,35 +45,52 @@ public class ParentServiceImpl implements ParentService {
     private final RoleVerifier roleVerifier;
 
 
-    @Override
-    public ParentsDashboardResponseDto getDashboard() {
-
+    public ParentsDashboardResponseDto getDashboard(String registrationId) {
         String currentUser = roleVerifier.getCurrentUsername();
         Parent parent = parentRepository.findByEmail(currentUser)
                 .orElseThrow(() -> new UnauthorizedAccessException("Parent session invalid"));
 
-        Student child = studentRepository.findFirstByParent(parent);
+        // Fetch the specific child using the Registration ID
+        Student child = studentRepository.findByRegId(registrationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
 
-        Float attendancePercent = attendancePercent(child);
-
-        int pendingAssignments = 0;
-        if (child.getAssignedClass() != null) {
-            pendingAssignments = assignmentRepository
-                    .countPendingAssignmentsByClass(child.getAssignedClass(), LocalDateTime.now());
+        // Security check
+        if (!child.getParent().getId().equals(parent.getId())) {
+            throw new UnauthorizedAccessException("You do not have access to this student's data");
         }
 
-        List<ParentNotificationResponseDto> recentNotifications =
-                userNotificationRepository.findTop3ByParentOrderByDeliveredAtDesc(parent)
-                        .stream()
-                        .map(userNotificationMapper::toParentResponseDto)
-                        .collect(Collectors.toList());
+        boolean isClassAllocated = child.getAssignedClass() != null;
+        boolean isProfileComplete = child.getGender() != null
+                && child.getNationality() != null
+                && child.getReligion() != null
+                && child.getCategory() != null;
 
-        return parentMapper.toDashboardResponseDto(child, attendancePercent, pendingAssignments, recentNotifications);
-    }
+        Float attendancePercent = 0f;
+        int pendingAssignments = 0;
+        List<ParentNotificationResponseDto> recentNotifications = List.of();
 
-    @Override
-    public ParentsDashboardResponseDto getDashboard(String regId) {
-        return null;
+        if (isClassAllocated && isProfileComplete) {
+            attendancePercent = attendancePercent(child);
+            pendingAssignments = assignmentRepository
+                    .countPendingAssignmentsByClass(child.getAssignedClass(), LocalDateTime.now());
+
+            recentNotifications = userNotificationRepository.findTop3ByParentOrderByDeliveredAtDesc(parent)
+                    .stream()
+                    .map(userNotificationMapper::toParentResponseDto)
+                    .collect(Collectors.toList());
+        }
+
+        return ParentsDashboardResponseDto.builder()
+                .studentId(child.getId())
+                .parentName(parent.getFatherFirstName() + " " + parent.getFatherLastName())
+                .studentName(child.getFirstName() + " " + child.getLastName())
+                .schoolClass(isClassAllocated ? child.getAssignedClass().getClassName() : "Unassigned")
+                .isClassAllocated(isClassAllocated)
+                .isProfileComplete(isProfileComplete)
+                .attendancePercent(attendancePercent)
+                .pendingAssignments(pendingAssignments)
+                .recentNotifications(recentNotifications)
+                .build();
     }
 
     @Override
@@ -94,7 +112,7 @@ public class ParentServiceImpl implements ParentService {
         Parent parent = parentRepository.findByEmail(currentUser)
                 .orElseThrow(() -> new UnauthorizedAccessException("Parent session invalid"));
 
-        Student child = studentRepository.findByRegId(regId);
+        Student child = studentRepository.findByRegId(regId).orElseThrow(() -> new ResourceNotFoundException("Student not fount with given registration id."));
 
         if (!child.getParent().getId().equals(parent.getId())) {
             throw new UnauthorizedAccessException("You can only view your own child's details");

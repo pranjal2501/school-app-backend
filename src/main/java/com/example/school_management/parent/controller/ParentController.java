@@ -45,13 +45,9 @@ public class ParentController {
     }
 
     @GetMapping("/dashboard")
-    public ResponseEntity<ApiResponse<ParentsDashboardResponseDto>> getDashboard(){
-        return ResponseEntity.ok(ApiResponse.ok("Dashboard fetched Successfully. ", parentService.getDashboard()));
-    }
-
-    @GetMapping("/dashboard/{RegId}")
-    public ResponseEntity<ApiResponse<ParentsDashboardResponseDto>> getDashboard(@PathVariable String regId){
-        return ResponseEntity.ok(ApiResponse.ok("Dashboard fetched Successfully. ", parentService.getDashboard(regId)));
+    public ResponseEntity<ApiResponse<ParentsDashboardResponseDto>> getDashboard(
+            @RequestParam String registrationId) {
+        return ResponseEntity.ok(ApiResponse.ok("Dashboard fetched Successfully. ", parentService.getDashboard(registrationId)));
     }
 
 

@@ -176,7 +176,7 @@ public class StudentServiceImpl implements StudentService {
     @Transactional(readOnly = true)
     public StudentResponseDto getStudentByRegId(String RegId) {
         enforceAdminOrTeacherAccess();
-        return studentMapper.toResponseDto(studentRepository.findByRegId(RegId));
+        return studentMapper.toResponseDto(studentRepository.findByRegId(RegId).orElseThrow(()->new ResourceNotFoundException("Student not found with given id.")));
     }
 
     @Override

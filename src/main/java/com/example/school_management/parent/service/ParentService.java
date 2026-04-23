@@ -10,8 +10,6 @@ import java.util.List;
 
 public interface ParentService {
 
-    ParentsDashboardResponseDto getDashboard();
-
     ParentsDashboardResponseDto getDashboard(String regId);
 
     List<ChildSummaryResponseDto> getChildList();

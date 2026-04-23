@@ -26,11 +26,9 @@ public class AttendanceConfigController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<AttendanceConfigResponseDto>> saveConfiguration(
             @Valid @RequestBody AttendanceConfigRequestDto request) throws AccessDeniedException {
-
         AttendanceConfigResponseDto response = configService.saveConfig(request);
         return ResponseEntity.ok(ApiResponse.ok("Configuration saved successfully", response));
     }
-
 
     //Fetch settings for a specific academic year.
     @GetMapping("/{academicYear}")

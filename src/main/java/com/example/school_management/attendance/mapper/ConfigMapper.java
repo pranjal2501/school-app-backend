@@ -17,7 +17,7 @@ public class ConfigMapper {
                 .academicYear(dto.getAcademicYear())
                 .attendanceType(dto.getAttendanceType())
                 .studentWorkingDays(dto.getStudentWorkingDays())
-                .studentMinAttendancePct(dto.getStudentMinAttendancePct())
+//                .studentMinAttendancePct(dto.getStudentMinAttendancePct())
                 .allowLateMarks(dto.getAllowLateMarks())
                 .lateMarksWindow(dto.getLateMarksWindow())
                 .notifyParentOnAbsent(dto.getNotifyParentOnAbsent())
@@ -56,7 +56,7 @@ public class ConfigMapper {
         entity.setAcademicYear(dto.getAcademicYear());
         entity.setAttendanceType(dto.getAttendanceType());
         entity.setStudentWorkingDays(dto.getStudentWorkingDays());
-        entity.setStudentMinAttendancePct(dto.getStudentMinAttendancePct());
+//        entity.setStudentMinAttendancePct(dto.getStudentMinAttendancePct());
         entity.setAllowLateMarks(dto.getAllowLateMarks());
         entity.setLateMarksWindow(dto.getLateMarksWindow());
         entity.setNotifyParentOnAbsent(dto.getNotifyParentOnAbsent());

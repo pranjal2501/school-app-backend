@@ -2,9 +2,7 @@ package com.example.school_management.student.repository;
 
 import com.example.school_management.student.dto.StudentSearchDto;
 import com.example.school_management.parent.entity.Parent;
-import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.student.entity.Student;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -35,7 +33,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     List<Student> findAllByAssignedClassIdAndIsActiveTrue(Long classId);
 
-    Student findByRegId(String RegId);
+    Optional<Student> findByRegId(String RegId);
 
     @Query("SELECT new com.example.school_management.student.dto.StudentSearchDto(" +
             "s.id, CONCAT(s.firstName, ' ', s.lastName), s.regId, " +
