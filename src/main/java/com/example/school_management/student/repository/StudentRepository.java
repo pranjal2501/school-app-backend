@@ -53,4 +53,6 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     List<Student> findByAssignedClassIdIn(List<Long> targetClasses);
 
     Student findFirstByParent(Parent parent);
+
+    int countByAssignedClassId(Long id);
 }

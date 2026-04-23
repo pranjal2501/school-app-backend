@@ -10,14 +10,6 @@ import lombok.Data;
 public class AttendanceConfigResponseDto{
         private Long id;
         private String academicYear;
-        private AttendanceType attendanceType;
         private Integer studentWorkingDays;
         private Float studentMinAttendancePct;
-        private Integer teacherWorkingDays;
-        private Float teacherMinAttendancePct;
-        private Boolean allowLateMarks;
-        private Integer lateMarksWindow;
-        private Boolean notifyParentOnAbsent;
-        private Integer absentNotifyThreshold;
-        private Integer minLeaveNoticeDays;
 }

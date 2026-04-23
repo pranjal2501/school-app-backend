@@ -41,6 +41,7 @@ public class TeacherResponseDto {
     // Education & URLs
     private DegreeType degreeType;
     private String customDegreeName;
+    private String profilePicUrl;
     private String aadharPhotourl;
     private String panPhotourl;
     private String degreeCertificateurl;

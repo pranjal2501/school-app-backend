@@ -86,6 +86,7 @@ public class TeacherMapper {
                 .previousSchool(teacher.getPreviousSchool())
                 .yearsOfExperienceInPreviousSchool(teacher.getYearsOfExperienceInPreviousSchool())
                 // URLs
+                .profilePicUrl(teacher.getProfilePicUrl())
                 .aadharPhotourl(teacher.getAadharPhotourl())
                 .panPhotourl(teacher.getPanPhotourl())
                 .degreeCertificateurl(teacher.getDegreeCertificateurl())
@@ -118,6 +119,7 @@ public class TeacherMapper {
         if (dto.getCustomDegreeName() != null) teacher.setCustomDegreeName(dto.getCustomDegreeName());
 
         // Document URLs
+        if(dto.getProfilePicUrl() != null) teacher.setProfilePicUrl(dto.getProfilePicUrl());
         if (dto.getAadharPhotourl() != null) teacher.setAadharPhotourl(dto.getAadharPhotourl());
         if (dto.getPanPhotourl() != null) teacher.setPanPhotourl(dto.getPanPhotourl());
         if (dto.getDegreeCertificateurl() != null) teacher.setDegreeCertificateurl(dto.getDegreeCertificateurl());

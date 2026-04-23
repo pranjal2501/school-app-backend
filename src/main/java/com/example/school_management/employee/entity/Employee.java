@@ -103,6 +103,10 @@ public abstract class Employee extends BaseEntity {
     private boolean isActive;
 
     @Size(max = 200)
+    @Column(name="profile_pic_url", length = 200)
+    private String profilePicUrl;
+
+    @Size(max = 200)
     @Column(name = "aadhar_photo_url", length = 200)
     private String aadharPhotourl;
 

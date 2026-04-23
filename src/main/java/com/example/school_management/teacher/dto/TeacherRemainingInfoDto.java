@@ -32,6 +32,9 @@ public class TeacherRemainingInfoDto {
     @Size(max = 150, message = "Custom degree name cannot exceed 150 characters")
     private String customDegreeName;
 
+    @Size(max=200)
+    private String profilePicUrl;
+
     @Size(max = 200)
     private String aadharPhotourl;
 

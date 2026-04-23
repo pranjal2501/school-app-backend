@@ -3,6 +3,7 @@ package com.example.school_management.notify.repository;
 
 import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.parent.entity.Parent;
+import com.example.school_management.teacher.entity.Teacher;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.jpa.repository.JpaRepository;

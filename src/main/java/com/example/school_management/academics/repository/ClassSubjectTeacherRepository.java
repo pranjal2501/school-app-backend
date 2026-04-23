@@ -19,4 +19,6 @@ public interface ClassSubjectTeacherRepository extends JpaRepository<ClassSubjec
 
     @Query("SELECT COUNT(DISTINCT cst.subject.id) FROM ClassSubjectTeacher cst WHERE cst.teacher.id = :teacherId")
     Integer countDistinctSubjectsByTeacherId(@Param("teacherId") Long teacherId);
+
+    List<ClassSubjectTeacher> findBySchoolClassId(Long classId);
 }

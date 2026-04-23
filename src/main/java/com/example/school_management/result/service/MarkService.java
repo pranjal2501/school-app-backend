@@ -4,6 +4,7 @@ import com.example.school_management.academics.entity.ClassSubjectTeacher;
 import com.example.school_management.academics.repository.ClassSubjectTeacherRepository;
 import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.enums.ExamTerm;
+import com.example.school_management.common.enums.MarkFillingStatus;
 import com.example.school_management.common.enums.Role;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.result.dto.MarkResponseDto;
@@ -31,6 +32,7 @@ public class MarkService {
 
     private final StudentSubjectMarkRepository markRepository;
     private final ClassSubjectTeacherRepository pivotRepository;
+    private final ClassSubjectTeacherRepository classSubjectTeacherRepository;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
     private final MarkMapper markMapper;
@@ -96,8 +98,24 @@ public class MarkService {
 
             savedMarks.add(markRepository.save(mark));
         }
+        //int totalStudents = allocation.getSchoolClass().getTotalStudents();
+        int totalStudents = studentRepository.countByAssignedClassId(
+                allocation.getSchoolClass().getId());
+        int marksFilledCount = markRepository.countByAllocationIdAndExamTerm(
+                allocation.getId(), request.getExamTerm());
+
+        if (marksFilledCount == 0) {
+            allocation.setMarkFillingStatus(MarkFillingStatus.NOT_FILLED);
+        } else if (marksFilledCount < totalStudents) {
+            allocation.setMarkFillingStatus(MarkFillingStatus.PARTIAL);
+        } else {
+            allocation.setMarkFillingStatus(MarkFillingStatus.COMPLETE);
+        }
+
+        classSubjectTeacherRepository.save(allocation);
 
         return savedMarks.stream().map(markMapper::toResponseDto).toList();
+
     }
 
     @Transactional(readOnly = true)

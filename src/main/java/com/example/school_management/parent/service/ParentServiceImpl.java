@@ -53,7 +53,7 @@ public class ParentServiceImpl implements ParentService {
 
         Student child = studentRepository.findFirstByParent(parent);
 
-        Float attendancePercent = attendancePercent(child);
+        float attendancePercent = attendancePercent(child);
 
         int pendingAssignments = 0;
         if (child.getAssignedClass() != null) {
@@ -101,7 +101,7 @@ public class ParentServiceImpl implements ParentService {
         }
 
         AttendanceConfig config = attendanceConfigRepo.findTopByOrderByCreatedAtDesc();
-        String academicYear = config.getAcademicYear();
+        String academicYear = config != null ? config.getAcademicYear() : null;
 
         float percentage = attendancePercent(child);
 
@@ -111,23 +111,25 @@ public class ParentServiceImpl implements ParentService {
 
     // ================= Helper Method ====================
 
-    float attendancePercent(Student child)
-    {
+    float attendancePercent(Student child) {
+
+        if (child.getAssignedClass() == null) return 0f;
+        if (child.getRollNumber() == null) return 0f;
+
         AttendanceConfig config = attendanceConfigRepo.findTopByOrderByCreatedAtDesc();
+        if (config == null) return 0f;
+
         String academicYear = config.getAcademicYear();
+        Long classId = child.getAssignedClass().getId();
+        Integer rollNumber = child.getRollNumber();
 
+        long sessionsConducted = studentAttendanceRepo.countTotalSessionsConducted(classId, academicYear);
+        if (sessionsConducted == 0) return 0f;
 
-        long sessionsConducted = studentAttendanceRepo.countTotalSessionsConducted(child.getAssignedClass().getId(), academicYear);
-
-        Integer rollStr = child.getRollNumber();
-        long totalAbsent  = studentAttendanceRepo.countAbsentDays(child.getAssignedClass().getId(), academicYear, rollStr);
+        long totalAbsent = studentAttendanceRepo.countAbsentDays(classId, academicYear, rollNumber);
         long totalPresent = sessionsConducted - totalAbsent;
 
-        float percentage = 0f;
-        if (sessionsConducted > 0) {
-            percentage = (totalPresent * 100.0f) / sessionsConducted;
-        }
-        return percentage;
+        return (totalPresent * 100.0f) / sessionsConducted;
     }
 
     public Parent getParentById(Long id) {

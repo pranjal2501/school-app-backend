@@ -13,7 +13,4 @@ public class SchoolHolidayRequestDto {
 
     @NotBlank(message = "Holiday description is required (e.g., Christmas)")
     private String description;
-
-    @NotBlank(message = "Academic year is required (e.g., 2025-26)")
-    private String academicYear;
 }

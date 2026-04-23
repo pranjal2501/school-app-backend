@@ -102,12 +102,18 @@ public class ParentMapper {
 
         return ChildDetailsResponseDto.builder()
                 .name(child.getFirstName() + " " + child.getLastName())
-                .schoolClass(assignedClass != null ? assignedClass.getClassName() : "N/A")
-                .rollNo(child.getRollNumber())
+                .schoolClass(assignedClass != null
+                        ? assignedClass.getClassName()
+                        : "Class not assigned yet")
+                .rollNo(child.getRollNumber() != null
+                        ? child.getRollNumber()
+                        : null)
                 .classTeacher(classTeacher != null
                         ? classTeacher.getFirstName() + " " + classTeacher.getLastName()
-                        : "N/A")
-                .academicYear(academicYear)
+                        : "Class teacher not assigned yet")
+                .academicYear(academicYear != null
+                        ? academicYear
+                        : "Academic year not configured")
                 .attendancePercent(attendancePercent)
                 .build();
     }

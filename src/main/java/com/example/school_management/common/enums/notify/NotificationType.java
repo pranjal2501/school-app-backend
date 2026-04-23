@@ -7,7 +7,8 @@ public enum NotificationType {
     MEETING("Meeting"),
     INSPECTION("Inspection"),
     COMPLAINT("Complaint"),
-    UPDATE("Update");
+    UPDATE("Update"),
+    REMINDER("Reminder");
     private final String displayName;
 
     NotificationType(String displayName) {

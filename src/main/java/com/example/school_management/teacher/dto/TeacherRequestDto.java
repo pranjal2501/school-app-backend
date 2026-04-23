@@ -96,6 +96,9 @@ public class TeacherRequestDto {
 
     private Long assignedClassId;
 
+    @Size(max=200)
+    private String profilePicUrl;
+
     @Size(max = 200)
     private String aadharPhotourl;
 
