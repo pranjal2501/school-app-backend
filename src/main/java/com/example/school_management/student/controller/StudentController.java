@@ -3,15 +3,20 @@ package com.example.school_management.student.controller;
 import com.example.school_management.common.ApiResponse;
 import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.student.repository.StudentRepository;
+import com.example.school_management.student.service.StudentExcelService;
 import com.example.school_management.student.service.StudentService;
 import com.example.school_management.student.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -21,6 +26,7 @@ import java.util.List;
 public class StudentController {
 
     private final StudentService studentService;
+    private final StudentExcelService studentExcelService;
     private final RoleVerifier roleVerifier;
     private final StudentRepository studentRepository;
 
@@ -46,6 +52,27 @@ public class StudentController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Bulk students admitted successfully", response));
     }
+
+    @GetMapping("/bulk/template")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<byte[]> downloadTemplate() throws IOException {
+        byte[] template = studentExcelService.generateTemplate();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=student_admission_template.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(template);
+    }
+
+
+    @PostMapping("/bulk/excel")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<BulkAdmissionResponseDto>> admitFromExcel(
+            @RequestParam("file") MultipartFile file) throws IOException {
+        BulkAdmissionResponseDto response = studentExcelService.admitFromExcel(file);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok("Bulk admission from Excel completed", response));
+    }
+
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
