@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -16,6 +17,7 @@ public class NotificationResponseDto {
     private String shortInfo;
     private AudienceType audienceType;
     private NotificationType notificationType;
+    private List<String> urls;
     private LocalDateTime eventDateTime;
     private LocalDateTime scheduledDispatchTime;
     private Boolean dispatched;

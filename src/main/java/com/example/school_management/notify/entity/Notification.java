@@ -55,6 +55,11 @@ public class Notification {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = true, name = "supporting_urls")
+    @Builder.Default
+    private List<String> urls=null;
+
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "notification_target_classes",

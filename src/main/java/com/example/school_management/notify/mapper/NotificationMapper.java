@@ -40,6 +40,7 @@ public class NotificationMapper {
                 .notificationType(dto.getNotificationType())
                 .eventDateTime(dto.getEventDateTime())
                 .scheduledDispatchTime(dto.getDispatchNow() ? LocalDateTime.now() : null)
+                .urls(dto.getUrls())
                 .dispatched(false)
                 .targetClasses(targetClasses)
                 .teacherIds(dto.getTeacherId())
@@ -60,6 +61,7 @@ public class NotificationMapper {
                 .notificationType(notification.getNotificationType())
                 .eventDateTime(notification.getEventDateTime())
                 .scheduledDispatchTime(notification.getScheduledDispatchTime())
+                .urls(notification.getUrls())
                 .dispatched(notification.getDispatched())
                 .createdAt(notification.getCreatedAt())
                 .build();

@@ -403,6 +403,7 @@ public class TeacherServiceImpl implements TeacherService {
                 .shortInfo(request.getShortInfo())
                 .audienceType(AudienceType.PARENT)
                 .notificationType(request.getNotificationType())
+                .urls(request.getUrls())
                 .eventDateTime(request.getEventDateTime())
                 .scheduledDispatchTime(Boolean.TRUE.equals(request.getDispatchNow())
                         ? LocalDateTime.now()

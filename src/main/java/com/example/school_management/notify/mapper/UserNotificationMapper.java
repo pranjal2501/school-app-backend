@@ -46,6 +46,7 @@ public class UserNotificationMapper {
                 .shortInfo(n.getShortInfo())
                 .notificationType(n.getNotificationType())
                 .eventDateTime(n.getEventDateTime())
+                .urls(n.getUrls())
                 .isRead(un.getIsRead())
                 .readAt(un.getReadAt())
                 .build();
@@ -59,6 +60,7 @@ public class UserNotificationMapper {
         dto.setShortInfo(un.getNotification().getShortInfo());
         dto.setNotificationType(un.getNotification().getNotificationType());
         dto.setEventDateTime(un.getNotification().getEventDateTime());
+        dto.setUrls(un.getNotification().getUrls());
         dto.setIsRead(un.getIsRead());
         dto.setReadAt(un.getReadAt());
         return dto;
