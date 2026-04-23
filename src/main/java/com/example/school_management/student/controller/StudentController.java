@@ -110,13 +110,7 @@ public class StudentController {
         return ResponseEntity.ok(ApiResponse.ok("Student profile fetched for: " + roleVerifier.getCurrentUsername(), "Student Profile"));
     }
 
-    @GetMapping("/dashboard")
-    @PreAuthorize("hasAnyRole('STUDENT','PARENT')")
-    public ResponseEntity<ApiResponse<String>> studentDashboard() {
-        return ResponseEntity.ok(ApiResponse.ok("Dashboard fetched for: " + roleVerifier.getCurrentUsername(), "Student & Parent Dashboard"));
-    }
-
-//    @GetMapping("/search")
+    //    @GetMapping("/search")
 //    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
 //    public ResponseEntity<ApiResponse<List<StudentDropdownDto>>> searchStudents(
 //            @RequestParam String standard,

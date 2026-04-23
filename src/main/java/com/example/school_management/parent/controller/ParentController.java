@@ -36,9 +36,7 @@ public class ParentController {
 //    Results
 //    GET /api/v1/parents/children/{studentId}/results?examType=MID_TERM — results per exam type with subject wise marks, grade, avg, highest, lowest
 //
-    @GetMapping("/profile")
-    public void getProfile()
-    {}
+
 
     @GetMapping("/child-list")
     public ResponseEntity<ApiResponse<List<ChildSummaryResponseDto>>> getChildList()
@@ -46,22 +44,19 @@ public class ParentController {
         return ResponseEntity.ok(ApiResponse.ok("List fetched successfully", parentService.getChildList()));
     }
 
-    @GetMapping("/Dashboard")
-    public ResponseEntity<ApiResponse<ParentsDashboardResponseDto>> getDashboard()
-    {
+    @GetMapping("/dashboard")
+    public ResponseEntity<ApiResponse<ParentsDashboardResponseDto>> getDashboard(){
         return ResponseEntity.ok(ApiResponse.ok("Dashboard fetched Successfully. ", parentService.getDashboard()));
     }
 
-    @GetMapping("/Dashboard/{RegId}")
-    public ResponseEntity<ApiResponse<ParentsDashboardResponseDto>> getDashboard(@PathVariable String regId)
-    {
+    @GetMapping("/dashboard/{RegId}")
+    public ResponseEntity<ApiResponse<ParentsDashboardResponseDto>> getDashboard(@PathVariable String regId){
         return ResponseEntity.ok(ApiResponse.ok("Dashboard fetched Successfully. ", parentService.getDashboard(regId)));
     }
 
 
     @GetMapping("/child-details/{RegId}")
-    public ResponseEntity<ApiResponse<ChildDetailsResponseDto>> getChildDetails(@PathVariable String RegId)
-    {
+    public ResponseEntity<ApiResponse<ChildDetailsResponseDto>> getChildDetails(@PathVariable String RegId){
         return ResponseEntity.ok(ApiResponse.ok("Student fetched successfully", parentService.getChildDetails(RegId)));
     }
 

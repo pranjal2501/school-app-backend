@@ -315,7 +315,6 @@ public class TeacherServiceImpl implements TeacherService {
     public TeacherDashboardResponseDto getDashboard(Long teacherId) {
 
         String currentUser = roleVerifier.getCurrentUsername();
-
         Teacher teacher = teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", teacherId));
 
@@ -342,10 +341,10 @@ public class TeacherServiceImpl implements TeacherService {
 
         int activeAssignments = assignmentRepository
                 .countActiveAssignmentsByTeacher(teacher, LocalDateTime.now());
-
-        List<Complaint> openComplaints = complaintRepository
-                .findByReportedByEmployeeAndStatus(teacher, ComplaintStatus.PENDING);
-
+        List<Complaint> openComplaints = new ArrayList<>();
+        if(assignedClass != null){
+            openComplaints = complaintRepository.findByTargetStudent_AssignedClass_IdAndStatusOrderByCreatedAtDesc(assignedClass.getId(),ComplaintStatus.PENDING);
+        }
         int subjectsTaught = pivotRepository.countDistinctSubjectsByTeacherId(teacher.getId());
 
         return TeacherDashboardResponseDto.builder()

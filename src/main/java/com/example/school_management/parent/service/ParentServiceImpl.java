@@ -116,7 +116,6 @@ public class ParentServiceImpl implements ParentService {
         AttendanceConfig config = attendanceConfigRepo.findTopByOrderByCreatedAtDesc();
         String academicYear = config.getAcademicYear();
 
-
         long sessionsConducted = studentAttendanceRepo.countTotalSessionsConducted(child.getAssignedClass().getId(), academicYear);
 
         Integer rollStr = child.getRollNumber();

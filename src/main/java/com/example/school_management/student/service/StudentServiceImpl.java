@@ -139,12 +139,12 @@ public class StudentServiceImpl implements StudentService {
 
             Student student = studentMapper.toEntity(request);
             student.setParent(parent);
-
             student.setAddedBy(admin);
 
             if (admin.getAdmittedStudents() == null) {
                 admin.setAdmittedStudents(new ArrayList<>());
             }
+
             admin.getAdmittedStudents().add(student);
 
             student.setActive(true);

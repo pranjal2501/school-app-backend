@@ -19,5 +19,4 @@ public class ParentsDashboardResponseDto {
     private Integer pendingAssignments;
 
     private List<ParentNotificationResponseDto> recentNotifications;
-
 }
