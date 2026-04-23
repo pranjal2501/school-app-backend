@@ -302,4 +302,43 @@ public class AssignmentServiceImpl implements AssignmentService{
                 .map(assignmentMapper::toResponseDto)
                 .toList();
     }
+
+    @Override
+    public List<AssignmentResponseDto> getStudentAssignmentsWithStatus(String regId) {
+        // 1. Get Student & Verify Parent Access (omitted for brevity, similar to previous logic)
+        Student student = studentRepository.findByRegId(regId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+
+        if (student.getAssignedClass() == null) {
+            return List.of(); // Return empty if no class assigned
+        }
+
+        // 2. Fetch all assignments for the student's class
+        List<Assignment> assignments = assignmentRepository
+                .findByAllocation_SchoolClass_IdOrderByDueDateAsc(student.getAssignedClass().getId());
+
+        // 3. Map to DTO while checking submission status
+        return assignments.stream().map(a -> {
+            // Check if a submission entry exists for this student and this assignment
+            boolean submitted = submissionRepository
+                    .existsByAssignmentIdAndStudentIdAndIsSubmittedTrue(a.getId(), student.getId());
+
+            return AssignmentResponseDto.builder()
+                    .id(a.getId())
+                    .title(a.getTitle())
+                    .description(a.getDescription())
+                    .documentUrl(a.getDocumentUrl())
+                    .createdAt(a.getCreatedAt())
+                    .assignmentType(a.getAssignmentType())
+                    .dueDate(a.getDueDate())
+                    .totalMarks(a.getTotalMarks())
+                    .className(a.getAllocation().getSchoolClass().getClassName())
+                    .classId(a.getAllocation().getSchoolClass().getId())
+                    .subjectName(a.getAllocation().getSubject().getSubjectName())
+                    .subjectId(a.getAllocation().getSubject().getId())
+                    .teacherName(a.getAllocation().getTeacher().getFirstName() + " " + a.getAllocation().getTeacher().getLastName())
+                    .isSubmitted(submitted)
+                    .build();
+        }).collect(Collectors.toList());
+    }
 }

@@ -15,7 +15,6 @@ public class AttendanceConfigRequestDto {
 
     @Min(value = 1, message = "Student working days must be at least 1")
     private Integer studentWorkingDays;
-
     private Boolean allowLateMarks;
 
     @Min(value = 0)

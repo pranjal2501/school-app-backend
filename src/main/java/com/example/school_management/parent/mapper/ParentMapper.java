@@ -118,8 +118,11 @@ public class ParentMapper {
                 .name(child.getFirstName() + " " + child.getLastName())
                 .schoolClass(child.getAssignedClass() != null
                         ? child.getAssignedClass().getClassName()
-                        : "N/A")
+                        : "Unassigned")
                 .rollNo(child.getRollNumber())
+                .classId(child.getAssignedClass() != null
+                    ? child.getAssignedClass().getId() : null
+                )
                 .build();
     }
 
