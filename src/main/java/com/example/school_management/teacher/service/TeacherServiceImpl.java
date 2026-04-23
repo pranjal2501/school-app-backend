@@ -346,9 +346,7 @@ public class TeacherServiceImpl implements TeacherService {
         List<Complaint> openComplaints = complaintRepository
                 .findByReportedByEmployeeAndStatus(teacher, ComplaintStatus.PENDING);
 
-        int subjectsTaught = teacher.getSubjects() != null
-                ? teacher.getSubjects().size()
-                : 0;
+        int subjectsTaught = pivotRepository.countDistinctSubjectsByTeacherId(teacher.getId());
 
         return TeacherDashboardResponseDto.builder()
                 .attendancePercent(attendancePercent)
