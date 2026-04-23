@@ -8,7 +8,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "class_subject_teachers", uniqueConstraints = {
@@ -38,6 +40,6 @@ public class ClassSubjectTeacher {
     @JoinColumn(name = "teacher_id", nullable = false)
     private Teacher teacher;
 
-    @OneToMany(mappedBy = "classTeacher")
-    private List<StudyMaterial> studyMaterials = new ArrayList<>();
+    @ManyToMany(mappedBy = "classTeachers")
+    private Set<StudyMaterial> studyMaterials = new HashSet<>();
 }

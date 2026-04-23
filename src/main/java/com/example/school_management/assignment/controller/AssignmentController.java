@@ -1,10 +1,10 @@
 package com.example.school_management.assignment.controller;
 
-import com.example.school_management.academics.dto.response.AssignmentResponseDto;
 import com.example.school_management.assignment.dto.request.AssignmentBulkRequestDto;
 import com.example.school_management.assignment.dto.request.AssignmentRequestDto;
 import com.example.school_management.assignment.dto.request.AssignmentUpdateRequestDto;
 import com.example.school_management.assignment.dto.request.SubmissionBulkRequestDto;
+import com.example.school_management.assignment.dto.response.AssignmentResponseDto;
 import com.example.school_management.assignment.dto.response.SubmissionResponseDto;
 import com.example.school_management.assignment.dto.response.TeacherClassDropdownDto;
 import com.example.school_management.assignment.service.AssignmentService;
@@ -98,5 +98,12 @@ public class AssignmentController {
     public ResponseEntity<ApiResponse<Void>> deleteAssignment(@PathVariable Long id) {
         assignmentService.deleteAssignment(id);
         return ResponseEntity.ok(ApiResponse.ok("Assignment deleted successfully", null));
+    }
+
+    @GetMapping("/my-assignments")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<List<AssignmentResponseDto>>> getMyAssignments() {
+        List<AssignmentResponseDto> response = assignmentService.getMyCreatedAssignments();
+        return ResponseEntity.ok(ApiResponse.ok("Teacher assignments fetched successfully.", response));
     }
 }

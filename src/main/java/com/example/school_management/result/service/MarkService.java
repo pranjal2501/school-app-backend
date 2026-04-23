@@ -14,6 +14,7 @@ import com.example.school_management.result.mapper.MarkMapper;
 import com.example.school_management.result.repository.StudentSubjectMarkRepository;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.repository.StudentRepository;
+import com.example.school_management.subject.entity.Subject;
 import com.example.school_management.teacher.entity.Teacher;
 import com.example.school_management.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +63,9 @@ public class MarkService {
         Teacher currentTeacher = getCurrentTeacher();
         ClassSubjectTeacher allocation = verifyAndGetAllocation(request.getAllocationId(), currentTeacher);
 
+        // 🚀 Extract the Subject to validate max marks
+        Subject subject = allocation.getSubject();
+
         List<StudentSubjectMark> savedMarks = new ArrayList<>();
 
         for (StudentMarkEntryDto entry : request.getMarks()) {
@@ -73,6 +77,9 @@ public class MarkService {
                 throw new IllegalArgumentException(
                         "Student ID " + student.getId() + " does not belong to class " + allocation.getSchoolClass().getClassName()); // 400 BAD REQUEST
             }
+
+            // 🚀 NEW BULLETPROOF CHECK: Validate marks against subject maximums
+            validateMarksAgainstSubjectMax(entry, subject);
 
             // Upsert Logic: Does the mark already exist?
             StudentSubjectMark mark = markRepository.findByStudentIdAndAllocationIdAndExamTerm(
@@ -102,5 +109,45 @@ public class MarkService {
                 .stream()
                 .map(markMapper::toResponseDto)
                 .toList();
+    }
+
+    // 🚀 NEW HELPER METHOD: Validates uploaded marks against the Subject's maximums
+    private void validateMarksAgainstSubjectMax(StudentMarkEntryDto entry, Subject subject) {
+        String subjName = subject.getSubjectName();
+
+        if (entry.getTheoryObtained() != null) {
+            int max = subject.getTheoryMarks() != null ? subject.getTheoryMarks() : 0;
+            if (entry.getTheoryObtained() > max) {
+                throw new IllegalArgumentException(String.format("Theory marks (%d) exceed maximum allowed (%d) for subject %s.", entry.getTheoryObtained(), max, subjName));
+            }
+        }
+
+        if (entry.getInternalObtained() != null) {
+            int max = subject.getInternalMarks() != null ? subject.getInternalMarks() : 0;
+            if (entry.getInternalObtained() > max) {
+                throw new IllegalArgumentException(String.format("Internal marks (%d) exceed maximum allowed (%d) for subject %s.", entry.getInternalObtained(), max, subjName));
+            }
+        }
+
+        if (entry.getPracticalObtained() != null) {
+            int max = subject.getPracticalMarks() != null ? subject.getPracticalMarks() : 0;
+            if (entry.getPracticalObtained() > max) {
+                throw new IllegalArgumentException(String.format("Practical marks (%d) exceed maximum allowed (%d) for subject %s.", entry.getPracticalObtained(), max, subjName));
+            }
+        }
+
+        if (entry.getProjectObtained() != null) {
+            int max = subject.getProjectMarks() != null ? subject.getProjectMarks() : 0;
+            if (entry.getProjectObtained() > max) {
+                throw new IllegalArgumentException(String.format("Project marks (%d) exceed maximum allowed (%d) for subject %s.", entry.getProjectObtained(), max, subjName));
+            }
+        }
+
+        if (entry.getOralObtained() != null) {
+            int max = subject.getOralMarks() != null ? subject.getOralMarks() : 0;
+            if (entry.getOralObtained() > max) {
+                throw new IllegalArgumentException(String.format("Oral marks (%d) exceed maximum allowed (%d) for subject %s.", entry.getOralObtained(), max, subjName));
+            }
+        }
     }
 }

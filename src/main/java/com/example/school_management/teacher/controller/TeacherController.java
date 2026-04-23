@@ -1,5 +1,6 @@
 package com.example.school_management.teacher.controller;
 
+import com.example.school_management.assignment.dto.response.TeacherClassDropdownDto;
 import com.example.school_management.common.ApiResponse;
 import com.example.school_management.teacher.dto.response.MyClassResponseDto;
 import com.example.school_management.notify.dto.CreateNotificationRequestDto;
@@ -119,19 +120,23 @@ public class TeacherController {
 
     @GetMapping("/my-notifications")
     @PreAuthorize("hasRole('TEACHER')")
-    public ResponseEntity<ApiResponse<List<NotificationResponseDto>>> getMyNotifications()
-    {
+    public ResponseEntity<ApiResponse<List<NotificationResponseDto>>> getMyNotifications(){
         return ResponseEntity.ok(ApiResponse.ok("Notifications fetched successfully", teacherService.getMyNotifications()));
-
     }
 
 
     @GetMapping("/dashboard/{teacherId}")
     @PreAuthorize("hasRole('TEACHER')")
-    public ResponseEntity<ApiResponse<TeacherDashboardResponseDto>> getDashboard(@PathVariable Long teacherId)
-    {
+    public ResponseEntity<ApiResponse<TeacherDashboardResponseDto>> getDashboard(@PathVariable Long teacherId){
 
         return ResponseEntity.ok(ApiResponse.ok("Dashboard fetched successfully", teacherService.getDashboard(teacherId)));
+    }
+
+    @GetMapping("/my-allocations")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<List<TeacherClassDropdownDto>>> getMyAllocations() {
+        List<TeacherClassDropdownDto> response = teacherService.getMyAllocations();
+        return ResponseEntity.ok(ApiResponse.ok("Teacher allocations fetched successfully", response));
     }
 
 }

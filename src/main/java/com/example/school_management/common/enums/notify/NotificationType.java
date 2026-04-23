@@ -1,11 +1,20 @@
 package com.example.school_management.common.enums.notify;
 
 public enum NotificationType {
-    EVENT,
-    EXAM,
-    RESULT,
-    MEETING,
-    INSPECTION,
-    COMPLAINT,
-    UPDATE
+    EVENT("Event"),
+    EXAM("Exam"),
+    RESULT("Result"),
+    MEETING("Meeting"),
+    INSPECTION("Inspection"),
+    COMPLAINT("Complaint"),
+    UPDATE("Update");
+    private final String displayName;
+
+    NotificationType(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
 }

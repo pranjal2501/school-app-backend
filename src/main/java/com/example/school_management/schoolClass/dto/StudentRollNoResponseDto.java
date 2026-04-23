@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class StudentRollNoResponseDto {
+        private Long id;
         private Integer rollNumber;
         private String firstName;
         private String lastName;

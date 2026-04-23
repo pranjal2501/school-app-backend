@@ -9,13 +9,14 @@ import com.example.school_management.common.exception.UnauthorizedAccessExceptio
 import com.example.school_management.studyMaterial.dto.StudyMaterialUploadRequestDto;
 import com.example.school_management.studyMaterial.dto.StudyMaterialUploadResponseDto;
 import com.example.school_management.studyMaterial.entity.StudyMaterial;
-import com.example.school_management.studyMaterial.mapper.StudyMaterialMapper;
 import com.example.school_management.studyMaterial.repository.StudyMaterialRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,46 +24,133 @@ import java.util.stream.Collectors;
 public class StudyMaterialService {
 
     private final StudyMaterialRepository studyMaterialRepository;
-    private final StudyMaterialMapper studyMaterialMapper;
     private final RoleVerifier roleVerifier;
     private final ClassSubjectTeacherRepository classSubjectTeacherRepository;
 
     @Transactional
     public StudyMaterialUploadResponseDto uploadStudyMaterial(StudyMaterialUploadRequestDto request) {
-
         String currentUser = roleVerifier.getCurrentUsername();
+        boolean isAdmin = roleVerifier.hasRole(Role.ADMIN);
 
-        ClassSubjectTeacher cst = classSubjectTeacherRepository.findById(request.getClassSubjectTeacherEntityId())
-                .orElseThrow(() -> new ResourceNotFoundException("ClassSubjectTeacher", "id", request.getClassSubjectTeacherEntityId()));
+        List<ClassSubjectTeacher> allocations = classSubjectTeacherRepository.findAllById(request.getClassSubjectTeacherIds());
 
-        if (!cst.getTeacher().isIdentifiedBy(currentUser)) {
-            throw new UnauthorizedAccessException("You can only upload study material for your own classes.");
+        if (allocations.size() != request.getClassSubjectTeacherIds().size()) {
+            throw new ResourceNotFoundException("ClassSubjectTeacher", "ids", request.getClassSubjectTeacherIds());
         }
 
-        StudyMaterial studyMaterial = studyMaterialMapper.toEntity(request);
-        return studyMaterialMapper.toResponseDto(studyMaterialRepository.save(studyMaterial));
+        // Verify ownership for ALL selected classes
+        if (!isAdmin) {
+            for (ClassSubjectTeacher cst : allocations) {
+                if (!cst.getTeacher().isIdentifiedBy(currentUser)) {
+                    throw new UnauthorizedAccessException("You are not authorized to upload material for one or more selected classes.");
+                }
+            }
+        }
+
+        StudyMaterial studyMaterial = StudyMaterial.builder()
+                .classTeachers(new HashSet<>(allocations))
+                .description(request.getDescription())
+                .isVisibleToParent(request.getIsVisibleToParent())
+                .urls(request.getUrls() != null ? request.getUrls() : List.of())
+                .build();
+
+        return mapToResponseDto(studyMaterialRepository.save(studyMaterial));
     }
 
-    public List<StudyMaterialUploadResponseDto> getStudyMaterialByClass(Long classSubjectTeacherId) {
-        return studyMaterialRepository.findByClassTeacherId(classSubjectTeacherId)
-                .stream()
-                .map(studyMaterialMapper::toResponseDto)
-                .collect(Collectors.toList());
-    }
-
-    public void deleteStudyMaterial(Long studyMaterialId) {
-
+    @Transactional
+    public StudyMaterialUploadResponseDto updateStudyMaterial(Long studyMaterialId, StudyMaterialUploadRequestDto request) {
         String currentUser = roleVerifier.getCurrentUsername();
         boolean isAdmin = roleVerifier.hasRole(Role.ADMIN);
 
         StudyMaterial studyMaterial = studyMaterialRepository.findById(studyMaterialId)
                 .orElseThrow(() -> new ResourceNotFoundException("StudyMaterial", "id", studyMaterialId));
 
-        if (!isAdmin && !studyMaterial.getClassTeacher().getTeacher().isIdentifiedBy(currentUser)) {
-            throw new UnauthorizedAccessException("You can only delete your own study materials.");
+        // Verify ownership of existing material
+        if (!isAdmin) {
+            boolean ownsMaterial = studyMaterial.getClassTeachers().stream()
+                    .anyMatch(cst -> cst.getTeacher().isIdentifiedBy(currentUser));
+            if (!ownsMaterial) {
+                throw new UnauthorizedAccessException("You can only update your own study materials.");
+            }
+        }
+
+        // Fetch and verify new allocations (allowing adding/removing classes)
+        List<ClassSubjectTeacher> newAllocations = classSubjectTeacherRepository.findAllById(request.getClassSubjectTeacherIds());
+        if (newAllocations.size() != request.getClassSubjectTeacherIds().size()) {
+            throw new ResourceNotFoundException("ClassSubjectTeacher", "ids", request.getClassSubjectTeacherIds());
+        }
+
+        if (!isAdmin) {
+            for (ClassSubjectTeacher cst : newAllocations) {
+                if (!cst.getTeacher().isIdentifiedBy(currentUser)) {
+                    throw new UnauthorizedAccessException("You can only assign material to your own classes.");
+                }
+            }
+        }
+
+        studyMaterial.setClassTeachers(new HashSet<>(newAllocations));
+        studyMaterial.setDescription(request.getDescription());
+        studyMaterial.setIsVisibleToParent(request.getIsVisibleToParent());
+        studyMaterial.setUrls(request.getUrls() != null ? request.getUrls() : List.of());
+
+        return mapToResponseDto(studyMaterialRepository.save(studyMaterial));
+    }
+
+    public List<StudyMaterialUploadResponseDto> getStudyMaterialByClassAndSubject(Long classId, Long subjectId) {
+        return studyMaterialRepository.findByClassIdAndSubjectId(classId, subjectId)
+                .stream()
+                .map(this::mapToResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<StudyMaterialUploadResponseDto> getStudyMaterialByAllocation(Long classSubjectTeacherId) {
+        return studyMaterialRepository.findByClassTeachers_Id(classSubjectTeacherId)
+                .stream()
+                .map(this::mapToResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteStudyMaterial(Long studyMaterialId) {
+        String currentUser = roleVerifier.getCurrentUsername();
+        boolean isAdmin = roleVerifier.hasRole(Role.ADMIN);
+
+        StudyMaterial studyMaterial = studyMaterialRepository.findById(studyMaterialId)
+                .orElseThrow(() -> new ResourceNotFoundException("StudyMaterial", "id", studyMaterialId));
+
+        if (!isAdmin) {
+            boolean ownsMaterial = studyMaterial.getClassTeachers().stream()
+                    .anyMatch(cst -> cst.getTeacher().isIdentifiedBy(currentUser));
+            if (!ownsMaterial) {
+                throw new UnauthorizedAccessException("You can only delete your own study materials.");
+            }
         }
 
         studyMaterialRepository.delete(studyMaterial);
     }
-}
 
+    // Manual mapping ensures we extract the Lists of class names perfectly
+    private StudyMaterialUploadResponseDto mapToResponseDto(StudyMaterial sm) {
+        List<String> classNames = sm.getClassTeachers().stream()
+                .map(cst -> cst.getSchoolClass().getClassName())
+                .collect(Collectors.toList());
+
+        Set<Long> allocationIds = sm.getClassTeachers().stream()
+                .map(ClassSubjectTeacher::getId)
+                .collect(Collectors.toSet());
+
+        // Assuming all allocations are for the same subject and teacher
+        ClassSubjectTeacher firstAllocation = sm.getClassTeachers().iterator().next();
+
+        return StudyMaterialUploadResponseDto.builder()
+                .studyMaterialId(sm.getId())
+                .classSubjectTeacherIds(allocationIds)
+                .schoolClasses(classNames)
+                .subject(firstAllocation.getSubject().getSubjectName())
+                .teacher(firstAllocation.getTeacher().getFirstName() + " " + firstAllocation.getTeacher().getLastName())
+                .description(sm.getDescription())
+                .isVisibleToParent(sm.getIsVisibleToParent())
+                .urls(sm.getUrls())
+                .build();
+    }
+}

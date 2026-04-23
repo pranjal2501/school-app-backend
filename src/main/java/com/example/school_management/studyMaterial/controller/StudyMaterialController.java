@@ -1,6 +1,5 @@
 package com.example.school_management.studyMaterial.controller;
 
-
 import com.example.school_management.common.ApiResponse;
 import com.example.school_management.studyMaterial.dto.StudyMaterialUploadRequestDto;
 import com.example.school_management.studyMaterial.dto.StudyMaterialUploadResponseDto;
@@ -28,11 +27,31 @@ public class StudyMaterialController {
         return ResponseEntity.ok(ApiResponse.ok("Study material uploaded successfully", response));
     }
 
-    @GetMapping("/class/{classSubjectTeacherId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER','PARENT')")
-    public ResponseEntity<ApiResponse<List<StudyMaterialUploadResponseDto>>> getStudyMaterialByClass(
+    @PutMapping("/{studyMaterialId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<ApiResponse<StudyMaterialUploadResponseDto>> updateStudyMaterial(
+            @PathVariable Long studyMaterialId,
+            @Valid @RequestBody StudyMaterialUploadRequestDto request) {
+        StudyMaterialUploadResponseDto response = studyMaterialService.updateStudyMaterial(studyMaterialId, request);
+        return ResponseEntity.ok(ApiResponse.ok("Study material updated successfully", response));
+    }
+
+    // Your requested endpoint: By Class and Subject
+    @GetMapping("/class/{classId}/subject/{subjectId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT', 'STUDENT')")
+    public ResponseEntity<ApiResponse<List<StudyMaterialUploadResponseDto>>> getStudyMaterialByClassAndSubject(
+            @PathVariable Long classId,
+            @PathVariable Long subjectId) {
+        List<StudyMaterialUploadResponseDto> response = studyMaterialService.getStudyMaterialByClassAndSubject(classId, subjectId);
+        return ResponseEntity.ok(ApiResponse.ok("Study materials fetched successfully", response));
+    }
+
+    // Alternative endpoint: By exact allocation ID
+    @GetMapping("/allocation/{classSubjectTeacherId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT', 'STUDENT')")
+    public ResponseEntity<ApiResponse<List<StudyMaterialUploadResponseDto>>> getStudyMaterialByAllocation(
             @PathVariable Long classSubjectTeacherId) {
-        List<StudyMaterialUploadResponseDto> response = studyMaterialService.getStudyMaterialByClass(classSubjectTeacherId);
+        List<StudyMaterialUploadResponseDto> response = studyMaterialService.getStudyMaterialByAllocation(classSubjectTeacherId);
         return ResponseEntity.ok(ApiResponse.ok("Study materials fetched successfully", response));
     }
 
@@ -43,5 +62,4 @@ public class StudyMaterialController {
         studyMaterialService.deleteStudyMaterial(studyMaterialId);
         return ResponseEntity.ok(ApiResponse.ok("Study material deleted successfully", null));
     }
-
 }

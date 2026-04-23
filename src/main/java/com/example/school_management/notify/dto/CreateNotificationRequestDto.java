@@ -26,7 +26,7 @@ public class CreateNotificationRequestDto {
     @NotBlank(message = "Short info is required")
     private String shortInfo;
 
-    @NotNull(message = "Audience type is required")
+//    @NotNull(message = "Audience type is required")
     private AudienceType audienceType;
 
     @NotNull(message = "Notification type is required")

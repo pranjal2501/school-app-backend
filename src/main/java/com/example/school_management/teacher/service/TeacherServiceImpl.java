@@ -1,5 +1,9 @@
 package com.example.school_management.teacher.service;
 
+import com.example.school_management.academics.entity.ClassSubjectTeacher;
+import com.example.school_management.academics.repository.ClassSubjectTeacherRepository;
+import com.example.school_management.assignment.dto.response.TeacherClassDropdownDto;
+import com.example.school_management.assignment.mapper.AssignmentMapper;
 import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.assignment.repository.AssignmentRepository;
 import com.example.school_management.attendance.entity.StudentAttendance;
@@ -69,6 +73,8 @@ public class TeacherServiceImpl implements TeacherService {
     private final ComplaintMapper complaintMapper;
     private final EmailService emailService;
     private final RoleVerifier roleVerifier;
+    private final ClassSubjectTeacherRepository pivotRepository;
+    private final AssignmentMapper assignmentMapper;
     /**
      * Replaces manual SecurityContext verification.
      * Allows access if the user is an ADMIN, OR if they are the specific Teacher.
@@ -340,9 +346,7 @@ public class TeacherServiceImpl implements TeacherService {
         List<Complaint> openComplaints = complaintRepository
                 .findByReportedByEmployeeAndStatus(teacher, ComplaintStatus.PENDING);
 
-        int subjectsTaught = teacher.getSubjects() != null
-                ? teacher.getSubjects().size()
-                : 0;
+        int subjectsTaught = pivotRepository.countDistinctSubjectsByTeacherId(teacher.getId());
 
         return TeacherDashboardResponseDto.builder()
                 .attendancePercent(attendancePercent)
@@ -442,5 +446,16 @@ public class TeacherServiceImpl implements TeacherService {
     private String getSafeSubstring(String value, int length) {
         if (value == null) return "";
         return value.length() < length ? value : value.substring(0, length);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeacherClassDropdownDto> getMyAllocations() {
+        String identifier = roleVerifier.getCurrentUsername();
+        Teacher currentTeacher = teacherRepository.findByEmail(identifier)
+                .or(() -> teacherRepository.findByMobile(identifier))
+                .orElseThrow(() -> new AccessDeniedException("Teacher profile not found."));
+
+        List<ClassSubjectTeacher> myAllocations = pivotRepository.findAllByTeacherId(currentTeacher.getId());
+        return assignmentMapper.toClassDropdownList(myAllocations);
     }
 }

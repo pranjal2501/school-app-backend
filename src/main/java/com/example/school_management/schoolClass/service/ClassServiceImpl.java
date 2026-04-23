@@ -214,6 +214,7 @@ public class ClassServiceImpl implements ClassService {
                 .filter(s -> s.getRollNumber() != null)
                 .sorted(Comparator.comparing(Student::getRollNumber))
                 .map(s -> new StudentRollNoResponseDto(
+                        s.getId(),
                         s.getRollNumber(),
                         s.getFirstName(),
                         s.getLastName(),

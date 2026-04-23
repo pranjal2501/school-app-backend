@@ -1,4 +1,4 @@
-package com.example.school_management.academics.dto.response;
+package com.example.school_management.assignment.dto.response;
 
 import com.example.school_management.common.enums.AssignmentType;
 import lombok.Builder;

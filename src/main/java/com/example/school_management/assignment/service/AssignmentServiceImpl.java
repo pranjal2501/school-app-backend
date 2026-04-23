@@ -1,9 +1,9 @@
 package com.example.school_management.assignment.service;
 
-import com.example.school_management.academics.dto.response.AssignmentResponseDto;
 import com.example.school_management.academics.entity.ClassSubjectTeacher;
 import com.example.school_management.academics.repository.ClassSubjectTeacherRepository;
 import com.example.school_management.assignment.dto.request.*;
+import com.example.school_management.assignment.dto.response.AssignmentResponseDto;
 import com.example.school_management.assignment.dto.response.SubmissionResponseDto;
 import com.example.school_management.assignment.dto.response.TeacherClassDropdownDto;
 import com.example.school_management.assignment.entity.Assignment;
@@ -25,8 +25,6 @@ import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.notify.repository.NotificationRepository;
 import com.example.school_management.notify.repository.UserNotificationRepository;
 import com.example.school_management.parent.entity.Parent;
-import com.example.school_management.student.entity.Student;
-import com.example.school_management.student.repository.StudentRepository;
 import com.example.school_management.teacher.entity.Teacher;
 import com.example.school_management.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
@@ -292,5 +290,16 @@ public class AssignmentServiceImpl implements AssignmentService{
 
             userNotificationRepository.save(userNotification);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AssignmentResponseDto> getMyCreatedAssignments() {
+        Teacher currentTeacher = getCurrentTeacher();
+
+        return assignmentRepository.findAllByAllocation_Teacher_IdOrderByCreatedAtDesc(currentTeacher.getId())
+                .stream()
+                .map(assignmentMapper::toResponseDto)
+                .toList();
     }
 }
