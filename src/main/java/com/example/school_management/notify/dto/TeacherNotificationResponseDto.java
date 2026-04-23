@@ -4,6 +4,7 @@ import com.example.school_management.common.enums.notify.NotificationType;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class TeacherNotificationResponseDto {
@@ -12,6 +13,7 @@ public class TeacherNotificationResponseDto {
     private String description;  // ← full details
     private String shortInfo;
     private NotificationType notificationType;
+    private List<String> urls;
     private LocalDateTime eventDateTime;
     private Boolean isRead;
     private LocalDateTime readAt;

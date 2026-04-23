@@ -41,4 +41,6 @@ public class CreateNotificationRequestDto {
     private Set<Long> teacherId;
 
     private Boolean dispatchNow;
+
+    private List<String> urls;
 }
