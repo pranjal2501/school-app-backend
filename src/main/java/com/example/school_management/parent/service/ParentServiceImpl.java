@@ -21,6 +21,7 @@ import com.example.school_management.parent.repository.ParentRepository;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.repository.StudentRepository;
+import com.example.school_management.teacher.entity.Teacher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -107,24 +108,70 @@ public class ParentServiceImpl implements ParentService {
 
     @Override
     public ChildDetailsResponseDto getChildDetails(String regId) {
-
         String currentUser = roleVerifier.getCurrentUsername();
         Parent parent = parentRepository.findByEmail(currentUser)
                 .orElseThrow(() -> new UnauthorizedAccessException("Parent session invalid"));
 
-        Student child = studentRepository.findByRegId(regId).orElseThrow(() -> new ResourceNotFoundException("Student not fount with given registration id."));
+        Student child = studentRepository.findByRegId(regId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with given registration id."));
 
         if (!child.getParent().getId().equals(parent.getId())) {
             throw new UnauthorizedAccessException("You can only view your own child's details");
         }
 
         AttendanceConfig config = attendanceConfigRepo.findTopByOrderByCreatedAtDesc();
-        String academicYear = config.getAcademicYear();
-
+        String academicYear = config != null ? config.getAcademicYear() : "N/A";
         float percentage = attendancePercent(child);
 
-        return parentMapper.toChildDetailsResponseDto(child, percentage, academicYear);
+        // Safely extract Class and Teacher details
+        String className = "Unassigned";
+        String teacherName = null;
+        String teacherEmail = null;
+        String teacherMobile = null;
+        String teacherDegree = null;
 
+        if (child.getAssignedClass() != null) {
+            className = child.getAssignedClass().getClassName();
+            if (child.getAssignedClass().getClassTeacher() != null) {
+                Teacher t = child.getAssignedClass().getClassTeacher();
+                teacherName = t.getFirstName() + " " + t.getLastName();
+                teacherEmail = t.getEmail();
+                teacherMobile = t.getMobile();
+                teacherDegree = t.getDegreeType() != null ? t.getDegreeType().name() : null;
+            }
+        }
+
+        return ChildDetailsResponseDto.builder()
+                .regId(child.getRegId())
+                .academicYear(academicYear)
+                .attendancePercentage(percentage)
+                .firstName(child.getFirstName())
+                .middleName(child.getMiddleName())
+                .lastName(child.getLastName())
+                .gender(child.getGender() != null ? child.getGender().name() : null)
+                .dob(child.getDob())
+                .bloodGroup(child.getBloodGroup() != null ? child.getBloodGroup().name() : null)
+                .aadharNo(child.getAadharNo())
+                .nationality(child.getNationality())
+                .religion(child.getReligion() != null ? child.getReligion().name() : null)
+                .category(child.getCategory() != null ? child.getCategory().name() : null)
+                .standard(child.getStandard())
+                .rollNumber(child.getRollNumber())
+                .className(className)
+                .classTeacherName(teacherName)
+                .classTeacherEmail(teacherEmail)
+                .classTeacherMobile(teacherMobile)
+                .classTeacherDegree(teacherDegree)
+                .previousSchool(child.getPreviousSchool())
+                .previousPercentage(child.getPreviousPercentage())
+                .birthCertificateUrl(child.getBirthCertificateUrl())
+                .aadharPhotoUrl(child.getAadharPhotoUrl())
+                .previousMarksheetUrl(child.getPreviousMarksheetUrl())
+                .passportPhotoUrl(child.getPassportPhotoUrl())
+                .leavingCertificateUrl(child.getLeavingCertificateUrl())
+                .casteCertificateUrl(child.getCasteCertificateUrl())
+                .incomeCertificateUrl(child.getIncomeCertificateUrl())
+                .build();
     }
 
     // ================= Helper Method ====================

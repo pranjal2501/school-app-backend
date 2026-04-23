@@ -51,9 +51,13 @@ public class ParentController {
     }
 
 
-    @GetMapping("/child-details/{RegId}")
-    public ResponseEntity<ApiResponse<ChildDetailsResponseDto>> getChildDetails(@PathVariable String RegId){
-        return ResponseEntity.ok(ApiResponse.ok("Student fetched successfully", parentService.getChildDetails(RegId)));
+    @GetMapping("/child-details/{regId}")
+    public ResponseEntity<ApiResponse<ChildDetailsResponseDto>> getChildDetails(
+            @PathVariable String regId) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Child details fetched successfully",
+                parentService.getChildDetails(regId)
+        ));
     }
 
 }
