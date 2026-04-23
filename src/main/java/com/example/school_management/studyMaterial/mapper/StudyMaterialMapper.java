@@ -9,6 +9,12 @@ import com.example.school_management.studyMaterial.entity.StudyMaterial;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Component
 @RequiredArgsConstructor
 public class StudyMaterialMapper {
@@ -16,25 +22,43 @@ public class StudyMaterialMapper {
     private final ClassSubjectTeacherRepository classSubjectTeacherRepository;
 
     public StudyMaterial toEntity(StudyMaterialUploadRequestDto dto) {
-        ClassSubjectTeacher cst = classSubjectTeacherRepository.findById(dto.getClassSubjectTeacherEntityId())
-                .orElseThrow(() -> new ResourceNotFoundException("ClassSubjectTeacher", "id", dto.getClassSubjectTeacherEntityId()));
+        List<ClassSubjectTeacher> allocations = classSubjectTeacherRepository.findAllById(dto.getClassSubjectTeacherIds());
+
+        if (allocations.size() != dto.getClassSubjectTeacherIds().size()) {
+            throw new ResourceNotFoundException("ClassSubjectTeacher", "ids", dto.getClassSubjectTeacherIds());
+        }
 
         return StudyMaterial.builder()
-                .classTeacher(cst)
-                .urls(dto.getUrls())
+                .classTeachers(new HashSet<>(allocations))
+                .urls(dto.getUrls() != null ? dto.getUrls() : new ArrayList<>())
+                .isVisibleToParent(dto.getIsVisibleToParent())
+                .description(dto.getDescription())
                 .build();
     }
 
     public StudyMaterialUploadResponseDto toResponseDto(StudyMaterial studyMaterial) {
-        ClassSubjectTeacher cst = studyMaterial.getClassTeacher();
+        Set<ClassSubjectTeacher> csts = studyMaterial.getClassTeachers();
 
-        return new StudyMaterialUploadResponseDto(
-                studyMaterial.getId(),
-                cst.getId(),
-                cst.getSchoolClass().getClassName(),
-                cst.getSubject().getSubjectName(),
-                cst.getTeacher().getFirstName() + " " + cst.getTeacher().getLastName(),
-                studyMaterial.getUrls()
-        );
+        Set<Long> allocationIds = csts.stream()
+                .map(ClassSubjectTeacher::getId)
+                .collect(Collectors.toSet());
+
+        List<String> classNames = csts.stream()
+                .map(cst -> cst.getSchoolClass().getClassName())
+                .collect(Collectors.toList());
+
+        // Extract shared details from the first available allocation
+        ClassSubjectTeacher firstAllocation = csts.iterator().next();
+
+        return StudyMaterialUploadResponseDto.builder()
+                .studyMaterialId(studyMaterial.getId())
+                .classSubjectTeacherIds(allocationIds)
+                .schoolClasses(classNames)
+                .subject(firstAllocation.getSubject().getSubjectName())
+                .teacher(firstAllocation.getTeacher().getFirstName() + " " + firstAllocation.getTeacher().getLastName())
+                .description(studyMaterial.getDescription())
+                .isVisibleToParent(studyMaterial.getIsVisibleToParent())
+                .urls(studyMaterial.getUrls())
+                .build();
     }
 }

@@ -120,10 +120,8 @@ public class TeacherController {
 
     @GetMapping("/my-notifications")
     @PreAuthorize("hasRole('TEACHER')")
-    public ResponseEntity<ApiResponse<List<NotificationResponseDto>>> getMyNotifications()
-    {
+    public ResponseEntity<ApiResponse<List<NotificationResponseDto>>> getMyNotifications(){
         return ResponseEntity.ok(ApiResponse.ok("Notifications fetched successfully", teacherService.getMyNotifications()));
-
     }
 
 
