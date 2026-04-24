@@ -1,6 +1,5 @@
 package com.example.school_management.parent.mapper;
 
-
 import com.example.school_management.notify.dto.ParentNotificationResponseDto;
 import com.example.school_management.parent.dto.*;
 import com.example.school_management.parent.entity.Parent;
@@ -18,132 +17,129 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ParentMapper {
 
-    // DTO → Entity
+    // ── DTO → Entity ──
     public static Parent toEntity(ParentCreateRequestDto dto) {
         if (dto == null) return null;
-
         Parent parent = new Parent();
-
         parent.setFatherFirstName(dto.getFatherFirstName());
         parent.setFatherMiddleName(dto.getFatherMiddleName());
         parent.setFatherLastName(dto.getFatherLastName());
         parent.setFatherOccupation(dto.getFatherOccupation());
-
         parent.setMotherFirstName(dto.getMotherFirstName());
         parent.setMotherMiddleName(dto.getMotherMiddleName());
         parent.setMotherLastName(dto.getMotherLastName());
         parent.setMotherOccupation(dto.getMotherOccupation());
-
         parent.setMobilePrimary(dto.getMobilePrimary());
         parent.setEmail(dto.getEmail());
         parent.setPassword(dto.getPassword());
-
         parent.setAadharNo(dto.getAadharNo());
         parent.setAadharOwnerType(dto.getAadharOwnerType());
-
         return parent;
     }
 
-    // Entity → Response DTO
+    // ── Entity → Response DTO ──
     public static ParentResponseDto toResponseDto(Parent parent) {
         if (parent == null) return null;
-
         ParentResponseDto dto = new ParentResponseDto();
-
         dto.setId(parent.getId());
-
         dto.setFatherFirstName(parent.getFatherFirstName());
         dto.setFatherMiddleName(parent.getFatherMiddleName());
         dto.setFatherLastName(parent.getFatherLastName());
         dto.setFatherOccupation(parent.getFatherOccupation());
-
         dto.setMotherFirstName(parent.getMotherFirstName());
         dto.setMotherLastName(parent.getMotherLastName());
         dto.setMotherOccupation(parent.getMotherOccupation());
-
         dto.setGuardianFirstName(parent.getGuardianFirstName());
         dto.setGuardianMiddleName(parent.getGuardianMiddleName());
         dto.setGuardianLastName(parent.getGuardianLastName());
-
         dto.setMobilePrimary(parent.getMobilePrimary());
         dto.setEmail(parent.getEmail());
         dto.setAadharNo(parent.getAadharNo());
-
-        dto.setStudents(
-                ParentMapper.toLiteDtoList(parent.getStudents())
-        );
-
+        dto.setStudents(ParentMapper.toLiteDtoList(parent.getStudents()));
         return dto;
     }
 
     public static StudentLiteDto toLiteDto(Student student) {
         if (student == null) return null;
-
         StudentLiteDto dto = new StudentLiteDto();
         dto.setId(student.getId());
         dto.setFirstName(student.getFirstName());
         dto.setLastName(student.getLastName());
-
         return dto;
     }
 
     public static List<StudentLiteDto> toLiteDtoList(List<Student> students) {
         if (students == null) return new ArrayList<>();
-
-        return students.stream()
-                .map(ParentMapper::toLiteDto)
-                .collect(Collectors.toList());
+        return students.stream().map(ParentMapper::toLiteDto).collect(Collectors.toList());
     }
 
+    // 🚀 FIXED: Fully maps all 25+ fields to the UI DTO
     public ChildDetailsResponseDto toChildDetailsResponseDto(Student child, float attendancePercent, String academicYear) {
-
         SchoolClass assignedClass = child.getAssignedClass();
         Teacher classTeacher = assignedClass != null ? assignedClass.getClassTeacher() : null;
 
         return ChildDetailsResponseDto.builder()
-                .name(child.getFirstName() + " " + child.getLastName())
-                .schoolClass(assignedClass != null
-                        ? assignedClass.getClassName()
-                        : "Class not assigned yet")
-                .rollNo(child.getRollNumber() != null
-                        ? child.getRollNumber()
-                        : null)
-                .classTeacher(classTeacher != null
-                        ? classTeacher.getFirstName() + " " + classTeacher.getLastName()
-                        : "Class teacher not assigned yet")
-                .academicYear(academicYear != null
-                        ? academicYear
-                        : "Academic year not configured")
-                .attendancePercent(attendancePercent)
+                .regId(child.getRegId())
+                .academicYear(academicYear != null ? academicYear : "N/A")
+                .attendancePercentage(attendancePercent)
+                .firstName(child.getFirstName())
+                .middleName(child.getMiddleName())
+                .lastName(child.getLastName())
+                .gender(child.getGender() != null ? child.getGender().name() : null)
+                .dob(child.getDob())
+                .bloodGroup(child.getBloodGroup() != null ? child.getBloodGroup().name() : null)
+                .aadharNo(child.getAadharNo())
+                .nationality(child.getNationality())
+                .religion(child.getReligion() != null ? child.getReligion().name() : null)
+                .category(child.getCategory() != null ? child.getCategory().name() : null)
+                .standard(child.getStandard())
+                .rollNumber(child.getRollNumber())
+                .className(assignedClass != null ? assignedClass.getClassName() : "Unassigned")
+                .classTeacherName(classTeacher != null ? classTeacher.getFirstName() + " " + classTeacher.getLastName() : null)
+                .classTeacherEmail(classTeacher != null ? classTeacher.getEmail() : null)
+                .classTeacherMobile(classTeacher != null ? classTeacher.getMobile() : null)
+                .classTeacherDegree(classTeacher != null && classTeacher.getDegreeType() != null ? classTeacher.getDegreeType().name() : null)
+                .previousSchool(child.getPreviousSchool())
+                .previousPercentage(child.getPreviousPercentage())
+                .birthCertificateUrl(child.getBirthCertificateUrl())
+                .aadharPhotoUrl(child.getAadharPhotoUrl())
+                .previousMarksheetUrl(child.getPreviousMarksheetUrl())
+                .passportPhotoUrl(child.getPassportPhotoUrl())
+                .leavingCertificateUrl(child.getLeavingCertificateUrl())
+                .casteCertificateUrl(child.getCasteCertificateUrl())
+                .incomeCertificateUrl(child.getIncomeCertificateUrl())
                 .build();
     }
 
+    // 🚀 FIXED: Null-safe parent ID extraction
     public ChildSummaryResponseDto toSummaryDto(Student child) {
         return ChildSummaryResponseDto.builder()
                 .registrationId(child.getRegId())
                 .name(child.getFirstName() + " " + child.getLastName())
-                .schoolClass(child.getAssignedClass() != null
-                        ? child.getAssignedClass().getClassName()
-                        : "Unassigned")
+                .schoolClass(child.getAssignedClass() != null ? child.getAssignedClass().getClassName() : "Unassigned")
                 .rollNo(child.getRollNumber())
-                .classId(child.getAssignedClass() != null
-                    ? child.getAssignedClass().getId() : null
-                )
-                .parentId(child.getParent().getId())
+                .classId(child.getAssignedClass() != null ? child.getAssignedClass().getId() : null)
+                .parentId(child.getParent() != null ? child.getParent().getId() : null)
                 .build();
     }
 
+    // 🚀 FIXED: Synchronized with ParentServiceImpl fields
     public ParentsDashboardResponseDto toDashboardResponseDto(
             Student child,
+            Parent parent,
+            boolean isClassAllocated,
+            boolean isProfileComplete,
             Float attendancePercent,
             Integer pendingAssignments,
             List<ParentNotificationResponseDto> recentNotifications) {
 
-        SchoolClass assignedClass = child.getAssignedClass();
-
         return ParentsDashboardResponseDto.builder()
+                .studentId(child.getId())
+                .parentName(parent.getFatherFirstName() + " " + parent.getFatherLastName())
                 .studentName(child.getFirstName() + " " + child.getLastName())
-                .schoolClass(assignedClass != null ? assignedClass.getClassName() : "N/A")
+                .schoolClass(isClassAllocated ? child.getAssignedClass().getClassName() : "Unassigned")
+                .isClassAllocated(isClassAllocated)
+                .isProfileComplete(isProfileComplete)
                 .attendancePercent(attendancePercent)
                 .pendingAssignments(pendingAssignments)
                 .recentNotifications(recentNotifications)
