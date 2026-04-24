@@ -1,7 +1,9 @@
 package com.example.school_management.result.repository;
 
 import com.example.school_management.common.enums.ExamTerm;
+import com.example.school_management.result.entity.ResultLetterhead;
 import com.example.school_management.result.entity.StudentSubjectMark;
+import com.example.school_management.student.entity.Student;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,4 +24,6 @@ public interface StudentSubjectMarkRepository extends JpaRepository<StudentSubje
     int countByAllocationIdAndExamTerm(
             @Param("allocationId") Long allocationId,
             @Param("examTerm") ExamTerm examTerm);
+
+    List<StudentSubjectMark> findByStudentAndExamTerm(Student student, ExamTerm examTerm);
 }
