@@ -67,7 +67,7 @@ public class ResultDisplayService {
 
 
         // 1. fetch student
-        Student student = studentRepository.findByRegId(requestDto.getRegistrationId());
+        Student student = studentRepository.findByRegId(requestDto.getRegistrationId()).orElseThrow(()-> new ResourceNotFoundException("Student","Registration Id ", requestDto.getRegistrationId()));
 
         // 2. fetch marks
         List<StudentSubjectMark> marks = markRepository
