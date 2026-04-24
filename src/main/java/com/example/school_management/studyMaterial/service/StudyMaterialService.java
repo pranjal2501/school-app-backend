@@ -6,6 +6,7 @@ import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.enums.Role;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.common.exception.UnauthorizedAccessException;
+import com.example.school_management.studyMaterial.dto.ParentSubjectMaterialResponseDto;
 import com.example.school_management.studyMaterial.dto.StudyMaterialUploadRequestDto;
 import com.example.school_management.studyMaterial.dto.StudyMaterialUploadResponseDto;
 import com.example.school_management.studyMaterial.entity.StudyMaterial;
@@ -127,6 +128,58 @@ public class StudyMaterialService {
         }
 
         studyMaterialRepository.delete(studyMaterial);
+    }
+
+    @Transactional
+    public List<ParentSubjectMaterialResponseDto> getSubjectWiseMaterialsForClass(Long classId) {
+
+        // 1. Fetch all subjects taught in this class
+        List<ClassSubjectTeacher> allocations = classSubjectTeacherRepository.findBySchoolClassId(classId);
+
+        // 2. Map everything into the organized grouping
+        return allocations.stream().map(cst -> {
+
+            // Format Teacher Degree (e.g., "BACHELORS (B.Ed)")
+            String degreeDisplay = cst.getTeacher().getDegreeType() != null
+                    ? cst.getTeacher().getDegreeType().name()
+                    : "Not Specified";
+
+            if (cst.getTeacher().getCustomDegreeName() != null && !cst.getTeacher().getCustomDegreeName().isEmpty()) {
+                degreeDisplay += " (" + cst.getTeacher().getCustomDegreeName() + ")";
+            }
+
+            // Map Teacher Info
+            ParentSubjectMaterialResponseDto.TeacherInfoDto teacherInfo =
+                    ParentSubjectMaterialResponseDto.TeacherInfoDto.builder()
+                            .name(cst.getTeacher().getFirstName() + " " + cst.getTeacher().getLastName())
+                            .degree(degreeDisplay)
+                            .email(cst.getTeacher().getEmail())
+                            .mobile(cst.getTeacher().getMobile())
+                            .build();
+
+            // Map & Filter Study Materials (Only visible to parents)
+            List<ParentSubjectMaterialResponseDto.ParentStudyMaterialDto> materialsList =
+                    cst.getStudyMaterials().stream()
+                            .filter(StudyMaterial::getIsVisibleToParent)
+                            .map(sm -> ParentSubjectMaterialResponseDto.ParentStudyMaterialDto.builder()
+                                    .id(sm.getId())
+                                    .description(sm.getDescription())
+                                    .urls(sm.getUrls())
+                                    .build())
+                            .collect(Collectors.toList());
+
+            // Build the final Subject Group
+            return ParentSubjectMaterialResponseDto.builder()
+                    .subjectId(cst.getSubject().getId())
+                    .subjectName(cst.getSubject().getSubjectName())
+                    .subjectCode(cst.getSubject().getSubjectCode())
+                    .subjectType(cst.getSubject().getSubjectType() != null ? cst.getSubject().getSubjectType().name() : "N/A")
+                    .totalMarks(cst.getSubject().getTotalMarks())
+                    .teacher(teacherInfo)
+                    .materials(materialsList)
+                    .build();
+
+        }).collect(Collectors.toList());
     }
 
     // Manual mapping ensures we extract the Lists of class names perfectly
