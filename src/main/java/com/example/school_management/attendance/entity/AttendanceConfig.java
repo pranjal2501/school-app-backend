@@ -37,13 +37,16 @@ public class AttendanceConfig extends BaseEntity {
     @Builder.Default
     private Boolean allowLateMarks = true;
 
-    private Integer lateMarksWindow;
+    @Builder.Default
+    private Integer lateMarksWindow=15;
 
     @Column(nullable = false)
     @Builder.Default
     private Boolean notifyParentOnAbsent = true;
 
-    private Integer absentNotifyThreshold;
+    @Builder.Default
+    private Integer absentNotifyThreshold=1;
 
-    private Integer minLeaveNoticeDays;
+    @Builder.Default
+    private Integer minLeaveNoticeDays=3;
 }

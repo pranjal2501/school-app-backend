@@ -1,5 +1,6 @@
 package com.example.school_management.academics.entity;
 
+import com.example.school_management.common.enums.MarkFillingStatus;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.studyMaterial.entity.StudyMaterial;
 import com.example.school_management.subject.entity.Subject;
@@ -42,4 +43,8 @@ public class ClassSubjectTeacher {
 
     @ManyToMany(mappedBy = "classTeachers")
     private Set<StudyMaterial> studyMaterials = new HashSet<>();
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private MarkFillingStatus markFillingStatus = MarkFillingStatus.NOT_FILLED;
 }

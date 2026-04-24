@@ -106,11 +106,11 @@ public class Student extends BaseEntity {
     private Double previousPercentage;
 
     @Size(max = 200)
-    @Column(name = "birth_certificate_url", length = 200, updatable = false)
+    @Column(name = "birth_certificate_url", length = 200)
     private String birthCertificateUrl;
 
     @Size(max = 200)
-    @Column(name = "aadhar_photo_url", length = 200, updatable = false)
+    @Column(name = "aadhar_photo_url", length = 200)
     private String aadharPhotoUrl;
 
     @Size(max = 200)
@@ -118,7 +118,7 @@ public class Student extends BaseEntity {
     private String previousMarksheetUrl;
 
     @Size(max = 200)
-    @Column(name = "passport_photo_url", length = 200, updatable = false)
+    @Column(name = "passport_photo_url", length = 200)
     private String passportPhotoUrl;
 
     @Size(max = 200)

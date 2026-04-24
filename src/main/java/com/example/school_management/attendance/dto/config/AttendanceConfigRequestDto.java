@@ -10,21 +10,11 @@ public class AttendanceConfigRequestDto {
     @NotBlank(message = "Academic year is required")
     private String academicYear;
 
-    @NotNull(message = "Attendance type is required")
-    private AttendanceType attendanceType;
-
     @Min(value = 1, message = "Student working days must be at least 1")
     private Integer studentWorkingDays;
-    private Boolean allowLateMarks;
 
-    @Min(value = 0)
-    private Integer lateMarksWindow;
+    @DecimalMin(value = "0.0", message = "Min attendance cannot be negative")
+    @DecimalMax(value = "100.0", message = "Min attendance cannot exceed 100")
+    private Float studentMinAttendancePct;
 
-    private Boolean notifyParentOnAbsent;
-
-    @Min(value = 1)
-    private Integer absentNotifyThreshold;
-
-    @Min(value = 0)
-    private Integer minLeaveNoticeDays;
 }

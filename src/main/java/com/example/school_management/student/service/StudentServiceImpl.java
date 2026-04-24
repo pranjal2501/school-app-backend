@@ -194,7 +194,7 @@ public class StudentServiceImpl implements StudentService {
     public StudentResponseDto updateStudentAfterAdmit(Long id, StudentRemainingInfoDto request) {
         enforceAdminOrParentAccess();
 
-        Student existing = findById(id);
+        Student existing = studentRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Student not found"));
         studentMapper.updateEntityAfterAdmit(existing, request);
         return studentMapper.toResponseDto(studentRepository.save(existing));
     }

@@ -95,22 +95,28 @@ public class ParentMapper {
                 .collect(Collectors.toList());
     }
 
-//    public ChildDetailsResponseDto toChildDetailsResponseDto(Student child, float attendancePercent, String academicYear) {
-//
-//        SchoolClass assignedClass = child.getAssignedClass();
-//        Teacher classTeacher = assignedClass != null ? assignedClass.getClassTeacher() : null;
-//
-//        return ChildDetailsResponseDto.builder()
-//                .name(child.getFirstName() + " " + child.getLastName())
-//                .schoolClass(assignedClass != null ? assignedClass.getClassName() : "N/A")
-//                .rollNo(child.getRollNumber())
-//                .classTeacher(classTeacher != null
-//                        ? classTeacher.getFirstName() + " " + classTeacher.getLastName()
-//                        : "N/A")
-//                .academicYear(academicYear)
-//                .attendancePercent(attendancePercent)
-//                .build();
-//    }
+    public ChildDetailsResponseDto toChildDetailsResponseDto(Student child, float attendancePercent, String academicYear) {
+
+        SchoolClass assignedClass = child.getAssignedClass();
+        Teacher classTeacher = assignedClass != null ? assignedClass.getClassTeacher() : null;
+
+        return ChildDetailsResponseDto.builder()
+                .name(child.getFirstName() + " " + child.getLastName())
+                .schoolClass(assignedClass != null
+                        ? assignedClass.getClassName()
+                        : "Class not assigned yet")
+                .rollNo(child.getRollNumber() != null
+                        ? child.getRollNumber()
+                        : null)
+                .classTeacher(classTeacher != null
+                        ? classTeacher.getFirstName() + " " + classTeacher.getLastName()
+                        : "Class teacher not assigned yet")
+                .academicYear(academicYear != null
+                        ? academicYear
+                        : "Academic year not configured")
+                .attendancePercent(attendancePercent)
+                .build();
+    }
 
     public ChildSummaryResponseDto toSummaryDto(Student child) {
         return ChildSummaryResponseDto.builder()

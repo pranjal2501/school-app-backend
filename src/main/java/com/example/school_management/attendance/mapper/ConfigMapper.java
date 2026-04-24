@@ -15,14 +15,8 @@ public class ConfigMapper {
 
         return AttendanceConfig.builder()
                 .academicYear(dto.getAcademicYear())
-                .attendanceType(dto.getAttendanceType())
                 .studentWorkingDays(dto.getStudentWorkingDays())
-//                .studentMinAttendancePct(dto.getStudentMinAttendancePct())
-                .allowLateMarks(dto.getAllowLateMarks())
-                .lateMarksWindow(dto.getLateMarksWindow())
-                .notifyParentOnAbsent(dto.getNotifyParentOnAbsent())
-                .absentNotifyThreshold(dto.getAbsentNotifyThreshold())
-                .minLeaveNoticeDays(dto.getMinLeaveNoticeDays())
+                .studentMinAttendancePct(dto.getStudentMinAttendancePct())
                 .build();
     }
 
@@ -34,14 +28,8 @@ public class ConfigMapper {
         return AttendanceConfigResponseDto.builder()
                 .id(entity.getId())
                 .academicYear(entity.getAcademicYear())
-                .attendanceType(entity.getAttendanceType())
                 .studentWorkingDays(entity.getStudentWorkingDays())
                 .studentMinAttendancePct(entity.getStudentMinAttendancePct())
-                .allowLateMarks(entity.getAllowLateMarks())
-                .lateMarksWindow(entity.getLateMarksWindow())
-                .notifyParentOnAbsent(entity.getNotifyParentOnAbsent())
-                .absentNotifyThreshold(entity.getAbsentNotifyThreshold())
-                .minLeaveNoticeDays(entity.getMinLeaveNoticeDays())
                 .build();
     }
 
@@ -54,13 +42,7 @@ public class ConfigMapper {
     // Setters remain here because you cannot use a Builder to update an existing, attached Hibernate entity.
     public void mapDtoToEntity(AttendanceConfigRequestDto dto, AttendanceConfig entity) {
         entity.setAcademicYear(dto.getAcademicYear());
-        entity.setAttendanceType(dto.getAttendanceType());
         entity.setStudentWorkingDays(dto.getStudentWorkingDays());
-//        entity.setStudentMinAttendancePct(dto.getStudentMinAttendancePct());
-        entity.setAllowLateMarks(dto.getAllowLateMarks());
-        entity.setLateMarksWindow(dto.getLateMarksWindow());
-        entity.setNotifyParentOnAbsent(dto.getNotifyParentOnAbsent());
-        entity.setAbsentNotifyThreshold(dto.getAbsentNotifyThreshold());
-        entity.setMinLeaveNoticeDays(dto.getMinLeaveNoticeDays());
+        entity.setStudentMinAttendancePct(dto.getStudentMinAttendancePct());
     }
 }
