@@ -35,7 +35,6 @@ public class AcademicSetupController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<SubjectWithTeachersResponseDto>>> getSubjectsForStandard(
             @PathVariable String standard) {
-
         List<SubjectWithTeachersResponseDto> response = academicSetupService.getSubjectsByStandard(standard);
         return ResponseEntity.ok(ApiResponse.ok("Subjects fetched for standard: " + standard, response));
     }

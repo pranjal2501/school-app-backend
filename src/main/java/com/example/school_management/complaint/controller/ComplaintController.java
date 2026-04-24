@@ -76,4 +76,13 @@ public class ComplaintController {
         List<ComplaintResponseDto> response = complaintService.getComplaintsByClassId(classId);
         return ResponseEntity.ok(ApiResponse.ok("Complaints for class " + classId + " fetched successfully", response));
     }
+
+    @GetMapping("/student/{regId}")
+    @PreAuthorize("hasAnyRole('PARENT')")
+    public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> getStudentComplaints(
+            @PathVariable String regId) {
+
+        List<ComplaintResponseDto> response = complaintService.getComplaintsForParent(regId);
+        return ResponseEntity.ok(ApiResponse.ok("Complaints fetched successfully.", response));
+    }
 }

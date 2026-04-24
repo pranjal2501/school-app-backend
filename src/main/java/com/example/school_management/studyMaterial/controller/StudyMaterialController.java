@@ -1,6 +1,7 @@
 package com.example.school_management.studyMaterial.controller;
 
 import com.example.school_management.common.ApiResponse;
+import com.example.school_management.studyMaterial.dto.ParentSubjectMaterialResponseDto;
 import com.example.school_management.studyMaterial.dto.StudyMaterialUploadRequestDto;
 import com.example.school_management.studyMaterial.dto.StudyMaterialUploadResponseDto;
 import com.example.school_management.studyMaterial.service.StudyMaterialService;
@@ -61,5 +62,14 @@ public class StudyMaterialController {
             @PathVariable Long studyMaterialId) {
         studyMaterialService.deleteStudyMaterial(studyMaterialId);
         return ResponseEntity.ok(ApiResponse.ok("Study material deleted successfully", null));
+    }
+
+    @GetMapping("/class/{classId}")
+    @PreAuthorize("hasAnyRole('PARENT')")
+    public ResponseEntity<ApiResponse<List<ParentSubjectMaterialResponseDto>>> getStudyMaterials(
+            @PathVariable Long classId) {
+
+        List<ParentSubjectMaterialResponseDto> response = studyMaterialService.getSubjectWiseMaterialsForClass(classId);
+        return ResponseEntity.ok(ApiResponse.ok("Subject-wise study materials fetched successfully", response));
     }
 }

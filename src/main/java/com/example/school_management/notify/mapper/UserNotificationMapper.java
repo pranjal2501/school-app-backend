@@ -43,6 +43,7 @@ public class UserNotificationMapper {
         return GeneralParentNotificationResponseDto.builder()
                 .id(un.getId())
                 .title(n.getTitle())
+                .description(n.getDescription())
                 .shortInfo(n.getShortInfo())
                 .notificationType(n.getNotificationType())
                 .eventDateTime(n.getEventDateTime())

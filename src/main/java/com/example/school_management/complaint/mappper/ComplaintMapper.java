@@ -17,7 +17,6 @@ public class ComplaintMapper {
                 .category(dto.getCategory())
                 .priority(dto.getPriority())
                 .supportedMedia(dto.getSupportedMediaUrls())
-                // 🚀 MAP THE NEW FIELD (Fallback to true just in case)
                 .isVisibleToParents(dto.getIsVisibleToParents() != null ? dto.getIsVisibleToParents() : true)
                 .build();
     }
@@ -40,7 +39,6 @@ public class ComplaintMapper {
         response.setPriority(entity.getPriority());
         response.setSupportedMedia(entity.getSupportedMedia());
 
-        // 🚀 MAP THE NEW FIELD TO RESPONSE
         response.setVisibleToParents(entity.isVisibleToParents());
 
         // --- Map Target Student Safely ---

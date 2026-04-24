@@ -148,7 +148,6 @@ public class AcademicSetupService {
                 ClassSubjectTeacher mapping = pivotRepository
                         .findBySchoolClassIdAndSubjectId(schoolClass.getId(), subject.getId())
                         .orElse(new ClassSubjectTeacher());
-
                 mapping.setSchoolClass(schoolClass);
                 mapping.setSubject(subject);
                 mapping.setTeacher(defaultTeacher);

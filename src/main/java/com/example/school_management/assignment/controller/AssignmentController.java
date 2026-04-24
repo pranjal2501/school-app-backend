@@ -51,7 +51,6 @@ public class AssignmentController {
     @PreAuthorize("isAuthenticated()") // Or specifically Student/Parent roles
     public ResponseEntity<ApiResponse<List<AssignmentResponseDto>>> getClassAssignments(
             @PathVariable Long classId) {
-
         List<AssignmentResponseDto> response = assignmentService.getAssignmentsForClass(classId);
         return ResponseEntity.ok(ApiResponse.ok("Class assignments fetched successfully.", response));
     }
@@ -82,6 +81,11 @@ public class AssignmentController {
             @PathVariable Long assignmentId) {
         List<SubmissionResponseDto> response = assignmentService.getSubmissionsForAssignment(assignmentId);
         return ResponseEntity.ok(ApiResponse.ok("Submissions fetched successfully.", response));
+    }
+
+    @GetMapping("/student/{regId}")
+    public ResponseEntity<ApiResponse<List<AssignmentResponseDto>>> getAssignmentsByStudent(@PathVariable String regId) {
+        return ResponseEntity.ok(ApiResponse.ok("Assignments fetched", assignmentService.getStudentAssignmentsWithStatus(regId)));
     }
 
     @PutMapping("/{id}")

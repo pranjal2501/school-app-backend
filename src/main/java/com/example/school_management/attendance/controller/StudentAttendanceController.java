@@ -47,7 +47,6 @@ public class StudentAttendanceController {
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER','PARENT')")
     public ResponseEntity<ApiResponse<StudentMonthlyCalendarResponseDto>> getMonthlyCalendar(
             @Valid @RequestBody StudentAttendanceCalendarRequestDto request) throws AccessDeniedException {
-
         return ResponseEntity.ok(ApiResponse.ok("Record fetched successfully",attendanceService.getMonthlyCalendar(request)));
     }
 

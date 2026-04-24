@@ -8,8 +8,6 @@ import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.common.exception.UnauthorizedAccessException;
 import com.example.school_management.notify.dto.ParentNotificationResponseDto;
-import com.example.school_management.notify.entity.Notification;
-import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.notify.mapper.UserNotificationMapper;
 import com.example.school_management.notify.repository.UserNotificationRepository;
 import com.example.school_management.parent.dto.ChildDetailsResponseDto;
@@ -18,10 +16,8 @@ import com.example.school_management.parent.dto.ParentsDashboardResponseDto;
 import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.parent.mapper.ParentMapper;
 import com.example.school_management.parent.repository.ParentRepository;
-import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.repository.StudentRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -43,43 +39,51 @@ public class ParentServiceImpl implements ParentService {
     private final UserNotificationMapper userNotificationMapper;
     private final RoleVerifier roleVerifier;
 
-
     @Override
-    public ParentsDashboardResponseDto getDashboard() {
-
+    public ParentsDashboardResponseDto getDashboard(String registrationId) {
         String currentUser = roleVerifier.getCurrentUsername();
         Parent parent = parentRepository.findByEmail(currentUser)
                 .orElseThrow(() -> new UnauthorizedAccessException("Parent session invalid"));
 
-        Student child = studentRepository.findFirstByParent(parent);
+        Student child = studentRepository.findByRegId(registrationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
 
-        float attendancePercent = attendancePercent(child);
+        if (!child.getParent().getId().equals(parent.getId())) {
+            throw new UnauthorizedAccessException("You do not have access to this student's data");
+        }
 
+        boolean isClassAllocated = child.getAssignedClass() != null;
+        boolean isProfileComplete = child.getGender() != null
+                && child.getNationality() != null
+                && child.getReligion() != null
+                && child.getCategory() != null;
+
+        Float attendancePercent = 0f;
         int pendingAssignments = 0;
-        if (child.getAssignedClass() != null) {
+
+        if (isClassAllocated && isProfileComplete) {
+            attendancePercent = attendancePercent(child);
             pendingAssignments = assignmentRepository
                     .countPendingAssignmentsByClass(child.getAssignedClass(), LocalDateTime.now());
         }
 
-        List<ParentNotificationResponseDto> recentNotifications =
-                userNotificationRepository.findTop3ByParentOrderByDeliveredAtDesc(parent)
-                        .stream()
-                        .map(userNotificationMapper::toParentResponseDto)
-                        .collect(Collectors.toList());
+        List<ParentNotificationResponseDto> recentNotifications = userNotificationRepository
+                .findTop3ByParentOrderByDeliveredAtDesc(parent)
+                .stream()
+                .map(userNotificationMapper::toParentResponseDto)
+                .collect(Collectors.toList());
 
-        return parentMapper.toDashboardResponseDto(child, attendancePercent, pendingAssignments, recentNotifications);
-    }
-
-    @Override
-    public ParentsDashboardResponseDto getDashboard(String regId) {
-        return null;
+        return parentMapper.toDashboardResponseDto(
+                child, parent, isClassAllocated, isProfileComplete,
+                attendancePercent, pendingAssignments, recentNotifications
+        );
     }
 
     @Override
     public List<ChildSummaryResponseDto> getChildList() {
-
-        String currentUser= roleVerifier.getCurrentUsername();
-        Parent parent=parentRepository.findByEmail(currentUser).orElseThrow(() -> new UnauthorizedAccessException("Parent session invalid"));
+        String currentUser = roleVerifier.getCurrentUsername();
+        Parent parent = parentRepository.findByEmail(currentUser)
+                .orElseThrow(() -> new UnauthorizedAccessException("Parent session invalid"));
 
         return parent.getStudents()
                 .stream()
@@ -89,30 +93,28 @@ public class ParentServiceImpl implements ParentService {
 
     @Override
     public ChildDetailsResponseDto getChildDetails(String regId) {
-
         String currentUser = roleVerifier.getCurrentUsername();
         Parent parent = parentRepository.findByEmail(currentUser)
                 .orElseThrow(() -> new UnauthorizedAccessException("Parent session invalid"));
 
-        Student child = studentRepository.findByRegId(regId);
+        Student child = studentRepository.findByRegId(regId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with given registration id."));
 
         if (!child.getParent().getId().equals(parent.getId())) {
             throw new UnauthorizedAccessException("You can only view your own child's details");
         }
 
         AttendanceConfig config = attendanceConfigRepo.findTopByOrderByCreatedAtDesc();
-        String academicYear = config != null ? config.getAcademicYear() : null;
-
+        String academicYear = config != null ? config.getAcademicYear() : "N/A";
         float percentage = attendancePercent(child);
 
+        // 🚀 DELEGATED TO MAPPER (Reduced 35 lines of code down to 1 line)
         return parentMapper.toChildDetailsResponseDto(child, percentage, academicYear);
-
     }
 
     // ================= Helper Method ====================
 
-    float attendancePercent(Student child) {
-
+    private float attendancePercent(Student child) {
         if (child.getAssignedClass() == null) return 0f;
         if (child.getRollNumber() == null) return 0f;
 

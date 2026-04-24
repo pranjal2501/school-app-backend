@@ -139,12 +139,12 @@ public class StudentServiceImpl implements StudentService {
 
             Student student = studentMapper.toEntity(request);
             student.setParent(parent);
-
             student.setAddedBy(admin);
 
             if (admin.getAdmittedStudents() == null) {
                 admin.setAdmittedStudents(new ArrayList<>());
             }
+
             admin.getAdmittedStudents().add(student);
 
             student.setActive(true);
@@ -176,7 +176,7 @@ public class StudentServiceImpl implements StudentService {
     @Transactional(readOnly = true)
     public StudentResponseDto getStudentByRegId(String RegId) {
         enforceAdminOrTeacherAccess();
-        return studentMapper.toResponseDto(studentRepository.findByRegId(RegId));
+        return studentMapper.toResponseDto(studentRepository.findByRegId(RegId).orElseThrow(()->new ResourceNotFoundException("Student not found with given id.")));
     }
 
     @Override

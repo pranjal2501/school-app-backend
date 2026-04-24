@@ -23,4 +23,6 @@ public class AssignmentResponseDto {
     private Long subjectId;
     private String subjectName;
     private String teacherName;
+
+    private Boolean isSubmitted;
 }

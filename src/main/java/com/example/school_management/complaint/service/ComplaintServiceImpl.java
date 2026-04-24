@@ -22,6 +22,7 @@ import com.example.school_management.notify.repository.NotificationRepository;
 import com.example.school_management.notify.repository.UserNotificationRepository;
 import com.example.school_management.notify.service.impl.NotificationServiceImpl;
 import com.example.school_management.parent.entity.Parent;
+import com.example.school_management.parent.repository.ParentRepository;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.repository.StudentRepository;
 import com.example.school_management.teacher.entity.Teacher;
@@ -44,6 +45,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     private final ComplaintRepository complaintRepository;
     private final StudentRepository studentRepository;
+    private final ParentRepository parentRepository;
     private final AdminRepository adminRepository;
     private final EmployeeRepository employeeRepository;
     private final TeacherRepository teacherRepository;
@@ -268,6 +270,31 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
 
         return complaints.stream()
+                .map(complaintMapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ComplaintResponseDto> getComplaintsForParent(String regId) {
+        // 1. Verify Parent Session
+        String currentUser = roleVerifier.getCurrentUsername();
+        Parent parent = parentRepository.findByEmail(currentUser)
+                .orElseThrow(() -> new UnauthorizedAccessException("Parent session invalid"));
+
+        // 2. Fetch Student & Verify Ownership (Security Check)
+        Student child = studentRepository.findByRegId(regId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with given registration id."));
+
+        if (!child.getParent().getId().equals(parent.getId())) {
+            throw new UnauthorizedAccessException("Access Denied: You can only view complaints for your own child.");
+        }
+
+        // 3. Fetch ONLY visible complaints from the database
+        List<Complaint> visibleComplaints = complaintRepository
+                .findByTargetStudent_RegIdAndIsVisibleToParentsTrueOrderByCreatedAtDesc(regId);
+
+        // 4. Map to DTOs
+        return visibleComplaints.stream()
                 .map(complaintMapper::toResponseDto)
                 .collect(Collectors.toList());
     }

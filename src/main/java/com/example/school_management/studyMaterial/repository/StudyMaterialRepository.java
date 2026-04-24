@@ -1,5 +1,6 @@
 package com.example.school_management.studyMaterial.repository;
 
+import com.example.school_management.academics.entity.ClassSubjectTeacher;
 import com.example.school_management.studyMaterial.entity.StudyMaterial;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,4 +13,11 @@ public interface StudyMaterialRepository extends JpaRepository<StudyMaterial, Lo
     List<StudyMaterial> findByClassTeachers_Id(Long classSubjectTeacherId);
     @Query("SELECT DISTINCT sm FROM StudyMaterial sm JOIN sm.classTeachers ct WHERE ct.schoolClass.id = :classId AND ct.subject.id = :subjectId")
     List<StudyMaterial> findByClassIdAndSubjectId(@Param("classId") Long classId, @Param("subjectId") Long subjectId);
+
+    @Query("SELECT cst FROM ClassSubjectTeacher cst " +
+            "JOIN FETCH cst.subject " +
+            "JOIN FETCH cst.teacher " +
+            "LEFT JOIN FETCH cst.studyMaterials sm " +
+            "WHERE cst.schoolClass.id = :classId")
+    List<ClassSubjectTeacher> findAllBySchoolClassIdWithDetails(@Param("classId") Long classId);
 }

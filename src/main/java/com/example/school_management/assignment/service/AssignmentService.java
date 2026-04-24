@@ -22,4 +22,5 @@ public interface AssignmentService {
     List<SubmissionResponseDto> getSubmissionsForAssignment(Long assignmentId);
     List<AssignmentResponseDto> createBulkAssignments(@Valid List<AssignmentBulkRequestDto> requests);
     List<AssignmentResponseDto> getMyCreatedAssignments();
+    List<AssignmentResponseDto> getStudentAssignmentsWithStatus(String regId);
 }

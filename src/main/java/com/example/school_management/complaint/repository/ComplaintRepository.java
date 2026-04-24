@@ -18,8 +18,11 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     Optional<Complaint> findByTicketNumber(String ticketNumber);
     List<Complaint> findByReportedByEmployee_EmailOrderByCreatedAtDesc(String email);
     List<Complaint> findByTargetStudent_AssignedClass_IdOrderByCreatedAtDesc(Long classId);
-
     List<Complaint> findByReportedByEmployeeAndStatus(Teacher teacher, ComplaintStatus complaintStatus);
     @Query("SELECT c FROM Complaint c WHERE c.targetStudent.assignedClass.id = :classId")
     List<Complaint> findByClassId(@Param("classId") Long classId);
-}
+    List<Complaint> findByTargetStudent_AssignedClass_IdAndStatusOrderByCreatedAtDesc(
+            Long classId,
+            ComplaintStatus status
+    );
+    List<Complaint> findByTargetStudent_RegIdAndIsVisibleToParentsTrueOrderByCreatedAtDesc(String regId);}
