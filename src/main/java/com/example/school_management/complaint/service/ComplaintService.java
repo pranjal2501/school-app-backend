@@ -15,6 +15,6 @@ public interface ComplaintService {
     List<ComplaintResponseDto> getMyRaisedComplaints();
     List<ComplaintResponseDto> getComplaintsForMyClass();
     ComplaintResponseDto updateComplaintVisibility(String ticketNumber, VisibilityUpdateDto request);
-
+    List<ComplaintResponseDto> getComplaintsForParent(String regId);
     List<ComplaintResponseDto> getComplaintsByClassId(Long classId);
 }

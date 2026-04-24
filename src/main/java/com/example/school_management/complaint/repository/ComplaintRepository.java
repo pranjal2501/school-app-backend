@@ -25,4 +25,4 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
             Long classId,
             ComplaintStatus status
     );
-}
+    List<Complaint> findByTargetStudent_RegIdAndIsVisibleToParentsTrueOrderByCreatedAtDesc(String regId);}

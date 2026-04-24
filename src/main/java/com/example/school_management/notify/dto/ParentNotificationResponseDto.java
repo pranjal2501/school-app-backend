@@ -8,5 +8,4 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = GeneralParentNotificationResponseDto.class, name = "GENERAL"),
         @JsonSubTypes.Type(value = ComplaintNotificationResponse.class, name = "COMPLAINT")
 })
-public interface ParentNotificationResponseDto {
-}
+public interface ParentNotificationResponseDto {}

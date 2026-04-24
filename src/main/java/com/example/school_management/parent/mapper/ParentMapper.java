@@ -123,6 +123,7 @@ public class ParentMapper {
                 .classId(child.getAssignedClass() != null
                     ? child.getAssignedClass().getId() : null
                 )
+                .parentId(child.getParent().getId())
                 .build();
     }
 

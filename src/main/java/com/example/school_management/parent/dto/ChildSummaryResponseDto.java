@@ -15,4 +15,5 @@ public class ChildSummaryResponseDto {
     private String schoolClass;
     private Long classId;
     private Integer rollNo;
+    private Long parentId;
 }

@@ -14,6 +14,7 @@ public class GeneralParentNotificationResponseDto implements ParentNotificationR
     private String title;
     private String shortInfo;
     private NotificationType notificationType;
+    private String description;
     private List<String> urls;
     private LocalDateTime eventDateTime;
     private Boolean isRead;
