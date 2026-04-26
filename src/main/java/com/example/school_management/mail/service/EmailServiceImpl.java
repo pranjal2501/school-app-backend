@@ -195,4 +195,45 @@ public class EmailServiceImpl implements EmailService {
                 + "<p style=\"color: #555; font-size: 14px;\">Best Regards,<br><strong style=\"color: #2c3e50;\">School Administration Team</strong></p>"
                 + "</div>";
     }
+
+    @Async
+    @Override
+    public void sendResultEmail(String toEmail, String studentName, byte[] pdfBytes) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(senderEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("Result Card - " + studentName);
+            helper.setText(buildResultEmailTemplate(studentName), true);
+            helper.addAttachment(
+                    "ResultCard_" + studentName.replace(" ", "_") + ".pdf",
+                    () -> new java.io.ByteArrayInputStream(pdfBytes),
+                    "application/pdf"
+            );
+
+            mailSender.send(message);
+            log.info("Result email sent to: {}", toEmail);
+
+        } catch (MessagingException e) {
+            log.error("Failed to send result email to: {}. Error: {}", toEmail, e.getMessage());
+        }
+    }
+
+    private String buildResultEmailTemplate(String studentName) {
+        return "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;\">"
+                + "<h2 style=\"color: #2c3e50; text-align: center;\">Result Card 📄</h2>"
+                + "<p style=\"color: #333; font-size: 16px;\">Dear Parent/Guardian,</p>"
+                + "<p style=\"color: #333; font-size: 16px; line-height: 1.5;\">Please find attached the result card for <strong>" + studentName + "</strong>.</p>"
+
+                + "<div style=\"background-color: #f0f4ff; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #0056b3;\">"
+                + "<p style=\"margin: 5px 0; font-size: 16px;\">📎 The result card is attached to this email as a <strong>PDF</strong>.</p>"
+                + "<p style=\"margin: 5px 0; font-size: 14px; color: #555;\">Please download and keep it safe for your records.</p>"
+                + "</div>"
+
+                + "<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\" />"
+                + "<p style=\"color: #555; font-size: 14px;\">Best Regards,<br><strong style=\"color: #2c3e50;\">School Administration Team</strong></p>"
+                + "</div>";
+    }
 }

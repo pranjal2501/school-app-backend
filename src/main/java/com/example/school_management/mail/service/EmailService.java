@@ -17,4 +17,6 @@ public interface EmailService {
 
     void sendBonafideApproved(String toEmail, String parentName, String studentName, byte[] imageBytes);
     void sendBonafideRejected(String toEmail, String parentName, String studentName, String remarks);
+
+    void sendResultEmail(String toEmail, String studentName, byte[] pdfBytes);
 }
