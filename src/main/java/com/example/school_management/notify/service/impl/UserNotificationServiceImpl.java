@@ -28,6 +28,7 @@ import com.example.school_management.notify.dto.TeacherNotificationResponseDto;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -109,27 +110,6 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     @Override
-    public List<ParentNotificationResponseDto> getParentNotifications(Long parentId) {
-
-        String currentUser = roleVerifier.getCurrentUsername();
-        boolean isParent = roleVerifier.hasRole(Role.PARENT);
-
-        if (!isParent) {
-            Parent parent = parentRepository.findById(parentId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", parentId));
-
-            if (!parent.isIdentifiedBy(currentUser)) {
-                throw new UnauthorizedAccessException("Access Denied: You can only view your own notifications.");
-            }
-        }
-
-        return userNotificationRepository.findByParentId(parentId)
-                .stream()
-                .map(userNotificationMapper::toParentResponseDto)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public List<TeacherNotificationResponseDto> getTeacherNotifications(Long teacherId) {
 
         String currentUser = roleVerifier.getCurrentUsername();
@@ -144,9 +124,33 @@ public class UserNotificationServiceImpl implements UserNotificationService {
             }
         }
 
-        return userNotificationRepository.findByTeacherId(teacherId)
+        // 🚀 Pass LocalDateTime.now() to instantly filter out future scheduled notifications
+        return userNotificationRepository
+                .findByTeacherIdAndNotification_ScheduledDispatchTimeLessThanEqual(teacherId, LocalDateTime.now())
                 .stream()
                 .map(userNotificationMapper::toTeacherResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ParentNotificationResponseDto> getParentNotifications(Long parentId) {
+
+        String currentUser = roleVerifier.getCurrentUsername();
+        boolean isParent = roleVerifier.hasRole(Role.PARENT);
+
+        if (!isParent) {
+            Parent parent = parentRepository.findById(parentId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Parent", "id", parentId));
+
+            if (!parent.isIdentifiedBy(currentUser)) {
+                throw new UnauthorizedAccessException("Access Denied: You can only view your own notifications.");
+            }
+        }
+        LocalDateTime rightNow = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
+        return userNotificationRepository
+                .findByParentIdAndNotification_ScheduledDispatchTimeLessThanEqual(parentId, rightNow)
+                .stream()
+                .map(userNotificationMapper::toParentResponseDto)
                 .collect(Collectors.toList());
     }
 

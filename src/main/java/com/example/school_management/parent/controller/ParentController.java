@@ -3,6 +3,7 @@ package com.example.school_management.parent.controller;
 import com.example.school_management.common.ApiResponse;
 import com.example.school_management.parent.dto.ChildDetailsResponseDto;
 import com.example.school_management.parent.dto.ChildSummaryResponseDto;
+import com.example.school_management.parent.dto.ParentProfileResponseDto;
 import com.example.school_management.parent.dto.ParentsDashboardResponseDto;
 import com.example.school_management.parent.service.ParentService;
 import com.example.school_management.student.entity.Student;
@@ -60,4 +61,12 @@ public class ParentController {
         ));
     }
 
+    @GetMapping("/my-profile")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<ApiResponse<ParentProfileResponseDto>> getMyProfile() {
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Profile fetched successfully",
+                parentService.getMyProfile()
+        ));
+    }
 }
