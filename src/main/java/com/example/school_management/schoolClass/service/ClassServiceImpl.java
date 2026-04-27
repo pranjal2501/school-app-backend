@@ -9,6 +9,7 @@ import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.schoolClass.mapper.ClassMapper;
 import com.example.school_management.schoolClass.repo.SchoolClassRepository;
 import com.example.school_management.student.entity.Student;
+import com.example.school_management.student.repository.StudentRepository;
 import com.example.school_management.teacher.entity.Teacher;
 import com.example.school_management.common.exception.DuplicateResourceException;
 import com.example.school_management.common.exception.ResourceNotFoundException;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +34,7 @@ public class ClassServiceImpl implements ClassService {
 
     private final SchoolClassRepository classRepository;
     private final TeacherRepository teacherRepository;
+    private final StudentRepository studentRepository;
     private final ClassMapper classMapper;
 
     private void verifyAdminIdentity() {
@@ -233,5 +236,13 @@ public class ClassServiceImpl implements ClassService {
                 .orElseThrow(() -> new ResourceNotFoundException("Class not found for Standard: " + standard + " and Division: " + division));
 
         return classMapper.toResponseDto(schoolClass);
+    }
+
+    @Override
+    public List<ClassResponseDto> findClassWhoseRollNoNotAssign() {
+        return studentRepository.findClassesWithUnassignedRollNumbers()
+                .stream()
+                .map(classMapper::toResponseDto)
+                .collect(Collectors.toList());
     }
 }

@@ -19,4 +19,6 @@ public interface ClassService {
 
     List<StudentRollNoResponseDto> getStudentListWithRollNum(Long classId);
     ClassResponseDto getClassByStandardAndDivision(String standard, String division);
+
+    List<ClassResponseDto> findClassWhoseRollNoNotAssign();
 }

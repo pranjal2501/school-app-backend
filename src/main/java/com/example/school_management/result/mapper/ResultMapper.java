@@ -1,6 +1,7 @@
 package com.example.school_management.result.mapper;
 
 import com.example.school_management.common.enums.ExamTerm;
+import com.example.school_management.result.dto.resultDisplay.LetterHeadResponseDto;
 import com.example.school_management.result.dto.resultDisplay.StudentResultResponseDto;
 import com.example.school_management.result.dto.resultDisplay.SubjectMarkDto;
 import com.example.school_management.result.entity.ResultLetterhead;
@@ -13,6 +14,20 @@ import java.util.List;
 
 @Component
 public class ResultMapper {
+
+    //===================== LETTER HEAD CONCERN =====================
+
+    public LetterHeadResponseDto toLetterheadResponse(ResultLetterhead resultLetterhead)
+    {
+        LetterHeadResponseDto dto= new LetterHeadResponseDto();
+        dto.setUrl(resultLetterhead.getUrl());
+        dto.setExamTerm(resultLetterhead.getExamTerm());
+        dto.setAcademicYear(resultLetterhead.getAcademicYear());
+
+        return dto;
+    }
+
+    //===================== RESULT CONCERN ===========================
 
     public SubjectMarkDto toSubjectMarkDto(StudentSubjectMark mark) {
         Subject subject = mark.getAllocation().getSubject();

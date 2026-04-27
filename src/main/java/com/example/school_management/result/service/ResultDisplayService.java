@@ -1,5 +1,6 @@
 package com.example.school_management.result.service;
 
+import com.example.school_management.common.ApiResponse;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.mail.service.EmailService;
 import com.example.school_management.result.dto.resultDisplay.*;
@@ -13,6 +14,7 @@ import com.example.school_management.student.repository.StudentRepository;
 import com.example.school_management.subject.entity.Subject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -32,7 +34,15 @@ public class ResultDisplayService {
     private final StudentSubjectMarkRepository markRepository;
     private final ResultMapper resultMapper;
 
-    public void saveLetterhead(LetterheadRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<LetterHeadResponseDto>> saveLetterhead(LetterheadRequestDto requestDto) {
+
+        ResultLetterhead isPresent= resultLetterHeadRepository.findByExamTermAndAcademicYear(requestDto.getExamTerm(), requestDto.getAcademicYear()).orElse(null);
+
+        if(isPresent != null) {
+            isPresent.setUrl(requestDto.getUrl());
+
+            return ResponseEntity.ok(ApiResponse.ok("Existing updated successfully",resultMapper.toLetterheadResponse(isPresent)));
+        }
 
         ResultLetterhead letterhead = ResultLetterhead.builder()
                 .url(requestDto.getUrl())
@@ -40,6 +50,8 @@ public class ResultDisplayService {
                 .academicYear(requestDto.getAcademicYear())
                 .build();
         resultLetterHeadRepository.save(letterhead);
+
+        return ResponseEntity.ok(ApiResponse.ok("New Letter Head added successfully",resultMapper.toLetterheadResponse(isPresent)));
     }
 
     public void toggleResultPublish(ToggleResultStatus resultStatus) {

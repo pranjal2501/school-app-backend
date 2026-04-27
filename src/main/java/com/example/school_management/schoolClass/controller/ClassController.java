@@ -85,6 +85,13 @@ public class ClassController {
         return ResponseEntity.ok(ApiResponse.ok("Class teacher assigned successfully", response));
     }
 
+    @GetMapping("/not-assign-roll")
+    @PreAuthorize(("hasRole('ADMIN')"))
+    public ResponseEntity<ApiResponse<List<ClassResponseDto>>> findClassWhoseRollNoNotAssign()
+    {
+        return ResponseEntity.ok(ApiResponse.ok("Classes whose roll number not assigned yet",classService.findClassWhoseRollNoNotAssign()));
+    }
+
     @PatchMapping("/assign-roll-number/{classId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<String>>> assignRollNumberToStudents(@PathVariable Long classId)

@@ -30,6 +30,7 @@ public class StudentController {
     private final RoleVerifier roleVerifier;
     private final StudentRepository studentRepository;
 
+    //=================== ADMIT STUDENT VIA UI ================================
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StudentResponseDto>> admitStudent(
@@ -53,6 +54,7 @@ public class StudentController {
                 .body(ApiResponse.ok("Bulk students admitted successfully", response));
     }
 
+    // ========================= ADMIT STUDENT VIA EXCEL ========================
     @GetMapping("/bulk/template")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<byte[]> downloadTemplate() throws IOException {
@@ -74,22 +76,7 @@ public class StudentController {
     }
 
 
-    @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
-    public ResponseEntity<ApiResponse<List<StudentResponseDto>>> getAllStudents() {
-        List<StudentResponseDto> students = studentService.getAllStudents();
-        return ResponseEntity.ok(ApiResponse.ok("Students fetched successfully", students));
-    }
-
-    @GetMapping("/{RegId}")
-    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
-    public ResponseEntity<ApiResponse<StudentResponseDto>> getStudentByRegId(@PathVariable String RegId) {
-        StudentResponseDto student = studentService.getStudentByRegId(RegId);
-
-        return ResponseEntity.ok(ApiResponse.ok("Student fetched successfully", student));
-    }
-
-
+    // ================ UPDATE STUDENT API ==========================
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StudentResponseDto>> updateStudent(
@@ -122,6 +109,8 @@ public class StudentController {
         return ResponseEntity.ok(ApiResponse.ok("Class and Division assigned successfully", student));
     }
 
+    //=================================================================================
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> deleteStudent(@PathVariable Long id) {
@@ -148,6 +137,22 @@ public class StudentController {
 //
 //        return ResponseEntity.ok(ApiResponse.ok("Students fetched successfully", response));
 //    }
+
+    // =================== GET STUDENTS API ==========================
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
+    public ResponseEntity<ApiResponse<List<StudentResponseDto>>> getAllStudents() {
+        List<StudentResponseDto> students = studentService.getAllStudents();
+        return ResponseEntity.ok(ApiResponse.ok("Students fetched successfully", students));
+    }
+
+    @GetMapping("/{RegId}")
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
+    public ResponseEntity<ApiResponse<StudentResponseDto>> getStudentByRegId(@PathVariable String RegId) {
+        StudentResponseDto student = studentService.getStudentByRegId(RegId);
+
+        return ResponseEntity.ok(ApiResponse.ok("Student fetched successfully", student));
+    }
 
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
