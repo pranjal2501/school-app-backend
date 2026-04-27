@@ -2,11 +2,13 @@ package com.example.school_management.teacher.dto;
 
 import com.example.school_management.common.enums.Gender;
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
 
 @Data
+@Builder
 public class TeacherFromAdminRequestDto {
 
     @NotBlank(message = "First name is required")
