@@ -56,8 +56,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     int countByAssignedClassId(Long id);
 
     @Query("SELECT DISTINCT s.assignedClass FROM Student s " +
-            "WHERE s.assignedClass IS NOT NULL " +
+            "WHERE s.rollNumber IS NULL " +
             "AND s.isActive = true " +
-            "AND s.rollNumber IS NULL")
+            "AND s.assignedClass IS NOT NULL")
     List<SchoolClass> findClassesWithUnassignedRollNumbers();
 }

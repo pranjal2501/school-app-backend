@@ -104,7 +104,6 @@ public class StudentServiceImpl implements StudentService {
         );
 
         notifyToCompleteProfile(student);
-
         return studentMapper.toResponseDto(student);
     }
 
