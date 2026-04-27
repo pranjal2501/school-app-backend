@@ -1,5 +1,6 @@
 package com.example.school_management.student.repository;
 
+import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.student.dto.StudentSearchDto;
 import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.student.entity.Student;
@@ -53,4 +54,10 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     Student findFirstByParent(Parent parent);
 
     int countByAssignedClassId(Long id);
+
+    @Query("SELECT DISTINCT s.assignedClass FROM Student s " +
+            "WHERE s.assignedClass IS NOT NULL " +
+            "AND s.isActive = true " +
+            "AND s.rollNumber IS NULL")
+    List<SchoolClass> findClassesWithUnassignedRollNumbers();
 }
