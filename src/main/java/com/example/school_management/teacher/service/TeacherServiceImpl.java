@@ -384,6 +384,8 @@ public class TeacherServiceImpl implements TeacherService {
         userNotificationRepository.save(userNotification);
     }
 
+    // ... inside TeacherServiceImpl.java ...
+
     private NotificationResponseDto notifyParents(long classId, CreateNotificationRequestDto request) {
 
         SchoolClass schoolClass = schoolClassRepository.findById(classId)
@@ -392,10 +394,20 @@ public class TeacherServiceImpl implements TeacherService {
         Set<SchoolClass> targetClasses = new HashSet<>();
         targetClasses.add(schoolClass);
 
-        String currentUser= roleVerifier.getCurrentUsername();
+        String currentUser = roleVerifier.getCurrentUsername();
 
         Teacher teacher = teacherRepository.findByEmail(currentUser)
                 .orElseThrow(() -> new UnauthorizedAccessException("Teacher session invalid"));
+
+        LocalDateTime calculatedDispatchTime;
+        if (Boolean.TRUE.equals(request.getDispatchNow())) {
+            calculatedDispatchTime = LocalDateTime.now();
+        } else if (request.getScheduledDispatchTime() != null) {
+            calculatedDispatchTime = request.getScheduledDispatchTime();
+        } else {
+            // Failsafe: Default to sending 3 days prior if custom time was forgotten
+            calculatedDispatchTime = request.getEventDateTime().minusDays(3);
+        }
 
         Notification notification = Notification.builder()
                 .title(request.getTitle())
@@ -405,9 +417,7 @@ public class TeacherServiceImpl implements TeacherService {
                 .notificationType(request.getNotificationType())
                 .urls(request.getUrls())
                 .eventDateTime(request.getEventDateTime())
-                .scheduledDispatchTime(Boolean.TRUE.equals(request.getDispatchNow())
-                        ? LocalDateTime.now()
-                        : null)
+                .scheduledDispatchTime(calculatedDispatchTime) // 🚀 Applied here
                 .dispatched(false)
                 .targetClasses(targetClasses)
                 .teacherIds(new HashSet<>())

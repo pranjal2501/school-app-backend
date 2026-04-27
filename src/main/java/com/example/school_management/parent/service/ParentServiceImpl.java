@@ -12,6 +12,7 @@ import com.example.school_management.notify.mapper.UserNotificationMapper;
 import com.example.school_management.notify.repository.UserNotificationRepository;
 import com.example.school_management.parent.dto.ChildDetailsResponseDto;
 import com.example.school_management.parent.dto.ChildSummaryResponseDto;
+import com.example.school_management.parent.dto.ParentProfileResponseDto;
 import com.example.school_management.parent.dto.ParentsDashboardResponseDto;
 import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.parent.mapper.ParentMapper;
@@ -20,6 +21,7 @@ import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -137,5 +139,17 @@ public class ParentServiceImpl implements ParentService {
     public Parent getParentById(Long id) {
         return parentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Parent not found with id: " + id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ParentProfileResponseDto getMyProfile() {
+        String currentUser = roleVerifier.getCurrentUsername();
+
+        Parent parent = parentRepository.findByEmail(currentUser)
+                .or(() -> parentRepository.findByMobilePrimary(currentUser))
+                .orElseThrow(() -> new UnauthorizedAccessException("Parent session invalid"));
+
+        return parentMapper.toProfileDto(parent);
     }
 }

@@ -1,10 +1,6 @@
 package com.example.school_management.notify.dto;
 
 import com.example.school_management.common.enums.notify.*;
-import com.example.school_management.schoolClass.entity.SchoolClass;
-import com.example.school_management.teacher.entity.Teacher;
-import jakarta.annotation.Nullable;
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,7 +22,6 @@ public class CreateNotificationRequestDto {
     @NotBlank(message = "Short info is required")
     private String shortInfo;
 
-//    @NotNull(message = "Audience type is required")
     private AudienceType audienceType;
 
     @NotNull(message = "Notification type is required")
@@ -35,6 +30,8 @@ public class CreateNotificationRequestDto {
     @NotNull(message = "Event date time is required")
     @Future(message = "Event date must be in the future")
     private LocalDateTime eventDateTime;
+
+    private LocalDateTime scheduledDispatchTime;
 
     private Set<Long> classId;
 

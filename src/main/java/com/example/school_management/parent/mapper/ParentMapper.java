@@ -145,4 +145,43 @@ public class ParentMapper {
                 .recentNotifications(recentNotifications)
                 .build();
     }
+
+    public ParentProfileResponseDto toProfileDto(Parent parent) {
+        if (parent == null) return null;
+
+        String fatherName = String.format("%s %s %s",
+                parent.getFatherFirstName(),
+                parent.getFatherMiddleName() != null ? parent.getFatherMiddleName() : "",
+                parent.getFatherLastName()).trim().replaceAll(" +", " ");
+
+        String motherName = String.format("%s %s %s",
+                parent.getMotherFirstName(),
+                parent.getMotherMiddleName() != null ? parent.getMotherMiddleName() : "",
+                parent.getMotherLastName()).trim().replaceAll(" +", " ");
+
+        String fullAddress = String.format("%s, %s, %s, %s - %s",
+                        parent.getAddressLine1() != null ? parent.getAddressLine1() : "",
+                        parent.getAddressLine2() != null ? parent.getAddressLine2() : "",
+                        parent.getCity() != null ? parent.getCity() : "",
+                        parent.getState() != null ? parent.getState() : "",
+                        parent.getPincode() != null ? parent.getPincode() : "")
+                .replaceAll("^, |, $", "")
+                .replaceAll(", ,", ", ");
+
+        return ParentProfileResponseDto.builder()
+                .parentId(parent.getId())
+                .fatherFullName(fatherName)
+                .fatherOccupation(parent.getFatherOccupation())
+                .motherFullName(motherName)
+                .motherOccupation(parent.getMotherOccupation())
+                .email(parent.getEmail())
+                .mobilePrimary(parent.getMobilePrimary())
+                .mobileAlternate(parent.getMobileAlternate())
+                .emergencyContactName(parent.getEmergencyContactName())     // 🚀 ADDED
+                .emergencyContactNumber(parent.getEmergencyContactNumber()) // 🚀 ADDED
+                .fullAddress(fullAddress.length() > 5 ? fullAddress : "Address not provided")
+                .aadharNo(parent.getAadharNo())
+                .aadharOwnerType(parent.getAadharOwnerType() != null ? parent.getAadharOwnerType().name() : "N/A")
+                .build();
+    }
 }

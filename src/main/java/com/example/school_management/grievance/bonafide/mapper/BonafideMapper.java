@@ -12,8 +12,7 @@ public class BonafideMapper {
 
     public BonafideRequestResponse toResponse(BonafideRequest req) {
         String studentName = req.getStudent().getFirstName() + " " + req.getStudent().getLastName();
-        String studentClass = req.getStudent().getAssignedClass().getClassName()
-                + "-" + req.getStudent().getAssignedClass().getAcademicStructure().getDivision();
+        String studentClass = req.getStudent().getAssignedClass().getClassName();
         String parentName = req.getRequestedBy().getFatherFirstName() + " " + req.getRequestedBy().getFatherLastName();
 
         return BonafideRequestResponse.builder()

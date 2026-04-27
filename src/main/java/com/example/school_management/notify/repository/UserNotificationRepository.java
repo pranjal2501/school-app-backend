@@ -30,4 +30,15 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
 
     //Used in parent dasboard to show latest top 3 notifications
     List<UserNotification> findTop3ByParentOrderByDeliveredAtDesc(Parent parent);
+
+    //  Fetches notifications for a Teacher ONLY IF scheduledDispatchTime <= current time
+    List<UserNotification> findByTeacherIdAndNotification_ScheduledDispatchTimeLessThanEqual(
+            Long teacherId, LocalDateTime currentTime);
+
+    // Fetches notifications for a Parent ONLY IF scheduledDispatchTime <= current time
+    List<UserNotification> findByParentIdAndNotification_ScheduledDispatchTimeLessThanEqual(
+            Long parentId, LocalDateTime currentTime);
+
+    List<UserNotification> findByParentIdAndNotification_ScheduledDispatchTimeLessThanEqualOrderByNotification_CreatedAtDesc(
+            Long parentId, LocalDateTime currentTime);
 }

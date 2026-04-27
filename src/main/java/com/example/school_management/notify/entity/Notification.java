@@ -57,7 +57,7 @@ public class Notification {
 
     @Column(nullable = true, name = "supporting_urls")
     @Builder.Default
-    private List<String> urls=null;
+    private List<String> urls = null;
 
 
     @ManyToMany(fetch = FetchType.LAZY)
