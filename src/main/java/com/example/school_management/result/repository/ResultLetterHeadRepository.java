@@ -12,4 +12,5 @@ import java.util.Optional;
 @Repository
 public interface ResultLetterHeadRepository extends JpaRepository<ResultLetterhead, Long> {
     Optional<ResultLetterhead> findByExamTermAndAcademicYear(ExamTerm examTerm, String academicYear);
+
 }

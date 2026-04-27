@@ -2,10 +2,7 @@ package com.example.school_management.result.controller;
 
 import com.example.school_management.common.ApiResponse;
 import com.example.school_management.common.enums.ExamTerm;
-import com.example.school_management.result.dto.resultDisplay.LetterheadRequestDto;
-import com.example.school_management.result.dto.resultDisplay.StudentResultRequestDto;
-import com.example.school_management.result.dto.resultDisplay.StudentResultResponseDto;
-import com.example.school_management.result.dto.resultDisplay.ToggleResultStatus;
+import com.example.school_management.result.dto.resultDisplay.*;
 import com.example.school_management.result.service.ResultDisplayService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +20,9 @@ public class ResultDisplayController {
     // admin uploads letterhead
     @PostMapping("/letterhead")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<String>> uploadLetterhead(
+    public ResponseEntity<ApiResponse<LetterHeadResponseDto>> uploadLetterhead(
             @Valid @RequestBody LetterheadRequestDto requestDto) {
-        resultService.saveLetterhead(requestDto);
-        return ResponseEntity.ok(ApiResponse.ok("Letterhead saved successfully", null));
+        return resultService.saveLetterhead(requestDto);
     }
 
     // admin toggles result visibility
