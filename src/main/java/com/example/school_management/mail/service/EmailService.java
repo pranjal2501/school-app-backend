@@ -3,6 +3,8 @@ package com.example.school_management.mail.service;
 import com.example.school_management.common.ValidationMessages;
 import com.example.school_management.common.payload.StudentEmailData;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.scheduling.annotation.Async;
 
@@ -25,4 +27,6 @@ public interface EmailService {
     void sendResultEmail(String toEmail, String studentName, byte[] pdfBytes);
 
     void sendPasswordEmail(@Email(message = ValidationMessages.EMAIL_INVALID) @Size(max = 100) String email, String password);
+
+    void sendParentApprovalRequestEmail(@Email(message = ValidationMessages.EMAIL_INVALID) @Size(max = 100) String email, @NotBlank(message = ValidationMessages.FATHER_FIRST_NAME_REQUIRED) @Size(max = 50) String fatherFirstName, String s, String s1, @NotNull String standard, String regId);
 }

@@ -17,6 +17,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -31,11 +32,6 @@ public class Student extends BaseEntity {
 
     @Column(name = "registration_Id", unique = true, nullable = false, updatable = false)
     private String regId;
-
-    @PrePersist
-    private void generateRegId() {
-        this.regId = "REG-STUD" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
-    }
 
     @NotBlank(message = ValidationMessages.FIRST_NAME_REQUIRED)
     @Size(max = 50, message = ValidationMessages.FIRST_NAME_MAX)
@@ -151,4 +147,24 @@ public class Student extends BaseEntity {
 
     @OneToMany(mappedBy = "student")
     private List<BonafideRequest> bonafideRequests;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private StudentAdmissionStatus admissionStatus = StudentAdmissionStatus.ACTIVE;
+
+    @Column
+    private LocalDateTime approvalExpiresAt;
+
+    @PrePersist
+    public void prePersist() {
+
+        if (this.regId == null) {
+            this.regId = "REG-STUD" + UUID.randomUUID().toString()
+                    .replace("-", "")
+                    .substring(0, 8)
+                    .toUpperCase();
+        }
+
+    }
+
 }

@@ -75,6 +75,21 @@ public class StudentController {
                 .body(ApiResponse.ok("Bulk admission from Excel completed", response));
     }
 
+    //================= GET STUDENT VERIFIED FROM PARENTS IF PARENT ID IS PROVIDED =======================
+    @PostMapping("/approve/{regId}")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<ApiResponse<String>> approveStudent(@PathVariable String regId) {
+        return ResponseEntity.ok(ApiResponse.ok("Student approved",
+                studentService.approveStudentIfParentId(regId)));
+    }
+
+    @PostMapping("/reject/{regId}")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<ApiResponse<String>> rejectStudent(@PathVariable String regId) {
+        return ResponseEntity.ok(ApiResponse.ok("Student rejected",
+                studentService.rejectStudentIfParentId(regId)));
+    }
+
 
     // ================ UPDATE STUDENT API ==========================
     @PutMapping("/{id}")

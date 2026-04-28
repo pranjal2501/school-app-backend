@@ -18,8 +18,10 @@ public class SingleDayAttendanceResponseDto {
     // overall
     private int totalStudents;
     private int totalPresent;
+    private int totalWholeDayPresent;
     private int totalAbsent;
     private int totalLate;
+    private int totalHalfDay;
 
     // gender breakdown
     private int totalBoys;

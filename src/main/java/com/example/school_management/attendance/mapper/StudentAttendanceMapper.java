@@ -153,30 +153,38 @@ public class StudentAttendanceMapper {
     public SingleDayAttendanceResponseDto toSingleDayResponseDto(
             LocalDate date,
             List<StudentAttendanceRecordDto> records) {
-
-        long totalPresent = records.stream()
+        long totalWholeDayPresent = records.stream()
                 .filter(r -> r.getStatus() == AttendanceStatus.PRESENT).count();
         long totalAbsent = records.stream()
                 .filter(r -> r.getStatus() == AttendanceStatus.ABSENT).count();
         long totalLate = records.stream()
                 .filter(r -> r.getStatus() == AttendanceStatus.LATE).count();
+        long totalHalfDay = records.stream()
+                .filter(r -> r.getStatus() == AttendanceStatus.HALF_DAY).count();
+
+        long totalPresent = totalWholeDayPresent + totalHalfDay;
+
         long totalBoys = records.stream()
                 .filter(r -> r.getGender() == Gender.MALE).count();
         long totalGirls = records.stream()
                 .filter(r -> r.getGender() == Gender.FEMALE).count();
         long totalBoysPresent = records.stream()
                 .filter(r -> r.getGender() == Gender.MALE
-                        && r.getStatus() == AttendanceStatus.PRESENT).count();
+                        && (r.getStatus() == AttendanceStatus.PRESENT
+                        || r.getStatus() == AttendanceStatus.HALF_DAY)).count();
         long totalGirlsPresent = records.stream()
                 .filter(r -> r.getGender() == Gender.FEMALE
-                        && r.getStatus() == AttendanceStatus.PRESENT).count();
+                        && (r.getStatus() == AttendanceStatus.PRESENT
+                        || r.getStatus() == AttendanceStatus.HALF_DAY)).count();
 
         return SingleDayAttendanceResponseDto.builder()
                 .date(date)
                 .totalStudents(records.size())
                 .totalPresent((int) totalPresent)
+                .totalWholeDayPresent((int) totalWholeDayPresent)
                 .totalAbsent((int) totalAbsent)
                 .totalLate((int) totalLate)
+                .totalHalfDay((int) totalHalfDay)
                 .totalBoys((int) totalBoys)
                 .totalGirls((int) totalGirls)
                 .totalBoysPresent((int) totalBoysPresent)
