@@ -236,4 +236,90 @@ public class EmailServiceImpl implements EmailService {
                 + "<p style=\"color: #555; font-size: 14px;\">Best Regards,<br><strong style=\"color: #2c3e50;\">School Administration Team</strong></p>"
                 + "</div>";
     }
+
+
+    @Override
+    public void sendForgotPasswordEmail(String toEmail, String otp) {
+        String subject = "Password Reset OTP - School Management System";
+
+        String htmlContent = buildForgotPasswordTemplate(toEmail, otp);
+
+        sendHtmlEmail(toEmail, subject, htmlContent);
+    }
+
+    private String buildForgotPasswordTemplate(String email, String otp) {
+
+        return "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;\">"
+                + "<h2 style=\"color: #2c3e50; text-align: center;\">Password Reset Request 🔐</h2>"
+
+                + "<p style=\"color: #333; font-size: 16px;\">Dear User,</p>"
+
+                + "<p style=\"color: #333; font-size: 16px; line-height: 1.5;\">We received a request to reset the password for your account associated with <strong>"
+                + email + "</strong>.</p>"
+
+                + "<p style=\"color: #333; font-size: 16px;\">Use the following One-Time Password (OTP) to proceed:</p>"
+
+                // OTP Box
+                + "<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #0056b3; text-align: center;\">"
+                + "<span style=\"font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #2c3e50;\">"
+                + otp
+                + "</span>"
+                + "</div>"
+
+                + "<p style=\"color: #555; font-size: 14px;\">This OTP is valid for a limited time. Please do not share it with anyone.</p>"
+
+                + "<p style=\"color: #d9534f; font-size: 14px; font-weight: bold;\">If you did not request a password reset, please ignore this email or contact support immediately.</p>"
+
+                + "<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\" />"
+
+                + "<p style=\"color: #555; font-size: 14px;\">Best Regards,<br><strong style=\"color: #2c3e50;\">School Administration Team</strong></p>"
+
+                + "</div>";
+    }
+
+    @Override
+    public void sendPasswordEmail(String email, String password) {
+        String subject = "Your Account Password - School Management System";
+
+        String htmlContent = buildPasswordEmailTemplate(email, password);
+
+        sendHtmlEmail(email, subject, htmlContent);
+    }
+
+    private String buildPasswordEmailTemplate(String email, String password) {
+
+        String portalUrl = "http://localhost:3000/login";
+
+        return "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;\">"
+                + "<h2 style=\"color: #2c3e50; text-align: center;\">Your Account Credentials 🔐</h2>"
+
+                + "<p style=\"color: #333; font-size: 16px;\">Dear User,</p>"
+
+                + "<p style=\"color: #333; font-size: 16px; line-height: 1.5;\">Your account password has been generated/updated for the account associated with <strong>"
+                + email + "</strong>.</p>"
+
+                // Credentials Box
+                + "<div style=\"background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #0056b3;\">"
+                + "<p style=\"margin: 5px 0; font-size: 16px;\"><strong>Username:</strong> " + email + "</p>"
+                + "<p style=\"margin: 5px 0; font-size: 16px;\"><strong>Password:</strong> "
+                + "<span style=\"background-color: #e2e8f0; padding: 3px 8px; border-radius: 4px; font-family: monospace; letter-spacing: 1px;\">"
+                + password
+                + "</span></p>"
+                + "</div>"
+
+                // Login Button
+                + "<div style=\"text-align: center; margin: 30px 0;\">"
+                + "<a href=\"" + portalUrl + "\" style=\"background-color: #0056b3; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;\">Login to Portal</a>"
+                + "</div>"
+
+                + "<p style=\"color: #d9534f; font-size: 14px; font-weight: bold;\">Security Notice: Please log in and change your password immediately to keep your account secure.</p>"
+
+                + "<p style=\"color: #555; font-size: 14px;\">If you did not request this change, please contact the school administration immediately.</p>"
+
+                + "<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\" />"
+
+                + "<p style=\"color: #555; font-size: 14px;\">Best Regards,<br><strong style=\"color: #2c3e50;\">School Administration Team</strong></p>"
+
+                + "</div>";
+    }
 }

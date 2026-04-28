@@ -18,6 +18,7 @@ import com.example.school_management.common.exception.UnauthorizedAccessExceptio
 import com.example.school_management.complaint.entity.Complaint;
 import com.example.school_management.complaint.mappper.ComplaintMapper;
 import com.example.school_management.complaint.repository.ComplaintRepository;
+import com.example.school_management.forgotPassword.service.ForgotPasswordService;
 import com.example.school_management.mail.service.EmailService;
 import com.example.school_management.notify.dto.CreateNotificationRequestDto;
 import com.example.school_management.notify.dto.NotificationResponseDto;
@@ -75,6 +76,7 @@ public class TeacherServiceImpl implements TeacherService {
     private final RoleVerifier roleVerifier;
     private final ClassSubjectTeacherRepository pivotRepository;
     private final AssignmentMapper assignmentMapper;
+    private final ForgotPasswordService forgotPasswordService;
     /**
      * Replaces manual SecurityContext verification.
      * Allows access if the user is an ADMIN, OR if they are the specific Teacher.

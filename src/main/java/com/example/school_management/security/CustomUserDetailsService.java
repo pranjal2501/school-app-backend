@@ -1,6 +1,10 @@
 package com.example.school_management.security;
 
 import com.example.school_management.admin.entity.Admin;
+import com.example.school_management.common.ApiResponse;
+import com.example.school_management.forgotPassword.dto.ForgotPasswordRequestDto;
+import com.example.school_management.forgotPassword.dto.VerifyOtpAndPasswordRequestDto;
+import com.example.school_management.forgotPassword.service.ForgotPasswordService;
 import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.teacher.entity.Teacher;
 import com.example.school_management.admin.repository.AdminRepository;
@@ -23,6 +27,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
     private AdminRepository adminRepository;
+
+    @Autowired
+    private ForgotPasswordService forgotPasswordService;
 
     @Override
     public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
@@ -60,5 +67,17 @@ public class CustomUserDetailsService implements UserDetailsService {
                 password,
                 List.of(new SimpleGrantedAuthority("ROLE_" + role))
         );
+    }
+
+    public ApiResponse<String> sendOtp(ForgotPasswordRequestDto email) {
+        String status= forgotPasswordService.sendEmailToResetPassword(email);
+
+        return ApiResponse.ok("Check the inbox", status);
+    }
+
+    public ApiResponse<String> verfiyTeacherOtp(VerifyOtpAndPasswordRequestDto dto) {
+        String status= forgotPasswordService.verifyOtp(dto);
+
+        return ApiResponse.ok("Status is :", status);
     }
 }
