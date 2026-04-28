@@ -3,6 +3,7 @@ package com.example.school_management.admin.service;
 import com.example.school_management.admin.dto.dashboard.AdminDashboardResponseDto;
 import com.example.school_management.admin.dto.dashboard.DashboardStatsDto;
 import com.example.school_management.admin.dto.dashboard.TodayClassDto;
+import com.example.school_management.admin.mapper.AdminDashboardMapper;
 import com.example.school_management.admin.mapper.AdminMapper;
 import com.example.school_management.admin.dto.AdminRequestDto;
 import com.example.school_management.admin.dto.AdminResponseDto;
@@ -58,6 +59,7 @@ public class AdminServiceImpl implements AdminService {
     private final StudentAttendanceRepo studentAttendanceRepo;
     private final AdminMapper adminMapper;
     private final RoleVerifier roleVerifier;
+    private final AdminDashboardMapper adminDashboardMapper;
 
     private void verifyAndGetAdminRecord() {
         if (!roleVerifier.hasRole(Role.ADMIN)) {
@@ -121,11 +123,7 @@ public class AdminServiceImpl implements AdminService {
                 .map(notification -> notificationMapper.toResponseDto(notification))
                 .collect(Collectors.toList());
 
-        return AdminDashboardResponseDto.builder()
-                .stats(stats)
-                .todayClasses(todayClasses)
-                .importantAlerts(alerts)
-                .build();
+        return adminDashboardMapper.toDashboardResponseDto(stats, todayClasses, alerts);
     }
 
     // ===================== STATS BUILDER =====================
@@ -175,16 +173,11 @@ public class AdminServiceImpl implements AdminService {
             }
         }
 
-        return DashboardStatsDto.builder()
-                .totalStudents(totalStudents)
-                .studentGrowthPercent(studentGrowth)
-                .totalTeachers(totalTeachers)
-                .teacherGrowthPercent(teacherGrowth)
-                .totalClasses(totalClasses)
-                .classGrowthPercent(classGrowth)
-                .avgAttendance(avgAttendance)
-                .attendanceGrowthPercent(attendanceGrowth)
-                .build();
+        return adminDashboardMapper.toStatsDto(
+                totalStudents, studentGrowth,
+                totalTeachers, teacherGrowth,
+                totalClasses, classGrowth,
+                avgAttendance, attendanceGrowth);
     }
 
     // ===================== TODAY'S CLASSES =====================
@@ -215,13 +208,8 @@ public class AdminServiceImpl implements AdminService {
                     ? classTeacher.getFirstName() + " " + classTeacher.getLastName()
                     : "Not Assigned";
 
-            result.add(TodayClassDto.builder()
-                    .className(schoolClass.getClassName())
-                    .classTeacherName(teacherName)
-                    .totalStudents(totalStudents)
-                    .totalPresent(totalPresent)
-                    .attendanceMarked(attendanceMarked)
-                    .build());
+            result.add(adminDashboardMapper.toTodayClassDto(
+                    schoolClass, totalStudents, totalPresent, attendanceMarked));
         }
 
         return result;
