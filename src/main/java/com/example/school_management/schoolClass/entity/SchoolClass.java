@@ -3,6 +3,7 @@ package com.example.school_management.schoolClass.entity;
 
 import com.example.school_management.academics.entity.AcademicStructure;
 import com.example.school_management.attendance.entity.StudentAttendance;
+import com.example.school_management.common.BaseEntity;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;
@@ -18,11 +19,11 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SchoolClass {
+public class SchoolClass extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "academic_structure_id", nullable = false, unique = true)

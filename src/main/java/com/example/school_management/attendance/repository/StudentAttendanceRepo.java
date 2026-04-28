@@ -104,4 +104,8 @@ public interface StudentAttendanceRepo extends JpaRepository<StudentAttendance, 
     //List<StudentAttendance> findTopNByClassEntityIdOrderByAttendanceDateDesc(@NotNull(message = "Class ID is required") Long classId, int threshold);
     List<StudentAttendance> findByClassEntityIdOrderByAttendanceDateDesc(Long classId, Pageable pageable);
     List<StudentAttendance> findByClassEntity(SchoolClass assignedClass);
+
+    List<StudentAttendance> findByAcademicYear(String academicYear);
+
+    List<StudentAttendance> findByAcademicYearAndAttendanceDateBetween(String academicYear, LocalDate from, LocalDate to);
 }
