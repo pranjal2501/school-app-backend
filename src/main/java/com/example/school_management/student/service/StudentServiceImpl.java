@@ -169,6 +169,7 @@ public class StudentServiceImpl implements StudentService {
 
         List<Student> studentsToSave = new ArrayList<>();
         List<StudentEmailData> emailDataList = new ArrayList<>();
+        List<Student> pendingApprovalStudents = new ArrayList<>(); // track pending ones
 
         for (StudentFromAdminRequestDto request : requests) {
 
@@ -187,26 +188,66 @@ public class StudentServiceImpl implements StudentService {
             if (admin.getAdmittedStudents() == null) {
                 admin.setAdmittedStudents(new ArrayList<>());
             }
-
             admin.getAdmittedStudents().add(student);
 
-            student.setActive(true);
-            studentsToSave.add(student);
+            // existing parent — pending approval
+            if (request.getParentId() != null) {
+                student.setAdmissionStatus(StudentAdmissionStatus.PENDING_PARENT_APPROVAL);
+                student.setApprovalExpiresAt(LocalDateTime.now().plusHours(48));
+                student.setActive(false);
+                pendingApprovalStudents.add(student);
+            } else {
+                // new parent — auto active
+                student.setAdmissionStatus(StudentAdmissionStatus.ACTIVE);
+                student.setActive(true);
+                emailDataList.add(new StudentEmailData(
+                        student,
+                        parent.getEmail(),
+                        autoPassword
+                ));
+            }
 
-            emailDataList.add(new StudentEmailData(
-                    student,
-                    parent.getEmail(),
-                    autoPassword
-            ));
+            studentsToSave.add(student);
         }
+
         List<Student> savedStudents = studentRepository.saveAll(studentsToSave);
 
-        emailService.sendBulkAdmissionEmails(emailDataList);
+        // send admission emails for new parent students
+        if (!emailDataList.isEmpty()) {
+            emailService.sendBulkAdmissionEmails(emailDataList);
+        }
+
+        // send in-app approval notifications for existing parent students
+        for (Student student : pendingApprovalStudents) {
+            Notification notification = Notification.builder()
+                    .title("Approve new child")
+                    .description("Attention parent please verify that "
+                            + student.getFirstName() + " " + student.getLastName()
+                            + " is your child. Aadhar: " + maskAadhar(student.getAadharNo()))
+                    .shortInfo("Verify child: " + student.getFirstName() + " " + student.getLastName())
+                    .audienceType(AudienceType.PARENT)
+                    .notificationType(NotificationType.STUDENT_APPROVAL)
+                    .eventDateTime(LocalDateTime.now())
+                    .scheduledDispatchTime(LocalDateTime.now())
+                    .dispatched(true)
+                    .build();
+
+            notificationRepository.save(notification);
+
+            UserNotification userNotification = UserNotification.builder()
+                    .notification(notification)
+                    .parent(student.getParent())
+                    .deliveredAt(LocalDateTime.now())
+                    .build();
+
+            userNotificationRepository.save(userNotification);
+        }
 
         return savedStudents.stream()
                 .map(studentMapper::toResponseDto)
                 .toList();
     }
+
 
     @Transactional
     @Override
@@ -247,6 +288,8 @@ public class StudentServiceImpl implements StudentService {
                 parent.getEmail(),
                 resolveAutoPassword(parent)
         );
+
+        notifyToCompleteProfile(student);
 
         return "Student approved successfully";
     }
