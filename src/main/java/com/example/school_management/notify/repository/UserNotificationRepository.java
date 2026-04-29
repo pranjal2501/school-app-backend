@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -41,4 +42,6 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
 
     List<UserNotification> findByParentIdAndNotification_ScheduledDispatchTimeLessThanEqualOrderByNotification_CreatedAtDesc(
             Long parentId, LocalDateTime currentTime);
+
+    List<UserNotification> findByParentIdAndNotification_ScheduledDispatchTimeLessThanEqualOrderByNotification_ScheduledDispatchTimeDesc(Long parentId, LocalDateTime rightNow);
 }

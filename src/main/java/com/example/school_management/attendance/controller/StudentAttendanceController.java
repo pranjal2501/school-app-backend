@@ -61,7 +61,7 @@ public class StudentAttendanceController {
     }
 
     @GetMapping("/class/{classId}/date/{date}")
-    @PreAuthorize("hasRole('TEACHER')")
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     public ResponseEntity<ApiResponse<MarkAttendanceResponseDto>> getAttendanceByDate(
             @PathVariable Long classId,
             @PathVariable LocalDate date) {

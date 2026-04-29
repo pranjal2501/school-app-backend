@@ -148,7 +148,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         }
         LocalDateTime rightNow = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
         return userNotificationRepository
-                .findByParentIdAndNotification_ScheduledDispatchTimeLessThanEqual(parentId, rightNow)
+                .findByParentIdAndNotification_ScheduledDispatchTimeLessThanEqualOrderByNotification_ScheduledDispatchTimeDesc(parentId, rightNow)
                 .stream()
                 .map(userNotificationMapper::toParentResponseDto)
                 .collect(Collectors.toList());
