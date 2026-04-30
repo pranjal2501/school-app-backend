@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -60,4 +61,16 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
             "AND s.isActive = true " +
             "AND s.assignedClass IS NOT NULL")
     List<SchoolClass> findClassesWithUnassignedRollNumbers();
+
+
+    long countByIsActiveTrue();
+
+    long countByIsActiveTrueAndCreatedAtAfter(Instant thisMonthStart);
+
+    long countByIsActiveTrueAndCreatedAtBetween(Instant lastMonthStart, Instant lastMonthEnd);
+
+//    List<Student> findByAdmissionStatusAndApprovalExpiresAtBefore(StudentAdmissionStatus studentAdmissionStatus, LocalDateTime now);
+//
+//    Student findFirstByParentAndAdmissionStatus(
+//            Parent parent, StudentAdmissionStatus admissionStatus);
 }

@@ -20,6 +20,8 @@ public interface StudentAttendanceRepo extends JpaRepository<StudentAttendance, 
     //check if class attendance already marked for a date
     boolean existsByClassEntityIdAndAttendanceDate(Long classId, LocalDate date);
 
+    List<StudentAttendance> findByAcademicYearAndAttendanceDateBetween(String academicYear, LocalDate from, LocalDate to);
+
 
     // Fetch single row — used for late mark correction
     Optional<StudentAttendance> findByClassEntityIdAndAttendanceDate(
@@ -104,4 +106,6 @@ public interface StudentAttendanceRepo extends JpaRepository<StudentAttendance, 
     //List<StudentAttendance> findTopNByClassEntityIdOrderByAttendanceDateDesc(@NotNull(message = "Class ID is required") Long classId, int threshold);
     List<StudentAttendance> findByClassEntityIdOrderByAttendanceDateDesc(Long classId, Pageable pageable);
     List<StudentAttendance> findByClassEntity(SchoolClass assignedClass);
+
+    List<StudentAttendance> findByAcademicYear(String academicYear);
 }

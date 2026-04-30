@@ -8,7 +8,9 @@ import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,4 +60,8 @@ public class SchoolClass {
 
     @OneToMany(mappedBy = "classEntity")
     private List<StudentAttendance> studentAttendances;
+
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private Instant createdAt;
 }

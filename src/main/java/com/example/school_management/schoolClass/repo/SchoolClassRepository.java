@@ -4,6 +4,7 @@ import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.teacher.entity.Teacher;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +13,7 @@ public interface SchoolClassRepository extends JpaRepository<SchoolClass, Long> 
     Optional<SchoolClass> findByClassName(String className);
     Optional<SchoolClass> findByClassTeacher(Teacher teacher);
     Optional<SchoolClass> findByAcademicStructureId(Long id);
-
+    long countByCreatedAtAfter(Instant thisMonthStart);
+    long countByCreatedAtBetween(Instant lastMonthStart, Instant lastMonthEnd);
     Optional<SchoolClass> findByAcademicStructure_StandardAndAcademicStructure_Division(String standard, String division);
 }

@@ -1,5 +1,6 @@
 package com.example.school_management.admin.controller;
 
+import com.example.school_management.admin.dto.dashboard.AdminDashboardResponseDto;
 import com.example.school_management.admin.service.AdminService;
 import com.example.school_management.admin.dto.AdminRequestDto;
 import com.example.school_management.admin.dto.AdminResponseDto;
@@ -8,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -19,11 +21,11 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    @GetMapping("/dashboard")
-    public ResponseEntity<ApiResponse<String>> adminDashboard() {
-        return ResponseEntity.ok(
-                ApiResponse.ok("Dashboard fetched", "Admin Dashboard")
-        );
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<AdminDashboardResponseDto>> getDashboard() {
+        return ResponseEntity.ok(ApiResponse.ok("Dashboard fetched successfully",
+                adminService.getDashboard()));
     }
 
     @PostMapping("/create")
