@@ -9,6 +9,7 @@ public enum NotificationType {
     COMPLAINT("Complaint"),
     UPDATE("Update"),
     REMINDER("Reminder"),
+    SPECIAL_EVENT("Special event, need fees"),
     STUDENT_APPROVAL("Approve_Student");
     private final String displayName;
 

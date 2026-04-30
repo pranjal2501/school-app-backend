@@ -3,6 +3,7 @@ package com.example.school_management.teacher.service;
 import com.example.school_management.assignment.dto.response.TeacherClassDropdownDto;
 import com.example.school_management.notify.dto.CreateNotificationRequestDto;
 import com.example.school_management.notify.dto.NotificationResponseDto;
+import com.example.school_management.teacher.dto.FeeSummaryDto;
 import com.example.school_management.teacher.dto.TeacherDashboardResponseDto;
 import com.example.school_management.teacher.dto.TeacherFromAdminRequestDto;
 import com.example.school_management.teacher.dto.TeacherRemainingInfoDto;
@@ -30,4 +31,8 @@ public interface TeacherService {
     List<TeacherClassDropdownDto> getMyAllocations();
 
     List<NotificationResponseDto> getMyNotifications();
+
+    void markFeePaid(Long userNotificationId);
+
+    List<FeeSummaryDto> getFeeSummary(Long notificationId);
 }

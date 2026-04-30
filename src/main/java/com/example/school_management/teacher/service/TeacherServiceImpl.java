@@ -34,6 +34,7 @@ import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.repository.StudentRepository;
 import com.example.school_management.subject.entity.Subject;
 import com.example.school_management.subject.repository.SubjectRepository;
+import com.example.school_management.teacher.dto.FeeSummaryDto;
 import com.example.school_management.teacher.dto.TeacherDashboardResponseDto;
 import com.example.school_management.teacher.dto.TeacherFromAdminRequestDto;
 import com.example.school_management.teacher.dto.TeacherRemainingInfoDto;
@@ -360,6 +361,74 @@ public class TeacherServiceImpl implements TeacherService {
                 .build();
     }
 
+
+
+    @Override
+    public void markFeePaid(Long userNotificationId) {
+        String currentUser = roleVerifier.getCurrentUsername();
+        Teacher teacher = teacherRepository.findByEmail(currentUser)
+                .orElseThrow(() -> new UnauthorizedAccessException("Teacher session invalid"));
+
+        UserNotification un = userNotificationRepository.findById(userNotificationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification", "id", userNotificationId));
+
+        // verify this notification belongs to teacher's class
+        Notification notification = un.getNotification();
+        if (!notification.getCreatedByTeacher().getId().equals(teacher.getId())) {
+            throw new UnauthorizedAccessException("You can only mark fees for your own notifications");
+        }
+
+        if (!Boolean.TRUE.equals(notification.getRequiresFee())) {
+            throw new IllegalStateException("This notification does not require fees");
+        }
+
+        if (notification.getPaymentDeadline() != null &&
+                LocalDateTime.now().isAfter(notification.getPaymentDeadline())) {
+            throw new IllegalStateException("Payment deadline has passed. Cannot mark as paid.");
+        }
+
+        if (Boolean.TRUE.equals(un.getFeePaid())) {
+            throw new IllegalStateException("Fee already marked as paid");
+        }
+
+        un.setFeePaid(true);
+        un.setFeePaidAt(LocalDateTime.now());
+        userNotificationRepository.save(un);
+    }
+
+    public List<FeeSummaryDto> getFeeSummary(Long notificationId) {
+
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification", "id", notificationId));
+        if(notification.getRequiresFee() != Boolean.TRUE)
+        {
+            throw new UnauthorizedAccessException("this event don't require fees");
+        }
+
+        List<UserNotification> userNotifications = userNotificationRepository
+                .findByNotification(notification);
+
+        return userNotifications.stream()
+                .map(un -> {
+                    Parent parent = un.getParent();
+                    Student student = studentRepository
+                            .findFirstByParent(parent);
+
+                    return FeeSummaryDto.builder()
+                            .parentName(parent.getFatherFirstName() + " " + parent.getFatherLastName())
+                            .studentName(student != null
+                                    ? student.getFirstName() + " " + student.getLastName() : "N/A")
+                            .feeAmount(un.getFeeAmount())
+                            .paymentDeadline(un.getNotification().getPaymentDeadline())
+                            .feePaid(un.getFeePaid())
+                            .feePaidAt(un.getFeePaidAt())
+                            .deadlineExpired(un.getNotification().getPaymentDeadline() != null &&
+                                    LocalDateTime.now().isAfter(un.getNotification().getPaymentDeadline()))
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
 // ===================== HELPER METHODS ===========================
 
     private void notifyToCompleteProfile(Teacher savedTeacher) {
@@ -386,8 +455,6 @@ public class TeacherServiceImpl implements TeacherService {
         userNotificationRepository.save(userNotification);
     }
 
-    // ... inside TeacherServiceImpl.java ...
-
     private NotificationResponseDto notifyParents(long classId, CreateNotificationRequestDto request) {
 
         SchoolClass schoolClass = schoolClassRepository.findById(classId)
@@ -399,17 +466,7 @@ public class TeacherServiceImpl implements TeacherService {
         String currentUser = roleVerifier.getCurrentUsername();
 
         Teacher teacher = teacherRepository.findByEmail(currentUser)
-                .orElseThrow(() -> new UnauthorizedAccessException("Teacher session invalid"));
-
-        LocalDateTime calculatedDispatchTime;
-        if (Boolean.TRUE.equals(request.getDispatchNow())) {
-            calculatedDispatchTime = LocalDateTime.now();
-        } else if (request.getScheduledDispatchTime() != null) {
-            calculatedDispatchTime = request.getScheduledDispatchTime();
-        } else {
-            // Failsafe: Default to sending 3 days prior if custom time was forgotten
-            calculatedDispatchTime = request.getEventDateTime().minusDays(3);
-        }
+              .orElseThrow(() -> new UnauthorizedAccessException("Teacher session invalid"));
 
         Notification notification = Notification.builder()
                 .title(request.getTitle())
@@ -417,24 +474,27 @@ public class TeacherServiceImpl implements TeacherService {
                 .shortInfo(request.getShortInfo())
                 .audienceType(AudienceType.PARENT)
                 .notificationType(request.getNotificationType())
-                .urls(request.getUrls())
                 .eventDateTime(request.getEventDateTime())
-                .scheduledDispatchTime(calculatedDispatchTime) // 🚀 Applied here
+                .scheduledDispatchTime(Boolean.TRUE.equals(request.getDispatchNow())
+                        ? LocalDateTime.now() : null)
                 .dispatched(false)
                 .targetClasses(targetClasses)
                 .teacherIds(new HashSet<>())
                 .createdByTeacher(teacher)
+                .requiresFee(Boolean.TRUE.equals(request.getRequiresFee()))
+                .feeAmount(request.getFeeAmount())
+                .feeType(request.getFeeType())
+                .paymentDeadline(Boolean.TRUE.equals(request.getRequiresFee())
+                        ? request.getPaymentDeadline() : null)
                 .build();
 
         notificationRepository.save(notification);
 
         if (Boolean.TRUE.equals(request.getDispatchNow())) {
-
             List<Student> students = studentRepository.findByAssignedClass_Id(classId);
 
             for (Student student : students) {
                 Parent parent = student.getParent();
-
                 if (parent == null) continue;
 
                 UserNotification userNotification = UserNotification.builder()
@@ -442,6 +502,9 @@ public class TeacherServiceImpl implements TeacherService {
                         .parent(parent)
                         .isRead(false)
                         .deliveredAt(LocalDateTime.now())
+                        .feePaid(false)
+                        .feeAmount(Boolean.TRUE.equals(notification.getRequiresFee())
+                                ? notification.getFeeAmount() : null)
                         .build();
 
                 userNotificationRepository.save(userNotification);

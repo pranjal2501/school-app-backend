@@ -71,6 +71,24 @@ public class UserNotificationMapper {
             return responseDto;
 
         }
+        else if (n.getNotificationType() == NotificationType.SPECIAL_EVENT) {
+            return SpecialEventNotificationResponseDto.builder()
+                    .id(un.getId())
+                    .title(n.getTitle())
+                    .shortInfo(n.getShortInfo())
+                    .description(n.getDescription())
+                    .notificationType(n.getNotificationType())
+                    .eventDateTime(n.getEventDateTime())
+                    .requiresFee(n.getRequiresFee())
+                    .feeAmount(un.getFeeAmount())
+                    .feeType(n.getFeeType())
+                    .feePaid(un.getFeePaid())
+                    .feePaidAt(un.getFeePaidAt())
+                    .paymentDeadline(n.getPaymentDeadline())
+                    .isRead(un.getIsRead())
+                    .readAt(un.getReadAt())
+                    .build();
+        }
 
         return GeneralParentNotificationResponseDto.builder()
                 .id(un.getId())
