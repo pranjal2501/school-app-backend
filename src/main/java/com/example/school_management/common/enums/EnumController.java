@@ -157,4 +157,17 @@ public class EnumController {
         }
         return ResponseEntity.ok(list);
     }
+
+    @GetMapping("/exam-terms")
+    public ResponseEntity<List<Map<String, String>>> getExamTerms()
+    {
+        List<Map<String, String>> list = new ArrayList<>();
+        for (ExamTerm ap : ExamTerm.values()) {
+            Map<String, String> map = new LinkedHashMap<>();
+            map.put("value", ap.name());
+            map.put("displayName", ap.getDisplayName());
+            list.add(map);
+        }
+        return ResponseEntity.ok(list);
+    }
 }

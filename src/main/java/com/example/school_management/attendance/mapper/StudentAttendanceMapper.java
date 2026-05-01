@@ -154,8 +154,6 @@ public class StudentAttendanceMapper {
             LocalDate date,
             List<StudentAttendanceRecordDto> records) {
 
-        long totalPresent = records.stream()
-                .filter(r -> r.getStatus() == AttendanceStatus.PRESENT).count();
         long totalAbsent = records.stream()
                 .filter(r -> r.getStatus() == AttendanceStatus.ABSENT).count();
         long totalLate = records.stream()
@@ -166,14 +164,23 @@ public class StudentAttendanceMapper {
                 .filter(r -> r.getGender() == Gender.FEMALE).count();
         long totalBoysPresent = records.stream()
                 .filter(r -> r.getGender() == Gender.MALE
-                        && r.getStatus() == AttendanceStatus.PRESENT).count();
+                        && (r.getStatus() == AttendanceStatus.PRESENT
+                        || r.getStatus() == AttendanceStatus.HALF_DAY)).count();
         long totalGirlsPresent = records.stream()
                 .filter(r -> r.getGender() == Gender.FEMALE
-                        && r.getStatus() == AttendanceStatus.PRESENT).count();
+                        && (r.getStatus() == AttendanceStatus.PRESENT
+                        || r.getStatus() == AttendanceStatus.HALF_DAY)).count();
+        long totalWholeDayPresent = records.stream()
+                .filter(r -> r.getStatus() == AttendanceStatus.PRESENT).count();
+        long totalHalfDay = records.stream()
+                .filter(r -> r.getStatus() == AttendanceStatus.HALF_DAY).count();
+        long totalPresent = totalWholeDayPresent + totalHalfDay;
 
         return SingleDayAttendanceResponseDto.builder()
                 .date(date)
                 .totalStudents(records.size())
+                .totalWholeDayPresent((int) totalWholeDayPresent)
+                .totalHalfDay((int) totalHalfDay)
                 .totalPresent((int) totalPresent)
                 .totalAbsent((int) totalAbsent)
                 .totalLate((int) totalLate)

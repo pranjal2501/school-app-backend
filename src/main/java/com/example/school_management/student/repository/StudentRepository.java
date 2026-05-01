@@ -73,4 +73,12 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 //
 //    Student findFirstByParentAndAdmissionStatus(
 //            Parent parent, StudentAdmissionStatus admissionStatus);
+
+    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM Student s " +
+            "WHERE s.assignedClass.classTeacher.id = :teacherId " +
+            "AND s.parent.mobilePrimary = :parentMobile")
+    boolean existsByClassTeacherAndParentMobile(
+            @Param("teacherId") Long teacherId,
+            @Param("parentMobile") String parentMobile
+    );
 }

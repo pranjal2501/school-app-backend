@@ -40,7 +40,7 @@ public class ResultDisplayService {
 
         if(isPresent != null) {
             isPresent.setUrl(requestDto.getUrl());
-
+            resultLetterHeadRepository.save(isPresent);
             return ResponseEntity.ok(ApiResponse.ok("Existing updated successfully",resultMapper.toLetterheadResponse(isPresent)));
         }
 
