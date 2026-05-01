@@ -1,6 +1,7 @@
 package com.example.school_management.academics.repository;
 
 import com.example.school_management.academics.entity.ClassSubjectTeacher;
+import com.example.school_management.subject.entity.Subject;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,4 +29,8 @@ public interface ClassSubjectTeacherRepository extends JpaRepository<ClassSubjec
             "LEFT JOIN FETCH cst.schoolClass " +
             "WHERE cst.schoolClass.id = :classId")
     List<ClassSubjectTeacher> findBySchoolClassIdWithDetails(@Param("classId") Long classId);
+
+    @Query("SELECT DISTINCT cst.subject FROM ClassSubjectTeacher cst " +
+            "WHERE cst.schoolClass.academicStructure.standard = :standard")
+    List<Subject> findDistinctSubjectsByStandard(@Param("standard") String standard);
 }

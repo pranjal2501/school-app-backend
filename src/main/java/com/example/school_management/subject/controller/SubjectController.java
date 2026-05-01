@@ -9,4 +9,5 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Validated // Required when validating a List<> of DTOs in the request body
 public class SubjectController {
+
 }
