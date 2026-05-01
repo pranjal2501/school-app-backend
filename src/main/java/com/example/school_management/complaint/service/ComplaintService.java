@@ -1,9 +1,6 @@
 package com.example.school_management.complaint.service;
 
-import com.example.school_management.complaint.dto.ComplaintRequestDto;
-import com.example.school_management.complaint.dto.ComplaintResponseDto;
-import com.example.school_management.complaint.dto.ComplaintStatusUpdateDto;
-import com.example.school_management.complaint.dto.VisibilityUpdateDto;
+import com.example.school_management.complaint.dto.*;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -17,4 +14,6 @@ public interface ComplaintService {
     ComplaintResponseDto updateComplaintVisibility(String ticketNumber, VisibilityUpdateDto request);
     List<ComplaintResponseDto> getComplaintsForParent(String regId);
     List<ComplaintResponseDto> getComplaintsByClassId(Long classId);
+
+    List<ComplaintResponseDto> raiseComplaintForEmployee(@Valid RaiseComplaintForEmployeeRequestDto request);
 }

@@ -7,7 +7,8 @@ public enum ComplaintCategory {
     INFRASTRUCTURE("Infrastructure"),     // e.g., broken desks, fans
     HOSTEL_OR_MESS("Hostel/Mess"),
     TRANSPORT("Transport"),          // e.g., bus issues
-    ADMINISTRATIVE("Administrative"),     // e.g., fee payment issues
+    ADMINISTRATIVE("Administrative"),
+    EMPLOYEE_COMPLAINT("Complaint Against Employee"),// e.g., fee payment issues
     OTHER("Other");
 
     private final String displayName;

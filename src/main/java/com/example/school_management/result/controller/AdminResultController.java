@@ -37,4 +37,6 @@ public class AdminResultController {
         adminResultService.notifyPendingTeachers(classId, examTerm);
         return ResponseEntity.ok(ApiResponse.ok("Pending teachers notified successfully", null));
     }
+
+
 }

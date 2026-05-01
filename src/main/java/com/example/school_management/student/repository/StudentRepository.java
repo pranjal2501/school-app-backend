@@ -1,5 +1,6 @@
 package com.example.school_management.student.repository;
 
+import com.example.school_management.common.enums.StudentAdmissionStatus;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.student.dto.StudentSearchDto;
 import com.example.school_management.parent.entity.Parent;
@@ -10,9 +11,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import static com.example.school_management.common.enums.StudentAdmissionStatus.PENDING_PARENT_APPROVAL;
 
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
@@ -62,17 +67,16 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
             "AND s.assignedClass IS NOT NULL")
     List<SchoolClass> findClassesWithUnassignedRollNumbers();
 
-
     long countByIsActiveTrue();
 
     long countByIsActiveTrueAndCreatedAtAfter(Instant thisMonthStart);
 
     long countByIsActiveTrueAndCreatedAtBetween(Instant lastMonthStart, Instant lastMonthEnd);
 
-//    List<Student> findByAdmissionStatusAndApprovalExpiresAtBefore(StudentAdmissionStatus studentAdmissionStatus, LocalDateTime now);
-//
-//    Student findFirstByParentAndAdmissionStatus(
-//            Parent parent, StudentAdmissionStatus admissionStatus);
+    List<Student> findByAdmissionStatusAndApprovalExpiresAtBefore(StudentAdmissionStatus studentAdmissionStatus, LocalDateTime now);
+
+    Student findFirstByParentAndAdmissionStatus(
+            Parent parent, StudentAdmissionStatus admissionStatus);
 
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM Student s " +
             "WHERE s.assignedClass.classTeacher.id = :teacherId " +

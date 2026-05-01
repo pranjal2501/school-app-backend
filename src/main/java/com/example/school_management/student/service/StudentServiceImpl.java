@@ -4,9 +4,12 @@ package com.example.school_management.student.service;
 import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.admin.repository.AdminRepository;
 import com.example.school_management.common.RoleVerifier;
+import com.example.school_management.common.enums.AssignmentStatus;
 import com.example.school_management.common.enums.Role;
+import com.example.school_management.common.enums.StudentAdmissionStatus;
 import com.example.school_management.common.enums.notify.AudienceType;
 import com.example.school_management.common.enums.notify.NotificationType;
+import com.example.school_management.common.exception.UnauthorizedAccessException;
 import com.example.school_management.common.payload.StudentEmailData;
 import com.example.school_management.common.enums.Gender;
 import com.example.school_management.common.exception.DuplicateResourceException;
@@ -27,7 +30,9 @@ import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.mapper.StudentMapper;
 import com.example.school_management.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,6 +46,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
@@ -94,16 +100,54 @@ public class StudentServiceImpl implements StudentService {
 
         Student student = createStudent(request, parent, admin);
 
+        if(request.getParentId()!=null)
+        {
+            student.setAdmissionStatus(StudentAdmissionStatus.PENDING_PARENT_APPROVAL);
+            student.setApprovalExpiresAt(LocalDateTime.now().plusHours(48));
+            student.setActive(false);
+        }
+        else {
+            // new parent — auto approve, parent just created
+            student.setAdmissionStatus(StudentAdmissionStatus.ACTIVE);
+            student.setActive(true);
+        }
+
         student = studentRepository.save(student);
 
-        emailService.sendAdmissionEmail(
-                parent.getEmail(),
-                student.getFirstName() + " " + student.getLastName(),
-                parent.getEmail(),
-                autoPassword
-        );
+        if (request.getParentId() != null) {
+            Notification notification = Notification.builder()
+                    .title("Approve new child")
+                    .description("Attention parent please verify that following "+ student.getFirstName()+" "+ student.getLastName()+ " is your child \n the Aadhaar number of child is "+ maskAadhar(student.getAadharNo()))
+                    .shortInfo("Verify the child " + student.getFirstName() +" "+ student.getLastName())
+                    .audienceType(AudienceType.PARENT)
+                    .notificationType(NotificationType.STUDENT_APPROVAL)
+                    .eventDateTime(LocalDateTime.now()) // immediate event
+                    .scheduledDispatchTime(LocalDateTime.now())
+                    .dispatched(true)
+                    .build();
 
-        notifyToCompleteProfile(student);
+            notificationRepository.save(notification);
+
+            UserNotification userNotification = UserNotification.builder()
+                    .notification(notification)
+                    .parent(parent)
+                    .deliveredAt(LocalDateTime.now())
+                    .build();
+
+            userNotificationRepository.save(userNotification);
+
+        }
+        else {
+            // new parent — send normal admission email
+            emailService.sendAdmissionEmail(
+                    parent.getEmail(),
+                    student.getFirstName() + " " + student.getLastName(),
+                    parent.getEmail(),
+                    autoPassword
+                );
+                notifyToCompleteProfile(student);
+            }
+
         return studentMapper.toResponseDto(student);
     }
 
@@ -125,6 +169,7 @@ public class StudentServiceImpl implements StudentService {
 
         List<Student> studentsToSave = new ArrayList<>();
         List<StudentEmailData> emailDataList = new ArrayList<>();
+        List<Student> pendingApprovalStudents = new ArrayList<>(); // track pending ones
 
         for (StudentFromAdminRequestDto request : requests) {
 
@@ -146,22 +191,133 @@ public class StudentServiceImpl implements StudentService {
 
             admin.getAdmittedStudents().add(student);
 
-            student.setActive(true);
-            studentsToSave.add(student);
+            // existing parent — pending approval
+            if (request.getParentId() != null) {
+                student.setAdmissionStatus(StudentAdmissionStatus.PENDING_PARENT_APPROVAL);
+                student.setApprovalExpiresAt(LocalDateTime.now().plusHours(48));
+                student.setActive(false);
+                pendingApprovalStudents.add(student);
+            } else {
+                // new parent — auto active
+                student.setAdmissionStatus(StudentAdmissionStatus.ACTIVE);
+                student.setActive(true);
+                emailDataList.add(new StudentEmailData(
+                        student,
+                        parent.getEmail(),
+                        autoPassword
+                ));
+            }
 
-            emailDataList.add(new StudentEmailData(
-                    student,
-                    parent.getEmail(),
-                    autoPassword
-            ));
+            studentsToSave.add(student);
         }
+
         List<Student> savedStudents = studentRepository.saveAll(studentsToSave);
 
-        emailService.sendBulkAdmissionEmails(emailDataList);
+        // send admission emails for new parent students
+        if (!emailDataList.isEmpty()) {
+            emailService.sendBulkAdmissionEmails(emailDataList);
+        }
+
+        // send in-app approval notifications for existing parent students
+        for (Student student : pendingApprovalStudents) {
+            Notification notification = Notification.builder()
+                    .title("Approve new child")
+                    .description("Attention parent please verify that "
+                            + student.getFirstName() + " " + student.getLastName()
+                            + " is your child. Aadhar: " + maskAadhar(student.getAadharNo()))
+                    .shortInfo("Verify child: " + student.getFirstName() + " " + student.getLastName())
+                    .audienceType(AudienceType.PARENT)
+                    .notificationType(NotificationType.STUDENT_APPROVAL)
+                    .eventDateTime(LocalDateTime.now())
+                    .scheduledDispatchTime(LocalDateTime.now())
+                    .dispatched(true)
+                    .build();
+
+            notificationRepository.save(notification);
+
+            UserNotification userNotification = UserNotification.builder()
+                    .notification(notification)
+                    .parent(student.getParent())
+                    .deliveredAt(LocalDateTime.now())
+                    .build();
+
+            userNotificationRepository.save(userNotification);
+        }
 
         return savedStudents.stream()
                 .map(studentMapper::toResponseDto)
                 .toList();
+    }
+
+
+    @Transactional
+    @Override
+    public String approveStudentIfParentId(String regId) {
+        String currentUser = roleVerifier.getCurrentUsername();
+        Parent parent = parentRepository.findByEmail(currentUser)
+                .orElseThrow(() -> new UnauthorizedAccessException("Parent session invalid"));
+
+        Student student = studentRepository.findByRegId(regId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "regId", regId));
+
+        // verify this parent owns this student
+        if (!student.getParent().getId().equals(parent.getId())) {
+            throw new UnauthorizedAccessException("You can only approve your own child");
+        }
+
+        // check status
+        if (student.getAdmissionStatus() != StudentAdmissionStatus.PENDING_PARENT_APPROVAL) {
+            throw new IllegalStateException("This student is not pending approval");
+        }
+
+        // check expiry
+        if (student.getApprovalExpiresAt().isBefore(LocalDateTime.now())) {
+            student.setAdmissionStatus(StudentAdmissionStatus.EXPIRED);
+            studentRepository.save(student);
+            throw new IllegalStateException("Approval window has expired");
+        }
+
+        student.setAdmissionStatus(StudentAdmissionStatus.ACTIVE);
+        student.setActive(true);
+        student.setApprovalExpiresAt(null);
+        studentRepository.save(student);
+
+        // send confirmation email
+        emailService.sendAdmissionEmail(
+                parent.getEmail(),
+                student.getFirstName() + " " + student.getLastName(),
+                parent.getEmail(),
+                resolveAutoPassword(parent)
+        );
+
+        notifyToCompleteProfile(student);
+
+        return "Student approved successfully";
+    }
+
+    @Transactional
+    @Override
+    public String rejectStudentIfParentId(String regId) {
+        String currentUser = roleVerifier.getCurrentUsername();
+        Parent parent = parentRepository.findByEmail(currentUser)
+                .orElseThrow(() -> new UnauthorizedAccessException("Parent session invalid"));
+
+        Student student = studentRepository.findByRegId(regId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "regId", regId));
+
+        if (!student.getParent().getId().equals(parent.getId())) {
+            throw new UnauthorizedAccessException("You can only reject your own child");
+        }
+
+        if (student.getAdmissionStatus() != StudentAdmissionStatus.PENDING_PARENT_APPROVAL) {
+            throw new IllegalStateException("This student is not pending approval");
+        }
+
+        student.setAdmissionStatus(StudentAdmissionStatus.REJECTED);
+        student.setActive(false);
+        studentRepository.save(student);
+
+        return "Student rejected successfully";
     }
 
     @Override
@@ -317,6 +473,11 @@ public class StudentServiceImpl implements StudentService {
         return "Use existing password";
     }
 
+    private String maskAadhar(String aadhar) {
+        if (aadhar == null || aadhar.length() < 4) return "****";
+        return "********" + aadhar.substring(aadhar.length() - 4);
+    }
+
     private Student createStudent(StudentFromAdminRequestDto request, Parent parent, Admin admin) {
         Student student = studentMapper.toEntity(request);
         student.setParent(parent);
@@ -380,5 +541,21 @@ public class StudentServiceImpl implements StudentService {
                 .standard(student.getStandard())
                 .gender(student.getGender())
                 .build();
+    }
+
+    @Scheduled(fixedDelay = 3600000) // every hour
+    @Transactional
+    public void expirePendingStudents() {
+        List<Student> pendingStudents = studentRepository
+                .findByAdmissionStatusAndApprovalExpiresAtBefore(
+                        StudentAdmissionStatus.PENDING_PARENT_APPROVAL,
+                        LocalDateTime.now());
+
+        for (Student student : pendingStudents) {
+            student.setAdmissionStatus(StudentAdmissionStatus.EXPIRED);
+            student.setActive(false);
+            log.warn("Student {} approval expired", student.getRegId());
+        }
+        studentRepository.saveAll(pendingStudents);
     }
 }

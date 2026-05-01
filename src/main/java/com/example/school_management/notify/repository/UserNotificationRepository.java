@@ -1,6 +1,7 @@
 package com.example.school_management.notify.repository;
 
 
+import com.example.school_management.notify.entity.Notification;
 import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.teacher.entity.Teacher;
@@ -44,4 +45,6 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
             Long parentId, LocalDateTime currentTime);
 
     List<UserNotification> findByParentIdAndNotification_ScheduledDispatchTimeLessThanEqualOrderByNotification_ScheduledDispatchTimeDesc(Long parentId, LocalDateTime rightNow);
+
+    List<UserNotification> findByNotification(Notification notification);
 }

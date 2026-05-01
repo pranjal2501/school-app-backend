@@ -3,6 +3,7 @@ package com.example.school_management.admin.entity;
 import com.example.school_management.attendance.entity.LeaveRequests;
 //import com.example.school_management.attendance.entity.TeacherAttendance;
 import com.example.school_management.complaint.entity.Complaint;
+import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.student.entity.Student;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -65,4 +66,7 @@ public class Admin {
 
     @OneToMany(mappedBy = "approvedBy")
     private List<LeaveRequests> leaveRequests;
+
+    @OneToMany(mappedBy = "admin", fetch = FetchType.LAZY)
+    private List<UserNotification> notifications = new ArrayList<>();
 }

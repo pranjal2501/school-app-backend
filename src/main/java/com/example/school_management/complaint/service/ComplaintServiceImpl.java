@@ -111,14 +111,68 @@ public class ComplaintServiceImpl implements ComplaintService {
         return savedComplaints.stream().map(complaintMapper::toResponseDto).toList();
     }
 
+
+    @Override
+    public List<ComplaintResponseDto> raiseComplaintForEmployee(RaiseComplaintForEmployeeRequestDto request) {
+
+        String currentUser = roleVerifier.getCurrentUsername();
+        boolean isParent = roleVerifier.hasRole(Role.PARENT);
+
+        // 1. Resolve Raiser Identity ONCE to save DB calls
+        Parent parentRaiser = parentRepository.findByEmailOrMobilePrimary(currentUser, currentUser)
+                .orElseThrow(() -> new ResourceNotFoundException("Parent", "identifier", currentUser));
+
+        List<Complaint> complaintsToSave = new ArrayList<>();
+
+        // 2. Loop through selected students and create individual tickets
+        for (Long employeeId : request.getTargetEmployeeIds()) {
+            Employee targetEmp = employeeRepository.findById(employeeId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Student", "id", employeeId));
+
+            Complaint complaint = complaintMapper.empComplaintToEntity(request);
+            complaint.setTargetEmployee(targetEmp);
+            complaint.setReportedByParent(parentRaiser);
+
+            complaintsToSave.add(complaint);
+        }
+
+        // 3. Batch Save and Flush (Ensures IDs and Ticket Numbers are generated in the DB)
+        List<Complaint> savedComplaints = complaintRepository.saveAllAndFlush(complaintsToSave);
+
+        // 4. Send Notifications safely AFTER everything is successfully saved
+        for (Complaint savedComplaint : savedComplaints) {
+            // Only notify if the complaint is marked as visible to parents!
+            if (savedComplaint.isVisibleToAdmin()) {
+                notifyAdminOnComplaint(savedComplaint);
+            }
+        }
+        // 5. Map to DTOs and Return
+        return savedComplaints.stream().map(complaintMapper::toResponseDto).toList();
+    }
+
+
     // ── 2. VIEW COMPLAINTS RAISED BY ME ──────────────────────────────────────
     @Override
     @Transactional(readOnly = true)
     public List<ComplaintResponseDto> getMyRaisedComplaints() {
         String currentUser = roleVerifier.getCurrentUsername();
 
-        List<Complaint> myComplaints = complaintRepository
-                .findByReportedByEmployee_EmailOrderByCreatedAtDesc(currentUser);
+        List<Complaint> myComplaints= new ArrayList<Complaint>();
+
+        if(adminRepository.findByUsername(currentUser).isPresent())
+        {
+            Admin ad = adminRepository.findByUsername(currentUser).orElseThrow(() -> new ResourceNotFoundException("Admin", "identifier", currentUser));
+            myComplaints=complaintRepository.findByReportedByAdminId(ad.getId());
+        }
+        else if(parentRepository.findByEmailOrMobilePrimary(currentUser, currentUser).isPresent())
+        {
+            Parent parent= parentRepository.findByEmailOrMobilePrimary(currentUser, currentUser).orElseThrow(() -> new ResourceNotFoundException("Parent", "identifier", currentUser));
+            myComplaints=complaintRepository.findByReportedByParentId(parent.getId());
+        }
+        else
+        {
+            myComplaints= complaintRepository.findByReportedByEmployee_EmailOrderByCreatedAtDesc(currentUser);
+        }
 
         return myComplaints.stream().map(complaintMapper::toResponseDto).toList();
     }
@@ -257,6 +311,35 @@ public class ComplaintServiceImpl implements ComplaintService {
                 .build();
 
         userNotificationRepository.save(userNotification);
+    }
+
+    private void notifyAdminOnComplaint(Complaint complaint) {
+
+        List<Admin> admin= adminRepository.findAll();
+
+        // 1. Create Notification
+        Notification notification = Notification.builder()
+                .title(complaint.getTitle())
+                .description("Complaint : " +complaint.getDescription())
+                .shortInfo("Complaint raised against employee"+complaint.getTargetEmployee().getFirstName() + " " + complaint.getTargetEmployee().getLastName())
+                .audienceType(AudienceType.ADMIN)
+                .notificationType(NotificationType.COMPLAINT)
+                .eventDateTime(LocalDateTime.now()) // immediate event
+                .scheduledDispatchTime(LocalDateTime.now())
+                .dispatched(true)
+                .build();
+
+        notificationRepository.save(notification);
+
+        for(Admin ad : admin) {
+            UserNotification userNotification = UserNotification.builder()
+                    .notification(notification)
+                    .admin(ad)
+                    .deliveredAt(LocalDateTime.now())
+                    .build();
+
+            userNotificationRepository.save(userNotification);
+        }
     }
 
     @Override

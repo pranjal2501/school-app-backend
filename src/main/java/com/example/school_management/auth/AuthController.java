@@ -1,6 +1,8 @@
 package com.example.school_management.auth;
 
 import com.example.school_management.common.ApiResponse;
+import com.example.school_management.forgotPassword.dto.ForgotPasswordRequestDto;
+import com.example.school_management.forgotPassword.dto.VerifyOtpAndPasswordRequestDto;
 import com.example.school_management.security.CustomUserDetails;
 import com.example.school_management.security.CustomUserDetailsService;
 import com.example.school_management.security.JwtUtil;
@@ -74,5 +76,20 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         return ResponseEntity.ok(ApiResponse.ok("Logout successful", null));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<String>> getPassword(
+            @RequestBody ForgotPasswordRequestDto email
+    )
+    {
+        return ResponseEntity.ok(service.sendOtp(email));
+    }
+
+    @PostMapping("/regain-password")
+    public ResponseEntity<ApiResponse<String>> verifyTeacherOtp(
+            @RequestBody VerifyOtpAndPasswordRequestDto dto)
+    {
+        return ResponseEntity.ok(service.verfiyTeacherOtp(dto));
     }
 }

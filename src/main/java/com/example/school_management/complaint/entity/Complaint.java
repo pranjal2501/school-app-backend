@@ -3,10 +3,12 @@ package com.example.school_management.complaint.entity;
 import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.common.BaseEntity;
 import com.example.school_management.employee.entity.Employee;
+import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.common.enums.ComplaintCategory;
 import com.example.school_management.common.enums.ComplaintStatus;
 import com.example.school_management.common.enums.Priority;
+import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -88,7 +90,11 @@ public class Complaint extends BaseEntity {
 
     @Column(name = "is_visible_to_parents", nullable = false)
     @Builder.Default
-    private boolean isVisibleToParents = true;
+    private boolean isVisibleToParents = false;
+
+    @Column(name = "is_visible_to_admin", nullable = false)
+    @Builder.Default
+    private boolean isVisibleToAdmin = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resolved_by_employee_id")
@@ -99,6 +105,11 @@ public class Complaint extends BaseEntity {
     @JoinColumn(name = "target_student_id")
     @ToString.Exclude
     private Student targetStudent;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "target_teacher_id")
+    @ToString.Exclude
+    private Employee targetEmployee;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "raised_by_employee")
@@ -114,6 +125,11 @@ public class Complaint extends BaseEntity {
     @JoinColumn(name = "reported_by_admin_id")
     @ToString.Exclude
     private Admin reportedByAdmin;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "raised_by_parent_id")
+    @ToString.Exclude
+    private Parent reportedByParent;
 
     @PrePersist
     protected void onCreate() {

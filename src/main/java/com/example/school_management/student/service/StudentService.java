@@ -11,6 +11,10 @@ public interface StudentService {
 
     List<StudentResponseDto> admitStudentsBulk(List<StudentFromAdminRequestDto> requests);
 
+    String approveStudentIfParentId(String regId);
+
+    String rejectStudentIfParentId(String regId);
+
     List<StudentResponseDto> getAllStudents();
 
 //    StudentResponseDto getStudentById(Long id);

@@ -141,6 +141,9 @@ public abstract class Employee extends BaseEntity {
     @OneToMany(mappedBy = "reportedByEmployee", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Complaint> complaints = new ArrayList<>();
 
+    @OneToMany(mappedBy = "targetEmployee", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Complaint> raisedAgainstMe = new ArrayList<>();
+
     /**
      * Domain logic: Checks if a given string matches any of this employee's unique identifiers.
      */

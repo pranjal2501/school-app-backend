@@ -2,15 +2,12 @@ package com.example.school_management.teacher.controller;
 
 import com.example.school_management.assignment.dto.response.TeacherClassDropdownDto;
 import com.example.school_management.common.ApiResponse;
-import com.example.school_management.teacher.dto.BulkTeacherAdmissionResponseDto;
+import com.example.school_management.teacher.dto.*;
 import com.example.school_management.teacher.dto.response.MyClassResponseDto;
 import com.example.school_management.notify.dto.CreateNotificationRequestDto;
 import com.example.school_management.notify.dto.NotificationResponseDto;
-import com.example.school_management.teacher.dto.TeacherDashboardResponseDto;
 import com.example.school_management.teacher.service.TeacherExcelService;
 import com.example.school_management.teacher.service.TeacherService;
-import com.example.school_management.teacher.dto.TeacherFromAdminRequestDto;
-import com.example.school_management.teacher.dto.TeacherRemainingInfoDto;
 import com.example.school_management.teacher.dto.response.TeacherResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -168,5 +165,22 @@ public class TeacherController {
         List<TeacherClassDropdownDto> response = teacherService.getMyAllocations();
         return ResponseEntity.ok(ApiResponse.ok("Teacher allocations fetched successfully", response));
     }
+
+    @PatchMapping("/notifications/{userNotificationId}/mark-paid")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<String>> markFeePaid(
+            @PathVariable Long userNotificationId) {
+        teacherService.markFeePaid(userNotificationId);
+        return ResponseEntity.ok(ApiResponse.ok("Fee marked as paid", null));
+    }
+
+    @GetMapping("/notifications/{notificationId}/fee-summary")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<List<FeeSummaryDto>>> getFeeSummary(
+            @PathVariable Long notificationId) {
+        return ResponseEntity.ok(ApiResponse.ok("Fee summary fetched",
+                teacherService.getFeeSummary(notificationId)));
+    }
+
 
 }

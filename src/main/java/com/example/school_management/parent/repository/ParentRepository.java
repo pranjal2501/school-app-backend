@@ -21,4 +21,6 @@ public interface ParentRepository extends JpaRepository<Parent, Long> {
 
     @Query("SELECT p.mobilePrimary FROM Parent p WHERE p.email = :username OR p.mobilePrimary = :username")
     Optional<String> findPrimaryMobileByUsername(@Param("username") String username);
+
+    Optional<Parent> findByEmailOrMobilePrimary(String email, String mobilePrimary);
 }

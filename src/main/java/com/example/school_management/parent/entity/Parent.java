@@ -1,6 +1,7 @@
 package com.example.school_management.parent.entity;
 
 import com.example.school_management.common.ValidationMessages;
+import com.example.school_management.complaint.entity.Complaint;
 import com.example.school_management.grievance.bonafide.entity.BonafideRequest;
 import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.student.entity.Student;
@@ -148,6 +149,9 @@ public class Parent {
 
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
     private List<UserNotification> notifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "reportedByParent", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Complaint> complaints = new ArrayList<>();
 
     @OneToMany(mappedBy = "requestedBy")
     private List<BonafideRequest> bonafideRequestList;

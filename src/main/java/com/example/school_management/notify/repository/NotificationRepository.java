@@ -1,6 +1,8 @@
 package com.example.school_management.notify.repository;
 
 import com.example.school_management.common.enums.notify.AudienceType;
+import com.example.school_management.common.enums.notify.AudienceType;
+import com.example.school_management.notify.dto.NotificationResponseDto;
 import com.example.school_management.notify.entity.Notification;
 import com.example.school_management.teacher.entity.Teacher;
 import org.springframework.data.jpa.repository.JpaRepository;
