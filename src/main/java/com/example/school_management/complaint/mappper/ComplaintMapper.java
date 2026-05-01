@@ -2,6 +2,7 @@ package com.example.school_management.complaint.mappper;
 
 import com.example.school_management.complaint.dto.ComplaintRequestDto;
 import com.example.school_management.complaint.dto.ComplaintResponseDto;
+import com.example.school_management.complaint.dto.RaiseComplaintForEmployeeRequestDto;
 import com.example.school_management.complaint.entity.Complaint;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,19 @@ public class ComplaintMapper {
                 .priority(dto.getPriority())
                 .supportedMedia(dto.getSupportedMediaUrls())
                 .isVisibleToParents(dto.getIsVisibleToParents() != null ? dto.getIsVisibleToParents() : true)
+                .build();
+    }
+
+    public Complaint empComplaintToEntity(RaiseComplaintForEmployeeRequestDto dto)
+    {
+        if (dto==null) return null;
+
+        return Complaint.builder()
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .category(dto.getCategory())
+                .priority(dto.getPriority())
+                .isVisibleToAdmin(dto.getIsVisibleToAdmin())
                 .build();
     }
 

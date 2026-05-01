@@ -1,5 +1,6 @@
 package com.example.school_management.notify.entity;
 
+import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.teacher.entity.Teacher;
 import jakarta.persistence.*;
@@ -34,6 +35,10 @@ public class UserNotification {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id")
     private Teacher teacher;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admin_id")
+    private Admin admin;
 
     @Column(nullable = false)
     @Builder.Default

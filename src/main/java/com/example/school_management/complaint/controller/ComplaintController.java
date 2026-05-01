@@ -43,7 +43,7 @@ public class ComplaintController {
 
     // 3. Fetch complaints raised BY the logged-in teacher
     @GetMapping("/my-raised")
-    @PreAuthorize("hasRole('TEACHER')")
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN','PARENT')")
     public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> getMyRaisedComplaints() {
         List<ComplaintResponseDto> response = complaintService.getMyRaisedComplaints();
         return ResponseEntity.ok(ApiResponse.ok("Your raised complaints fetched successfully", response));
@@ -84,5 +84,15 @@ public class ComplaintController {
 
         List<ComplaintResponseDto> response = complaintService.getComplaintsForParent(regId);
         return ResponseEntity.ok(ApiResponse.ok("Complaints fetched successfully.", response));
+    }
+
+    @PostMapping("/parent/raise")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> raiseComplaintByParent(
+            @RequestBody @Valid RaiseComplaintForEmployeeRequestDto request)
+    {
+        List<ComplaintResponseDto> response = complaintService.raiseComplaintForEmployee(request);
+
+        return ResponseEntity.ok(ApiResponse.ok("Complaints registered successfully", response));
     }
 }

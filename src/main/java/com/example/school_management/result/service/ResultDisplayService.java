@@ -1,8 +1,18 @@
 package com.example.school_management.result.service;
 
+import com.example.school_management.admin.entity.Admin;
+import com.example.school_management.admin.repository.AdminRepository;
 import com.example.school_management.common.ApiResponse;
+import com.example.school_management.common.enums.notify.AudienceType;
+import com.example.school_management.common.enums.notify.NotificationType;
 import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.mail.service.EmailService;
+import com.example.school_management.notify.entity.Notification;
+import com.example.school_management.notify.entity.UserNotification;
+import com.example.school_management.notify.repository.NotificationRepository;
+import com.example.school_management.notify.repository.UserNotificationRepository;
+import com.example.school_management.parent.entity.Parent;
+import com.example.school_management.parent.repository.ParentRepository;
 import com.example.school_management.result.dto.resultDisplay.*;
 import com.example.school_management.result.entity.ResultLetterhead;
 import com.example.school_management.result.entity.StudentSubjectMark;
@@ -17,7 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,6 +44,10 @@ public class ResultDisplayService {
     private final ResultLetterHeadRepository resultLetterHeadRepository;
     private final StudentRepository studentRepository;
     private final StudentSubjectMarkRepository markRepository;
+    private final NotificationRepository notificationRepository;
+    private final UserNotificationRepository userNotificationRepository;
+    private final AdminRepository adminRepository;
+    private final ParentRepository parentRepository;
     private final ResultMapper resultMapper;
 
     public ResponseEntity<ApiResponse<LetterHeadResponseDto>> saveLetterhead(LetterheadRequestDto requestDto) {
@@ -40,6 +56,8 @@ public class ResultDisplayService {
 
         if(isPresent != null) {
             isPresent.setUrl(requestDto.getUrl());
+
+            resultLetterHeadRepository.save(isPresent);
 
             return ResponseEntity.ok(ApiResponse.ok("Existing updated successfully",resultMapper.toLetterheadResponse(isPresent)));
         }
@@ -65,6 +83,60 @@ public class ResultDisplayService {
         letterhead.setIsResultPublished(resultStatus.getPublish());
         letterhead.setPublishedAt(resultStatus.getPublish() ? LocalDateTime.now() : null);
         resultLetterHeadRepository.save(letterhead);
+
+        //================ fire notifications to parents and admin ===============
+        if(resultStatus.getPublish().equals(Boolean.TRUE)) {
+            List<Parent> parents = parentRepository.findAll();
+
+            Notification notification = Notification.builder()
+                    .title("Result")
+                    .description("Attention parent, result is published on " + LocalDate.now() + " at " + LocalTime.now())
+                    .shortInfo("Result Published")
+                    .audienceType(AudienceType.PARENT)
+                    .notificationType(NotificationType.RESULT)
+                    .eventDateTime(LocalDateTime.now()) // immediate event
+                    .scheduledDispatchTime(LocalDateTime.now())
+                    .dispatched(true)
+                    .build();
+
+            notificationRepository.save(notification);
+
+            for (Parent parent : parents) {
+                UserNotification userNotification = UserNotification.builder()
+                        .notification(notification)
+                        .parent(parent)
+                        .deliveredAt(LocalDateTime.now())
+                        .build();
+
+                userNotificationRepository.save(userNotification);
+            }
+        }
+
+        String message= "Result Status : "+ (((resultStatus.getPublish()==true)?"Published":"Closed"))+" on " + LocalDate.now() + " at " + LocalTime.now();
+        List<Admin> admin= adminRepository.findAll();
+
+        Notification notification = Notification.builder()
+                .title("Result")
+                .description(message)
+                .shortInfo("Result Status Changed")
+                .audienceType(AudienceType.ADMIN)
+                .notificationType(NotificationType.RESULT)
+                .eventDateTime(LocalDateTime.now()) // immediate event
+                .scheduledDispatchTime(LocalDateTime.now())
+                .dispatched(true)
+                .build();
+
+        notificationRepository.save(notification);
+
+        for(Admin ad : admin) {
+            UserNotification userNotification = UserNotification.builder()
+                    .notification(notification)
+                    .admin(ad)
+                    .deliveredAt(LocalDateTime.now())
+                    .build();
+
+            userNotificationRepository.save(userNotification);
+        }
     }
 
     public StudentResultResponseDto getStudentResult(StudentResultRequestDto requestDto) {

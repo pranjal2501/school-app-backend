@@ -1,5 +1,6 @@
 package com.example.school_management.common.enums;
 
+import com.example.school_management.common.ApiResponse;
 import com.example.school_management.common.enums.notify.NotificationType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -150,6 +151,19 @@ public class EnumController {
     public ResponseEntity<List<Map<String, String>>> getNotificationType() {
         List<Map<String, String>> list = new ArrayList<>();
         for (NotificationType ap : NotificationType.values()) {
+            Map<String, String> map = new LinkedHashMap<>();
+            map.put("value", ap.name());
+            map.put("displayName", ap.getDisplayName());
+            list.add(map);
+        }
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/exam-terms")
+    public ResponseEntity<List<Map<String, String>>> getExamTerms()
+    {
+        List<Map<String, String>> list = new ArrayList<>();
+        for (ExamTerm ap : ExamTerm.values()) {
             Map<String, String> map = new LinkedHashMap<>();
             map.put("value", ap.name());
             map.put("displayName", ap.getDisplayName());
