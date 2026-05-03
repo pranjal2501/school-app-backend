@@ -16,7 +16,7 @@ import java.util.List;
 @Data
 public class RaiseComplaintForEmployeeRequestDto {
 
-    @NotEmpty(message = "At least one student must be selected.")
+    @NotEmpty(message = "At least one employee must be selected.")
     private List<Long> targetEmployeeIds;
 
     @NotBlank(message = ValidationMessages.TITLE_REQUIRED)

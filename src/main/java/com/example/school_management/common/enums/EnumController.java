@@ -183,4 +183,16 @@ public class EnumController {
         }
         return ResponseEntity.ok(list);
     }
+
+    @GetMapping("/fee-type")
+    public ResponseEntity<List<Map<String, String>>> getFeeType(){
+        List<Map<String, String>> list = new ArrayList<>();
+        for (FeeType ap : FeeType.values()) {
+            Map<String, String> map = new LinkedHashMap<>();
+            map.put("value", ap.name());
+            map.put("displayName", ap.getDisplayName());
+            list.add(map);
+        }
+        return ResponseEntity.ok(list);
+    }
 }

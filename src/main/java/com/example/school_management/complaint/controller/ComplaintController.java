@@ -89,8 +89,7 @@ public class ComplaintController {
     @PostMapping("/parent/raise")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> raiseComplaintByParent(
-            @RequestBody @Valid RaiseComplaintForEmployeeRequestDto request)
-    {
+            @RequestBody @Valid RaiseComplaintForEmployeeRequestDto request){
         List<ComplaintResponseDto> response = complaintService.raiseComplaintForEmployee(request);
 
         return ResponseEntity.ok(ApiResponse.ok("Complaints registered successfully", response));
