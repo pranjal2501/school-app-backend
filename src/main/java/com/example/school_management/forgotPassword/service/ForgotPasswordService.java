@@ -31,97 +31,93 @@ public class ForgotPasswordService {
     private final RoleVerifier roleVerifier;
     private final EmailService emailService;
 
-    public String sendEmailToResetPassword(ForgotPasswordRequestDto email)
-    {
-        Role role= email.getRole();
+    public String sendEmailToResetPassword(ForgotPasswordRequestDto request) {
+        Role role = request.getRole();
+        String email = request.getEmail();
 
-        if(role.equals(Role.PARENT))
-        {//parents
-            Boolean status= parentRepository.findByEmail(email.getEmail()).isPresent();
-            return sendOTP(status, email.getEmail());
+        if (role.equals(Role.PARENT)) {
+            Boolean status = parentRepository.findByEmail(email).isPresent();
+            return sendOTP(status, email);
+        } else if (role.equals(Role.TEACHER)) {
+            Boolean status = teacherRepository.findByEmail(email).isPresent();
+            return sendOTP(status, email);
+        } else if (role.equals(Role.ADMIN)) {
+            // TODO: Implement Admin check when required
+            return sendOTP(false, email);
+        }
 
-        }
-        else if (role.equals(Role.TEACHER)) {
-        //Teachers
-            Boolean status= teacherRepository.findByEmail(email.getEmail()).isPresent();
-            return sendOTP(status, email.getEmail());
-        }
-        else if (role.equals(Role.ADMIN)) {
-            //admin
-        }
-            return new String("OTP SENT TO YOUR MAIL");
+        throw new IllegalArgumentException("Invalid role specified.");
     }
 
-
     public String verifyOtp(VerifyOtpAndPasswordRequestDto dto) {
-
         ForgotPasswordOtp entity = forgotPasswordOtpRepository
                 .findTopByEmailOrderByCreatedAtDesc(dto.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("No OTP found for this email"));
+                .orElseThrow(() -> new ResourceNotFoundException("No OTP request found for this email."));
 
         if (!entity.getOtp().equals(dto.getOtp())) {
-            return "Wrong OTP";
+            throw new IllegalArgumentException("Invalid OTP provided.");
         }
 
         if (entity.getIsUsed()) {
-            return "OTP already used";
+            throw new IllegalArgumentException("This OTP has already been used.");
         }
 
         if (entity.getExpireAt().isBefore(LocalDateTime.now())) {
-            return "OTP Expired";
+            throw new IllegalArgumentException("This OTP has expired. Please request a new one.");
         }
 
-        // valid OTP
+        // Valid OTP
         String password = findPassword(entity.getEmail());
+        if (password == null) {
+            throw new ResourceNotFoundException("Account data missing. Unable to recover password.");
+        }
+
         emailService.sendPasswordEmail(entity.getEmail(), password);
 
         entity.setIsUsed(true);
         forgotPasswordOtpRepository.save(entity);
 
-        return "Verified successfully, check your email for your password";
+        return "Verified successfully. Please check your email inbox for your password.";
     }
 
     //===================== HELPER METHOD =========================
 
-    public String sendOTP(Boolean status, String email)
-    {
-        if (status.equals(Boolean.TRUE)) {
-            Random rand = new Random();
-            String otp = String.valueOf(100000 + rand.nextInt(900000));
-
-            ForgotPasswordOtp entity = ForgotPasswordOtp.builder()
-                    .email(email)
-                    .otp(otp)
-                    .isUsed(false)
-                    .build();
-
-            forgotPasswordOtpRepository.save(entity);
-            log.info("OTP saved for: {}", email);
-
-            emailService.sendForgotPasswordEmail(email, otp);
-            log.info("OTP email sent to: {}", email);
-        } else {
+    public String sendOTP(Boolean status, String email) {
+        if (!status) {
             log.warn("Email not found in DB: {}", email);
+            throw new ResourceNotFoundException("This email address is not registered in our system.");
         }
-        return "OTP SENT SUCCESSFULLY";
+
+        Random rand = new Random();
+        String otp = String.valueOf(100000 + rand.nextInt(900000));
+
+        ForgotPasswordOtp entity = ForgotPasswordOtp.builder()
+                .email(email)
+                .otp(otp)
+                .isUsed(false)
+                .build();
+
+        forgotPasswordOtpRepository.save(entity);
+        log.info("OTP saved for: {}", email);
+
+        emailService.sendForgotPasswordEmail(email, otp);
+        log.info("OTP email sent to: {}", email);
+
+        return "Verification code sent successfully to your inbox.";
     }
 
-    public String findPassword(String email)
-    {
-        //teacher
+    public String findPassword(String email) {
+        // Teacher
         if(teacherRepository.findByEmail(email).isPresent()) {
-
-            Teacher teacher= teacherRepository.findByEmail(email).get();
+            Teacher teacher = teacherRepository.findByEmail(email).get();
             String namePart = getSafeSubstring(teacher.getLastName(), 3).toUpperCase(Locale.ROOT);
             String mobilePart = getSafeSubstring(teacher.getMobile(), 3);
             String aadharPart = getSafeSubstring(teacher.getAadharNo(), 3);
-            String rawPassword = namePart + mobilePart + aadharPart;
-            return rawPassword;
+            return namePart + mobilePart + aadharPart;
         }
-        //parents
+        // Parents
         else if (parentRepository.findByEmail(email).isPresent()) {
-
-            Parent parent= parentRepository.findByEmail(email).get();
+            Parent parent = parentRepository.findByEmail(email).get();
             return safe(parent.getFatherLastName()).toUpperCase() +
                     safe(parent.getMobilePrimary()) +
                     safe(parent.getAadharNo());
@@ -133,9 +129,9 @@ public class ForgotPasswordService {
         if (value == null) return "";
         return value.length() < length ? value : value.substring(0, length);
     }
+
     private String safe(String value) {
+        if (value == null) return "";
         return value.length() >= 3 ? value.substring(0, 3) : value;
     }
-
-
 }
