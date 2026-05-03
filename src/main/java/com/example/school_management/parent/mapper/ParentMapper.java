@@ -111,7 +111,6 @@ public class ParentMapper {
                 .build();
     }
 
-    // 🚀 FIXED: Null-safe parent ID extraction
     public ChildSummaryResponseDto toSummaryDto(Student child) {
         return ChildSummaryResponseDto.builder()
                 .registrationId(child.getRegId())
@@ -123,7 +122,6 @@ public class ParentMapper {
                 .build();
     }
 
-    // 🚀 FIXED: Synchronized with ParentServiceImpl fields
     public ParentsDashboardResponseDto toDashboardResponseDto(
             Student child,
             Parent parent,
@@ -131,7 +129,10 @@ public class ParentMapper {
             boolean isProfileComplete,
             Float attendancePercent,
             Integer pendingAssignments,
-            List<ParentNotificationResponseDto> recentNotifications) {
+            List<ParentNotificationResponseDto> recentNotifications,
+            Long classTeacherId,
+            String classTeacherName,
+            String parentMobile) {
 
         return ParentsDashboardResponseDto.builder()
                 .studentId(child.getId())
@@ -143,6 +144,9 @@ public class ParentMapper {
                 .attendancePercent(attendancePercent)
                 .pendingAssignments(pendingAssignments)
                 .recentNotifications(recentNotifications)
+                .classTeacherId(classTeacherId)
+                .classTeacherName(classTeacherName)
+                .parentMobile(parentMobile)
                 .build();
     }
 

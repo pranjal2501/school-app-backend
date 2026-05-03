@@ -17,4 +17,9 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     @Modifying
     @Query("DELETE FROM ChatMessage c WHERE c.createdAt <= :cutoffDate")
     void deleteMessagesOlderThan(@Param("cutoffDate") LocalDateTime cutoffDate);
+
+    @Query("SELECT m FROM ChatMessage m WHERE m.teacherId = :teacherId AND m.id IN " +
+            "(SELECT MAX(m2.id) FROM ChatMessage m2 WHERE m2.teacherId = :teacherId GROUP BY m2.parentMobile) " +
+            "ORDER BY m.createdAt DESC")
+    List<ChatMessage> findLatestMessagesForTeacherInbox(@Param("teacherId") Long teacherId);
 }

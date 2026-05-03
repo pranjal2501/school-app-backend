@@ -75,9 +75,18 @@ public class ParentServiceImpl implements ParentService {
                 .map(userNotificationMapper::toParentResponseDto)
                 .collect(Collectors.toList());
 
+        String parentMobile = parent.getMobilePrimary();
+        Long classTeacherId = null;
+        String classTeacherName = null;
+
+        if (isClassAllocated && child.getAssignedClass().getClassTeacher() != null) {
+            classTeacherId = child.getAssignedClass().getClassTeacher().getId();
+            classTeacherName = child.getAssignedClass().getClassTeacher().getFirstName() + " " + child.getAssignedClass().getClassTeacher().getLastName();
+        }
         return parentMapper.toDashboardResponseDto(
                 child, parent, isClassAllocated, isProfileComplete,
-                attendancePercent, pendingAssignments, recentNotifications
+                attendancePercent, pendingAssignments, recentNotifications,
+                classTeacherId, classTeacherName, parentMobile
         );
     }
 
