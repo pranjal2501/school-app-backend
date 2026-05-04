@@ -41,12 +41,4 @@ public class CreateNotificationRequestDto {
     private Boolean dispatchNow;
 
     private List<String> urls;
-
-    private Boolean requiresFee = false;
-
-    private Double feeAmount;
-
-    private FeeType feeType;
-
-    private LocalDateTime paymentDeadline;
 }

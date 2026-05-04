@@ -79,32 +79,11 @@ public class Notification {
     @JoinColumn(name = "created_by_teacher_id")
     private Teacher createdByTeacher;
 
-
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean requiresFee = false;
-
-    @Column
-    private Double feeAmount;
-
-    @Enumerated(EnumType.STRING)
-    @Column
-    private FeeType feeType;  // only for special events — ACTIVITY_FEES etc.
-
-    @Column
-    private LocalDateTime paymentDeadline;
-
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
 
         if (this.scheduledDispatchTime != null) return; // already set by mapper (dispatchNow = true)
-
-        if(this.requiresFee == false)
-        {
-            this.feeAmount=null;
-            this.feeType=null;
-        }
 
         if (this.audienceType == AudienceType.PARENT) {
             this.scheduledDispatchTime = this.eventDateTime.minusDays(3);

@@ -31,8 +31,4 @@ public interface TeacherService {
     List<TeacherClassDropdownDto> getMyAllocations();
 
     List<NotificationResponseDto> getMyNotifications();
-
-    void markFeePaid(Long userNotificationId);
-
-    List<FeeSummaryDto> getFeeSummary(Long notificationId);
 }

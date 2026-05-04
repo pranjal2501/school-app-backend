@@ -48,25 +48,4 @@ public class UserNotification {
 
     @Column(nullable = false)
     private LocalDateTime deliveredAt;
-
-
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean feePaid = false;
-
-    @Column
-    private LocalDateTime feePaidAt;
-
-    @Column
-    private Double feeAmount;  // copied from notification at delivery time
-
-    @PrePersist
-    public void prePersist() {
-
-        if(this.notification.getRequiresFee()==false)
-        {
-            this.feeAmount=null;
-            this.feePaidAt=null;
-        }
-    }
 }
