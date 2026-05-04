@@ -23,12 +23,10 @@ public class SyllabusSection {
     @JoinColumn(name = "syllabus_id", nullable = false)
     private Syllabus syllabus;
 
-    // 🚀 A section can have Sub-Sections...
     @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<SyllabusSubSection> subSections = new ArrayList<>();
 
-    // 🚀 ...OR it can have direct Chapters!
     @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<SyllabusChapter> directChapters = new ArrayList<>();

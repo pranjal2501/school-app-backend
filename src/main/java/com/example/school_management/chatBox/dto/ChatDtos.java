@@ -1,6 +1,7 @@
 package com.example.school_management.chatBox.dto;
 
 import com.example.school_management.common.enums.SenderRole;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -24,5 +25,23 @@ public class ChatDtos {
             this.content = content;
             this.timestamp = timestamp;
         }
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class ChatInboxResponse {
+        private String studentName;
+        private String parentMobile;
+        private String lastMessage;
+        private LocalDateTime lastMessageTime;
+        private Integer unreadCount;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class StudentSearchResponse {
+        private String studentName;
+        private String parentMobile;
+        private String schoolClass;
     }
 }

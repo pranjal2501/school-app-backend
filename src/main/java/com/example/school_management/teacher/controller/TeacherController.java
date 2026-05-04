@@ -181,6 +181,4 @@ public class TeacherController {
         return ResponseEntity.ok(ApiResponse.ok("Fee summary fetched",
                 teacherService.getFeeSummary(notificationId)));
     }
-
-
 }

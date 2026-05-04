@@ -70,14 +70,21 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     public ApiResponse<String> sendOtp(ForgotPasswordRequestDto email) {
-        String status= forgotPasswordService.sendEmailToResetPassword(email);
-
-        return ApiResponse.ok("Check the inbox", status);
+        try {
+            String status = forgotPasswordService.sendEmailToResetPassword(email);
+            return ApiResponse.ok("Success", status);
+        } catch (Exception e) {
+            // Throwing it allows your GlobalExceptionHandler to format it as success: false
+            throw e;
+        }
     }
 
     public ApiResponse<String> verfiyTeacherOtp(VerifyOtpAndPasswordRequestDto dto) {
-        String status= forgotPasswordService.verifyOtp(dto);
-
-        return ApiResponse.ok("Status is :", status);
+        try {
+            String status = forgotPasswordService.verifyOtp(dto);
+            return ApiResponse.ok("Success", status);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 }

@@ -9,14 +9,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/admin/syllabus")
+@RequestMapping("/api/v1/syllabus")
 @RequiredArgsConstructor
 public class SyllabusController {
 
     private final SyllabusService syllabusService;
 
     @GetMapping("/standard/{standard}/subject/{subjectId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','PARENT','TEACHER')")
     public ResponseEntity<ApiResponse<SyllabusPayload>> getSyllabus(
             @PathVariable String standard,
             @PathVariable Long subjectId) {
@@ -28,7 +28,7 @@ public class SyllabusController {
         }
     }
 
-    @PutMapping("/standard/{standard}/subject/{subjectId}")
+    @PutMapping("/admin/standard/{standard}/subject/{subjectId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> editSyllabus(
             @PathVariable String standard,
@@ -39,6 +39,17 @@ public class SyllabusController {
             return ResponseEntity.ok(ApiResponse.ok("Syllabus successfully saved/updated.", null));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Failed to update syllabus: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/teacher/allocation/{allocationId}")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<SyllabusPayload>> getSyllabusByAllocation(@PathVariable Long allocationId) {
+        try {
+            SyllabusPayload payload = syllabusService.getSyllabusByAllocation(allocationId);
+            return ResponseEntity.ok(ApiResponse.ok("Syllabus fetched successfully", payload));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to fetch syllabus: " + e.getMessage()));
         }
     }
 }

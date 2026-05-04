@@ -85,4 +85,26 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
             @Param("teacherId") Long teacherId,
             @Param("parentMobile") String parentMobile
     );
+
+    // Used by Inbox: Gets the student's name based on the parent's phone number and the specific class teacher
+    @Query("SELECT s FROM Student s WHERE s.parent.mobilePrimary = :parentMobile AND s.assignedClass.classTeacher.id = :teacherId")
+    List<Student> findStudentsByParentMobileAndClassTeacherId(
+            @Param("parentMobile") String parentMobile,
+            @Param("teacherId") Long teacherId);
+
+    // Used by Search Sheet: Finds students in this specific teacher's class by First or Last name
+    @Query("SELECT s FROM Student s WHERE s.assignedClass.classTeacher.id = :teacherId AND " +
+            "(LOWER(s.firstName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(s.lastName) LIKE LOWER(CONCAT('%', :query, '%')))")
+    List<Student> searchByTeacherAndName(
+            @Param("teacherId") Long teacherId,
+            @Param("query") String query);
+
+    @Query("SELECT COUNT(s) > 0 FROM Student s " +
+            "JOIN s.parent p " +
+            "WHERE s.assignedClass.id = :classId " +
+            "AND (p.email = :identifier OR p.mobilePrimary = :identifier)")
+    boolean existsByParentIdentifierAndClassId(
+            @Param("identifier") String identifier,
+            @Param("classId") Long classId
+    );
 }

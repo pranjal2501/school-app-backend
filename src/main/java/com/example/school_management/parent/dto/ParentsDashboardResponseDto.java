@@ -20,6 +20,10 @@ public class ParentsDashboardResponseDto {
     private String studentName;
     private String schoolClass;
 
+    private Long classTeacherId;
+    private String classTeacherName;
+    private String parentMobile;
+
     private Boolean isClassAllocated;
     private Boolean isProfileComplete;
 
