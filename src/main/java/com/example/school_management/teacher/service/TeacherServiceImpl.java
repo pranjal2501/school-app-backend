@@ -294,8 +294,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     public NotificationResponseDto notifyParentsOfClass(long classId, CreateNotificationRequestDto notification) throws AccessDeniedException{
 
-        if(!roleVerifier.hasRole(Role.TEACHER))
-        {
+        if(!roleVerifier.hasRole(Role.TEACHER)){
             throw new AccessDeniedException("Only teachers can access this service");
         }
         return notifyParents(classId, notification);

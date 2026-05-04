@@ -52,6 +52,23 @@ public class SyllabusProgressController {
         return ResponseEntity.ok(ApiResponse.ok("Progress fetched successfully", response));
     }
 
+    @GetMapping("/admin/class/{className}/subject/{subjectId}/progress")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<SyllabusProgressDtos.ProgressResponse>> getProgressForAdminByClassAndSubject(
+            @PathVariable String className,
+            @PathVariable Long subjectId) {
+
+        // 1. Get the allocation ID dynamically
+        Long allocationId = syllabusProgressService.getAllocationIdByClassAndSubject(className, subjectId);
+
+        // 2. Reuse your exact same service logic
+        var progressMap = syllabusProgressService.getProgressMap(allocationId);
+
+        // 3. Return the exact same DTO
+        var response = new SyllabusProgressDtos.ProgressResponse(allocationId, progressMap);
+        return ResponseEntity.ok(ApiResponse.ok("Progress fetched successfully", response));
+    }
+
     @GetMapping("/parent/allocation/{allocationId}/progress")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<ApiResponse<SyllabusProgressDtos.ProgressResponse>> getProgressForParent(@PathVariable Long allocationId) {

@@ -87,9 +87,7 @@ public class TimetableService {
 
             List<ClassSubjectTeacher> allocations = classSubjectTeacherRepository
                     .findBySchoolClassIdWithDetails(schoolClass.getId());
-
             if (allocations.isEmpty()) continue;
-
             int totalSlots = workingDays.size() * totalPeriodsPerDay;
             int totalSubjectHours = allocations.stream()
                     .mapToInt(a -> a.getSubject().getWeeklyHours())

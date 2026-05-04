@@ -33,4 +33,10 @@ public interface ClassSubjectTeacherRepository extends JpaRepository<ClassSubjec
     @Query("SELECT DISTINCT cst.subject FROM ClassSubjectTeacher cst " +
             "WHERE cst.schoolClass.academicStructure.standard = :standard")
     List<Subject> findDistinctSubjectsByStandard(@Param("standard") String standard);
+
+    @Query("SELECT cst.id FROM ClassSubjectTeacher cst WHERE cst.schoolClass.className = :className AND cst.subject.id = :subjectId")
+    Optional<Long> findAllocationIdByClassNameAndSubjectId(
+            @Param("className") String className,
+            @Param("subjectId") Long subjectId
+    );
 }
