@@ -30,4 +30,6 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     List<Complaint> findByReportedByAdminId(Long id);
 
     List<Complaint> findByReportedByParentId(Long id);
+
+    List<Complaint> findByIsVisibleToAdminTrue();
 }

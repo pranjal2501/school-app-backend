@@ -29,4 +29,8 @@ public interface EmailService {
     void sendPasswordEmail(@Email(message = ValidationMessages.EMAIL_INVALID) @Size(max = 100) String email, String password);
 
     void sendParentApprovalRequestEmail(@Email(message = ValidationMessages.EMAIL_INVALID) @Size(max = 100) String email, @NotBlank(message = ValidationMessages.FATHER_FIRST_NAME_REQUIRED) @Size(max = 50) String fatherFirstName, String s, String s1, @NotNull String standard, String regId);
+
+    void sendLCApproved(String toEmail, String parentName, String studentName, byte[] imageBytes);
+
+    void sendLCRejected(String toEmail, String parentName, String studentName, String remarks);
 }

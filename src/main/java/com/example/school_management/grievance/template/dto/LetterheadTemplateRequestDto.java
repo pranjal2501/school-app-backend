@@ -1,7 +1,8 @@
-package com.example.school_management.grievance.bonafide.dto;
-//Admin creates/updates the template
+package com.example.school_management.grievance.template.dto;
 
+import com.example.school_management.common.enums.LetterheadType;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -11,7 +12,10 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BonafideTemplateRequest {
+public class LetterheadTemplateRequestDto {
+
+    @NotNull(message = "Letterhead type is required")
+    private LetterheadType type;
 
     @NotBlank(message = "Letterhead URL is required")
     @Size(max = 500)
@@ -28,4 +32,6 @@ public class BonafideTemplateRequest {
 
     private Integer textXPosition;
     private Integer textYPosition;
+
+    private boolean isActive = true;
 }

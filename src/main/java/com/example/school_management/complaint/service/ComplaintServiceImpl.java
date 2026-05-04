@@ -150,6 +150,19 @@ public class ComplaintServiceImpl implements ComplaintService {
         return savedComplaints.stream().map(complaintMapper::toResponseDto).toList();
     }
 
+    @Override
+    public List<ComplaintResponseDto> getRecieverAdminComplaint() {
+
+        List<Complaint> complaintList = complaintRepository.findByIsVisibleToAdminTrue();
+        List<ComplaintResponseDto> responseDtos= new ArrayList<>();
+        for(Complaint result : complaintList)
+        {
+            responseDtos.add(complaintMapper.toResponseDto(result));
+        }
+
+        return responseDtos;
+    }
+
 
     // ── 2. VIEW COMPLAINTS RAISED BY ME ──────────────────────────────────────
     @Override

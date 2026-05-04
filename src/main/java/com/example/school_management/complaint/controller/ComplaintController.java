@@ -94,4 +94,12 @@ public class ComplaintController {
 
         return ResponseEntity.ok(ApiResponse.ok("Complaints registered successfully", response));
     }
+
+    @GetMapping("/admin/get-complaints")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<ComplaintResponseDto>>> recieverAdminComplaint(){
+
+        List<ComplaintResponseDto> response= complaintService.getRecieverAdminComplaint();
+        return ResponseEntity.ok(ApiResponse.ok("Complaints Fetched Succesfully", response));
+    }
 }

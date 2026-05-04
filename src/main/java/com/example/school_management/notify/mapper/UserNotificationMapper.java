@@ -1,11 +1,17 @@
 package com.example.school_management.notify.mapper;
 
+import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.enums.StudentAdmissionStatus;
 import com.example.school_management.common.enums.notify.NotificationType;
 import com.example.school_management.notify.dto.*;
 import com.example.school_management.notify.entity.Notification;
 import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.parent.entity.Parent;
+import com.example.school_management.parent.repository.ParentRepository;
+import com.example.school_management.specialEventFees.entity.SpecialEventFee;
+import com.example.school_management.specialEventFees.entity.SpecialEventFeePayment;
+import com.example.school_management.specialEventFees.repository.SpecialEventFeePaymentRepository;
+import com.example.school_management.specialEventFees.repository.SpecialEventFeeRepository;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +25,8 @@ import java.util.Optional;
 public class UserNotificationMapper {
 
     private final StudentRepository studentRepository;
+    private final SpecialEventFeeRepository specialEventFeeRepository;
+    private final SpecialEventFeePaymentRepository specialEventFeePaymentRepository;
 
 //    public GeneralParentNotificationResponseDto toParentResponseDto(UserNotification un) {
 //        GeneralParentNotificationResponseDto dto = new GeneralParentNotificationResponseDto();
@@ -71,7 +79,22 @@ public class UserNotificationMapper {
             return responseDto;
 
         }
+
         else if (n.getNotificationType() == NotificationType.SPECIAL_EVENT) {
+
+            Parent parent = un.getParent();
+
+            SpecialEventFee specialEvent = specialEventFeeRepository
+                    .findByNotification(n)
+                    .orElse(null);
+
+            SpecialEventFeePayment payment = null;
+            if (specialEvent != null && parent != null) {
+                payment = specialEventFeePaymentRepository
+                        .findBySpecialEventFeeAndParent(specialEvent, parent)
+                        .orElse(null);
+            }
+
             return SpecialEventNotificationResponseDto.builder()
                     .id(un.getId())
                     .title(n.getTitle())
@@ -79,12 +102,11 @@ public class UserNotificationMapper {
                     .description(n.getDescription())
                     .notificationType(n.getNotificationType())
                     .eventDateTime(n.getEventDateTime())
-                    .requiresFee(n.getRequiresFee())
-                    .feeAmount(un.getFeeAmount())
-                    .feeType(n.getFeeType())
-                    .feePaid(un.getFeePaid())
-                    .feePaidAt(un.getFeePaidAt())
-                    .paymentDeadline(n.getPaymentDeadline())
+                    .feeAmount(specialEvent != null ? specialEvent.getFeeAmount() : null)
+                    .feeType(specialEvent != null ? specialEvent.getFeeType() : null)
+                    .feePaid(payment != null ? payment.getFeePaid() : false)
+                    .feePaidAt(payment != null ? payment.getFeePaidAt() : null)
+                    .paymentDeadline(specialEvent != null ? specialEvent.getPaymentDeadline() : null)
                     .isRead(un.getIsRead())
                     .readAt(un.getReadAt())
                     .build();

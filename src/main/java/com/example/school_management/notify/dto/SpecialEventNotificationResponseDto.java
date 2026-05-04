@@ -20,7 +20,6 @@ public class SpecialEventNotificationResponseDto implements ParentNotificationRe
     private String description;
     private NotificationType notificationType= NotificationType.SPECIAL_EVENT;
     private LocalDateTime eventDateTime;
-    private Boolean requiresFee= Boolean.TRUE;
     private Double feeAmount;
     private FeeType feeType = FeeType.ACTIVITY_FEES;
     private Boolean feePaid;

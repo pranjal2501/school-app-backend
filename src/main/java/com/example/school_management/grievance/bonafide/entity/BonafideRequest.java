@@ -1,6 +1,6 @@
 package com.example.school_management.grievance.bonafide.entity;
 
-import com.example.school_management.common.enums.BonafideStatus;
+import com.example.school_management.common.enums.GrievanceStatus;
 import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.student.entity.Student;
 import jakarta.persistence.*;
@@ -32,7 +32,7 @@ public class BonafideRequest {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private BonafideStatus status = BonafideStatus.PENDING;
+    private GrievanceStatus status = GrievanceStatus.PENDING;
 
     @Column(name = "purpose", length = 255)
     private String purpose;

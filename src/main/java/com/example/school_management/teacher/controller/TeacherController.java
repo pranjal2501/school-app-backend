@@ -165,20 +165,4 @@ public class TeacherController {
         List<TeacherClassDropdownDto> response = teacherService.getMyAllocations();
         return ResponseEntity.ok(ApiResponse.ok("Teacher allocations fetched successfully", response));
     }
-
-    @PatchMapping("/notifications/{userNotificationId}/mark-paid")
-    @PreAuthorize("hasRole('TEACHER')")
-    public ResponseEntity<ApiResponse<String>> markFeePaid(
-            @PathVariable Long userNotificationId) {
-        teacherService.markFeePaid(userNotificationId);
-        return ResponseEntity.ok(ApiResponse.ok("Fee marked as paid", null));
-    }
-
-    @GetMapping("/notifications/{notificationId}/fee-summary")
-    @PreAuthorize("hasRole('TEACHER')")
-    public ResponseEntity<ApiResponse<List<FeeSummaryDto>>> getFeeSummary(
-            @PathVariable Long notificationId) {
-        return ResponseEntity.ok(ApiResponse.ok("Fee summary fetched",
-                teacherService.getFeeSummary(notificationId)));
-    }
 }

@@ -107,4 +107,6 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
             @Param("identifier") String identifier,
             @Param("classId") Long classId
     );
+
+    List<Student> findByAssignedClassId(Long id);
 }
