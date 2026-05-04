@@ -80,7 +80,8 @@ public class TimeTableController {
                     .body(excel);
 
         } catch (IOException e) {
-            log.error("Failed to download timetable for class: {}. Error: {}", classId, e.getMessage());
+            log.error("Failed to download timetable " +
+                    "for class: {}. Error: {}", classId, e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
     }

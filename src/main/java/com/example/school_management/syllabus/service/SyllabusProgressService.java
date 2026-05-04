@@ -3,6 +3,7 @@ package com.example.school_management.syllabus.service;
 import com.example.school_management.academics.entity.ClassSubjectTeacher;
 import com.example.school_management.academics.repository.ClassSubjectTeacherRepository;
 import com.example.school_management.common.RoleVerifier;
+import com.example.school_management.common.exception.ResourceNotFoundException;
 import com.example.school_management.student.repository.StudentRepository;
 import com.example.school_management.syllabus.entity.SyllabusProgress;
 import com.example.school_management.syllabus.repository.SyllabusProgressRepository;
@@ -38,6 +39,11 @@ public class SyllabusProgressService {
         return progressList.stream()
                 .filter(SyllabusProgress::isCompleted)
                 .collect(Collectors.toMap(SyllabusProgress::getNodePath, SyllabusProgress::isCompleted));
+    }
+
+    public Long getAllocationIdByClassAndSubject(String className, Long subjectId) {
+        return allocationRepository.findAllocationIdByClassNameAndSubjectId(className, subjectId)
+                .orElseThrow(() -> new ResourceNotFoundException("No teacher/subject allocation found for Class: " + className + " and Subject ID: " + subjectId));
     }
 
     // ─── PARENT FETCH PROGRESS ─────────────────────────────────────────────────
