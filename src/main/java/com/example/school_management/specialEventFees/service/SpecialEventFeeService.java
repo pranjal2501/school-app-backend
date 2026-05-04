@@ -15,6 +15,7 @@ import com.example.school_management.schoolClass.repo.SchoolClassRepository;
 import com.example.school_management.specialEventFees.dto.CreateSpecialEventFeeRequestDto;
 import com.example.school_management.specialEventFees.dto.SpecialEventFeePaymentResponseDto;
 import com.example.school_management.specialEventFees.dto.SpecialEventFeeResponseDto;
+import com.example.school_management.specialEventFees.dto.SpecialEventParentResponseDto;
 import com.example.school_management.specialEventFees.entity.SpecialEventFee;
 import com.example.school_management.specialEventFees.entity.SpecialEventFeePayment;
 import com.example.school_management.specialEventFees.mapper.SpecialEventFeeMapper;
@@ -28,6 +29,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.xmlbeans.impl.xb.xsdschema.Attribute;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -198,5 +200,19 @@ public class SpecialEventFeeService {
 
         return "Fee marked as paid for: " + payment.getStudent().getFirstName()
                 + " " + payment.getStudent().getLastName();
+    }
+
+    public List<SpecialEventParentResponseDto> getAllEventsForChild(String RegId) {
+
+        Student stud= studentRepository.findByRegId(RegId).get();
+
+        List<SpecialEventFeePayment> eventList= paymentRepository.findByStudent(stud);
+
+        List<SpecialEventParentResponseDto> responseDtos= new ArrayList<>();
+        for(SpecialEventFeePayment fee : eventList)
+        {
+            responseDtos.add(mapper.toParentResponseDto(fee));
+        }
+        return responseDtos;
     }
 }

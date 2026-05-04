@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.specialEventFees.entity.SpecialEventFee;
 import com.example.school_management.specialEventFees.entity.SpecialEventFeePayment;
+import com.example.school_management.student.entity.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SpecialEventFeePaymentRepository extends JpaRepository<SpecialEventFeePayment, Long> {
@@ -16,4 +17,6 @@ public interface SpecialEventFeePaymentRepository extends JpaRepository<SpecialE
     SpecialEventFeePayment findByParent(Parent parent);
 
     Optional<SpecialEventFeePayment> findBySpecialEventFeeAndParent(SpecialEventFee specialEvent, Parent parent);
+
+    List<SpecialEventFeePayment> findByStudent(Student stud);
 }

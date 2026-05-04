@@ -3,7 +3,10 @@ package com.example.school_management.specialEventFees.repository;
 import java.util.List;
 
 import com.example.school_management.notify.entity.Notification;
+import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.specialEventFees.entity.SpecialEventFee;
+import com.example.school_management.specialEventFees.entity.SpecialEventFeePayment;
+import com.example.school_management.student.entity.Student;
 import com.example.school_management.teacher.entity.Teacher;
 import org.springframework.data.jpa.repository.JpaRepository;
 

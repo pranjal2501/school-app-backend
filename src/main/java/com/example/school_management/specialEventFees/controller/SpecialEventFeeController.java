@@ -4,6 +4,7 @@ import com.example.school_management.common.ApiResponse;
 import com.example.school_management.specialEventFees.dto.CreateSpecialEventFeeRequestDto;
 import com.example.school_management.specialEventFees.dto.SpecialEventFeePaymentResponseDto;
 import com.example.school_management.specialEventFees.dto.SpecialEventFeeResponseDto;
+import com.example.school_management.specialEventFees.dto.SpecialEventParentResponseDto;
 import com.example.school_management.specialEventFees.service.SpecialEventFeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -49,5 +50,15 @@ public class SpecialEventFeeController {
             @PathVariable Long paymentId) {
         return ResponseEntity.ok(ApiResponse.ok("Fee marked as paid",
                 feeService.markFeePaid(paymentId)));
+    }
+
+    @GetMapping("/all-special-event")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<ApiResponse<List<SpecialEventParentResponseDto>>> getAllEventForClass(
+            @RequestParam String RegId
+    )
+    {
+        List<SpecialEventParentResponseDto> response= feeService.getAllEventsForChild(RegId);
+        return ResponseEntity.ok(ApiResponse.ok("Special Events fetched", response));
     }
 }
