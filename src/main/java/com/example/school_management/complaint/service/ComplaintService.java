@@ -16,4 +16,6 @@ public interface ComplaintService {
     List<ComplaintResponseDto> getComplaintsByClassId(Long classId);
 
     List<ComplaintResponseDto> raiseComplaintForEmployee(@Valid RaiseComplaintForEmployeeRequestDto request);
+
+    List<ComplaintResponseDto> getRecieverAdminComplaint();
 }
