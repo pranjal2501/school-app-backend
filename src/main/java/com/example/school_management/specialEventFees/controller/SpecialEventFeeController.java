@@ -16,7 +16,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/special-event-fees")
 @RequiredArgsConstructor
-public class SpecialEventFeeController {
+public class
+SpecialEventFeeController {
 
     private final SpecialEventFeeService feeService;
 
@@ -50,4 +51,6 @@ public class SpecialEventFeeController {
         return ResponseEntity.ok(ApiResponse.ok("Fee marked as paid",
                 feeService.markFeePaid(paymentId)));
     }
+
+
 }
