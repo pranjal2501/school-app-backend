@@ -1,15 +1,19 @@
 package com.example.school_management.grievance.bonafide.service;
 
 import com.example.school_management.common.RoleVerifier;
-import com.example.school_management.common.enums.BonafideStatus;
+import com.example.school_management.common.enums.GrievanceStatus;
+import com.example.school_management.common.enums.LetterheadType;
 import com.example.school_management.common.enums.Role;
 import com.example.school_management.common.enums.notify.AudienceType;
 import com.example.school_management.common.enums.notify.NotificationType;
 import com.example.school_management.grievance.bonafide.dto.*;
 import com.example.school_management.grievance.bonafide.entity.BonafideRequest;
-import com.example.school_management.grievance.bonafide.entity.BonafideTemplate;
 import com.example.school_management.grievance.bonafide.mapper.BonafideMapper;
 import com.example.school_management.grievance.bonafide.repository.BonafideRequestRepository;
+import com.example.school_management.grievance.template.dto.PlaceholderContext;
+import com.example.school_management.grievance.template.entity.LetterheadTemplate;
+import com.example.school_management.grievance.template.service.LetterheadTemplateService;
+import com.example.school_management.grievance.template.util.PlaceholderContextBuilder;
 import com.example.school_management.mail.service.EmailService;
 import com.example.school_management.notify.entity.Notification;
 import com.example.school_management.notify.entity.UserNotification;
@@ -39,11 +43,12 @@ public class BonafideRequestService {
     private final UserNotificationRepository userNotificationRepository;
     private final NotificationRepository notificationRepository;
     private final ParentRepository parentRepository;
-    private final BonafideTemplateService templateService;
+    private final LetterheadTemplateService templateService;
     private final BonafideImageService imageService;
     private final EmailService emailService;
     private final BonafideMapper bonafideMapper;
     private final RoleVerifier roleVerifier;
+    private final PlaceholderContextBuilder contextBuilder;
 
     // ── PARENT ACTIONS ─────────────────────────────────────────────────────────
 
@@ -64,7 +69,7 @@ public class BonafideRequestService {
             throw new SecurityException("You are not authorized to request bonafide for this student");
         }
 
-        if (requestRepository.existsByStudentIdAndStatus(student.getId(), BonafideStatus.PENDING)) {
+        if (requestRepository.existsByStudentIdAndStatus(student.getId(), GrievanceStatus.PENDING)) {
             throw new IllegalStateException(
                     "A bonafide request for this student is already pending approval");
         }
@@ -73,7 +78,7 @@ public class BonafideRequestService {
                 .student(student)
                 .requestedBy(parent)
                 .purpose(dto.getPurpose())
-                .status(BonafideStatus.PENDING)
+                .status(GrievanceStatus.PENDING)
                 .build();
 
         return bonafideMapper.toResponse(requestRepository.save(request));
@@ -100,7 +105,7 @@ public class BonafideRequestService {
         {
             throw new AccessDeniedException("Only admin can access");
         }
-        return requestRepository.findByStatus(BonafideStatus.PENDING)
+        return requestRepository.findByStatus(GrievanceStatus.PENDING)
                 .stream()
                 .map(bonafideMapper::toResponse)
                 .collect(Collectors.toList());
@@ -130,19 +135,20 @@ public class BonafideRequestService {
         }
 
         BonafideRequest request = getPendingRequestOrThrow(requestId);
-        BonafideTemplate template = templateService.getActiveTemplateEntity();
+        LetterheadTemplate template = templateService.getByTypeEntity(LetterheadType.BONAFIDE_CERTIFICATE);
 
         Student student = request.getStudent();
         validateStudentData(student);
         Parent parent = request.getRequestedBy();
 
-        byte[] imageBytes = imageService.generate(template, student);
+        PlaceholderContext context = contextBuilder.forBonafide(student, request.getPurpose());
+        byte[] imageBytes = imageService.generate(template, context);
 
         String studentName = student.getFirstName() + " " + student.getLastName();
         String parentName = parent.getFatherFirstName() + " " + parent.getFatherLastName();
         emailService.sendBonafideApproved(parent.getEmail(), parentName, studentName, imageBytes);
 
-        request.setStatus(BonafideStatus.APPROVED);
+        request.setStatus(GrievanceStatus.APPROVED);
         request.setResolvedAt(LocalDateTime.now());
 
         BonafideRequest saved = requestRepository.save(request);
@@ -161,7 +167,7 @@ public class BonafideRequestService {
         }
         BonafideRequest request = getPendingRequestOrThrow(requestId);
 
-        request.setStatus(BonafideStatus.REJECTED);
+        request.setStatus(GrievanceStatus.REJECTED);
         request.setRemarks(dto.getRemarks());
         request.setResolvedAt(LocalDateTime.now());
 
@@ -179,7 +185,7 @@ public class BonafideRequestService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Bonafide request not found with id: " + requestId));
 
-        if (request.getStatus() != BonafideStatus.PENDING) {
+        if (request.getStatus() != GrievanceStatus.PENDING) {
             throw new IllegalStateException(
                     "Request is already " + request.getStatus().name().toLowerCase()
                             + " and cannot be modified");

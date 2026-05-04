@@ -1,8 +1,8 @@
 package com.example.school_management.grievance.bonafide.service;
 
-import com.example.school_management.grievance.bonafide.entity.BonafideTemplate;
-import com.example.school_management.grievance.bonafide.util.BonafidePlaceholderResolver;
-import com.example.school_management.student.entity.Student;
+import com.example.school_management.grievance.template.dto.PlaceholderContext;
+import com.example.school_management.grievance.template.entity.LetterheadTemplate;
+import com.example.school_management.grievance.template.util.PlaceholderResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,10 +20,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BonafideImageService {
 
-    private final BonafidePlaceholderResolver placeholderResolver;
+    private final PlaceholderResolver placeholderResolver;
 
-    public byte[] generate(BonafideTemplate template, Student student) {
-        String resolvedText = placeholderResolver.resolve(template.getContent(), student);
+    public byte[] generate(LetterheadTemplate template, PlaceholderContext context) {
+        String resolvedText = placeholderResolver.resolve(template.getContent(), context);
         BufferedImage letterhead = loadImage(template.getLetterheadUrl());
         BufferedImage finalImage = overlayText(letterhead, resolvedText, template);
         return toBytes(finalImage);
@@ -37,7 +37,7 @@ public class BonafideImageService {
         }
     }
 
-    private BufferedImage overlayText(BufferedImage base, String text, BonafideTemplate template) {
+    private BufferedImage overlayText(BufferedImage base, String text, LetterheadTemplate template) {
         BufferedImage output = new BufferedImage(
                 base.getWidth(), base.getHeight(), BufferedImage.TYPE_INT_RGB);
 

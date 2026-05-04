@@ -3,7 +3,6 @@ package com.example.school_management.grievance.bonafide.controller;
 import com.example.school_management.common.ApiResponse;
 import com.example.school_management.grievance.bonafide.dto.*;
 import com.example.school_management.grievance.bonafide.service.BonafideRequestService;
-import com.example.school_management.grievance.bonafide.service.BonafideTemplateService;
 import com.example.school_management.parent.repository.ParentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -23,32 +22,7 @@ import java.util.List;
 public class BonafideController {
 
     private final BonafideRequestService requestService;
-    private final BonafideTemplateService templateService;
     private final ParentRepository parentRepository;
-
-    // ── ADMIN: Template Management ─────────────────────────────────────────────
-
-    @PostMapping("/admin/template")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<BonafideTemplateResponse>> createTemplate(
-            @Valid @RequestBody BonafideTemplateRequest request) throws AccessDeniedException {
-
-        return ResponseEntity.ok(ApiResponse.ok("Template created successfully", templateService.createTemplate(request)));
-    }
-
-    @PutMapping("/admin/template")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<BonafideTemplateResponse>> updateTemplate(
-            @Valid @RequestBody BonafideTemplateRequest request) throws AccessDeniedException {
-
-        return ResponseEntity.ok(ApiResponse.ok("Template updated successfully",templateService.updateActiveTemplate(request)));
-    }
-
-    @GetMapping("/admin/template")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<BonafideTemplateResponse>> getActiveTemplate() throws AccessDeniedException {
-        return ResponseEntity.ok(ApiResponse.ok("Active templates fetched ",templateService.getActiveTemplate()));
-    }
 
     // ── ADMIN: Request Management ──────────────────────────────────────────────
 

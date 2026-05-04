@@ -1,7 +1,7 @@
 package com.example.school_management.grievance.bonafide.dto;
 
 
-import com.example.school_management.common.enums.BonafideStatus;
+import com.example.school_management.common.enums.GrievanceStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -20,7 +20,7 @@ public class BonafideRequestResponse {
     private String studentClass;
     private Long requestedById;
     private String requestedByName;
-    private BonafideStatus status;
+    private GrievanceStatus status;
     private String purpose;
     private String remarks;
     private LocalDateTime requestedAt;

@@ -6,6 +6,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -375,6 +376,91 @@ public class EmailServiceImpl implements EmailService {
                 + "<p style=\"color: #d9534f; font-size: 14px; font-weight: bold;\">⚠ This request will expire in 48 hours. If you do not take action, the request will be automatically cancelled.</p>"
 
                 + "<p style=\"color: #555; font-size: 14px;\">If you did not expect this request or believe this is an error, please contact the school administration immediately.</p>"
+
+                + "<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\" />"
+                + "<p style=\"color: #555; font-size: 14px;\">Best Regards,<br><strong style=\"color: #2c3e50;\">School Administration Team</strong></p>"
+                + "</div>";
+    }
+
+    @Async
+    @Override
+    public void sendLCApproved(String toEmail, String parentName,
+                               String studentName, byte[] imageBytes) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(senderEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("Leaving Certificate Approved – " + studentName);
+            helper.setText(buildLCApprovedTemplate(parentName, studentName), true);
+            helper.addAttachment(
+                    "LC_" + studentName.replace(" ", "_") + ".png",
+                    () -> new java.io.ByteArrayInputStream(imageBytes),
+                    "image/png"
+            );
+
+            mailSender.send(message);
+            log.info("LC approval email sent to: {}", toEmail);
+
+        } catch (MessagingException e) {
+            log.error("Failed to send LC approval email to: {}. Error: {}", toEmail, e.getMessage());
+        }
+    }
+
+    @Async
+    @Override
+    public void sendLCRejected(String toEmail, String parentName,
+                               String studentName, String remarks) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(senderEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("Leaving Certificate Request Update – " + studentName);
+            helper.setText(buildLCRejectedTemplate(parentName, studentName, remarks), true);
+
+            mailSender.send(message);
+            log.info("LC rejection email sent to: {}", toEmail);
+
+        } catch (MessagingException e) {
+            log.error("Failed to send LC rejection email to: {}. Error: {}", toEmail, e.getMessage());
+        }
+    }
+
+    private String buildLCApprovedTemplate(String parentName, String studentName) {
+        return "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;\">"
+                + "<h2 style=\"color: #2c3e50; text-align: center;\">Leaving Certificate Approved ✓</h2>"
+                + "<p style=\"color: #333; font-size: 16px;\">Dear <strong>" + parentName + "</strong>,</p>"
+                + "<p style=\"color: #333; font-size: 16px; line-height: 1.5;\">We would like to inform you that the Leaving Certificate request for <strong>" + studentName + "</strong> has been <span style=\"color: #27ae60; font-weight: bold;\">approved</span> by the school administration.</p>"
+
+                // Info box
+                + "<div style=\"background-color: #f0fff4; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #27ae60;\">"
+                + "<p style=\"margin: 5px 0; font-size: 16px;\">📎 The Leaving Certificate is attached to this email as an <strong>image</strong>.</p>"
+                + "<p style=\"margin: 5px 0; font-size: 14px; color: #555;\">Please download and keep it safe for your records.</p>"
+                + "</div>"
+
+                + "<p style=\"color: #333; font-size: 15px; line-height: 1.5;\">We wish <strong>" + studentName + "</strong> all the very best in their future endeavours. It has been a pleasure having them as part of our school family.</p>"
+
+                + "<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\" />"
+                + "<p style=\"color: #555; font-size: 14px;\">Best Regards,<br><strong style=\"color: #2c3e50;\">School Administration Team</strong></p>"
+                + "</div>";
+    }
+
+    private String buildLCRejectedTemplate(String parentName, String studentName, String remarks) {
+        return "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;\">"
+                + "<h2 style=\"color: #2c3e50; text-align: center;\">Leaving Certificate Request Update</h2>"
+                + "<p style=\"color: #333; font-size: 16px;\">Dear <strong>" + parentName + "</strong>,</p>"
+                + "<p style=\"color: #333; font-size: 16px; line-height: 1.5;\">We regret to inform you that the Leaving Certificate request for <strong>" + studentName + "</strong> has been <span style=\"color: #e74c3c; font-weight: bold;\">rejected</span> by the school administration.</p>"
+
+                // Reason box
+                + "<div style=\"background-color: #fff5f5; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #e74c3c;\">"
+                + "<p style=\"margin: 5px 0; font-size: 16px;\"><strong>Reason:</strong></p>"
+                + "<p style=\"margin: 5px 0; font-size: 16px; color: #555;\">" + remarks + "</p>"
+                + "</div>"
+
+                + "<p style=\"color: #333; font-size: 15px;\">Please visit the school administration office or submit a new request after addressing the above reason. We are happy to assist you further.</p>"
 
                 + "<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\" />"
                 + "<p style=\"color: #555; font-size: 14px;\">Best Regards,<br><strong style=\"color: #2c3e50;\">School Administration Team</strong></p>"
