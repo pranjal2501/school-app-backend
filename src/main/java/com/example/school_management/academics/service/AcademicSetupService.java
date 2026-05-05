@@ -15,10 +15,18 @@ import com.example.school_management.academics.mapper.AcademicMapper;
 import com.example.school_management.common.RoleVerifier;
 import com.example.school_management.common.enums.Role;
 import com.example.school_management.common.exception.ResourceNotFoundException;
+import com.example.school_management.exam.entity.EvaluationComponent;
+import com.example.school_management.exam.entity.ExamType;
+import com.example.school_management.exam.entity.MarkingScheme;
+import com.example.school_management.exam.entity.MarkingSchemeDetail;
+import com.example.school_management.exam.repository.EvaluationComponentRepository;
+import com.example.school_management.exam.repository.ExamTypeRepository;
 import com.example.school_management.schoolClass.dto.ClassResponseDto;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.schoolClass.mapper.ClassMapper;
 import com.example.school_management.schoolClass.repo.SchoolClassRepository;
+import com.example.school_management.subject.dto.BulkSubjectCreateRequestDto;
+import com.example.school_management.subject.dto.newImpl.SubjectTreeResponseDto;
 import com.example.school_management.subject.entity.Subject;
 import com.example.school_management.subject.repository.SubjectRepository;
 import com.example.school_management.teacher.dto.response.TeacherResponseDto;
@@ -32,6 +40,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +58,8 @@ public class AcademicSetupService {
     private final ClassMapper classMapper;
     private final RoleVerifier roleVerifier;
     private final AcademicMapper academicMapper;
+    private final ExamTypeRepository examTypeRepository;
+    private final EvaluationComponentRepository componentRepository;
 
     private void verifyAndGetAdminRecord() {
         if (!roleVerifier.hasRole(Role.ADMIN)) {
@@ -107,24 +120,98 @@ public class AcademicSetupService {
     }
 
     @Transactional(readOnly = true)
-    public List<SubjectWithTeachersResponseDto> getAllocationsByClass(Long classId) {
+    public List<SubjectTreeResponseDto> getAllocationsByClass(Long classId) {
         verifyAndGetAdminRecord();
 
-        if (!classRepository.existsById(classId)) {
-            throw new ResourceNotFoundException("Class", "id", classId);
+        SchoolClass schoolClass = classRepository.findById(classId)
+                .orElseThrow(() -> new ResourceNotFoundException("Class", "id", classId));
+
+        String standard = schoolClass.getAcademicStructure().getStandard();
+
+        List<ClassSubjectTeacher> classAllocations = pivotRepository.findAllBySchoolClassId(classId);
+
+        Map<Long, Teacher> subjectTeacherMap = classAllocations.stream()
+                .collect(Collectors.toMap(
+                        mapping -> mapping.getSubject().getId(),
+                        ClassSubjectTeacher::getTeacher,
+                        (existing, replacement) -> existing
+                ));
+
+        List<Subject> rootSubjects = subjectRepository.findAllByStandardAndParentSubjectIsNull(standard);
+
+        return rootSubjects.stream()
+                .map(subject -> mapToTreeDto(subject, subjectTeacherMap))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private SubjectTreeResponseDto mapToTreeDto(Subject subject, Map<Long, Teacher> subjectTeacherMap) {
+        SubjectTreeResponseDto dto = new SubjectTreeResponseDto();
+        dto.setId(subject.getId());
+        dto.setSubjectName(subject.getSubjectName());
+        dto.setSubjectCode(subject.getSubjectCode());
+        dto.setAggregateOnly(subject.isAggregateOnly());
+        dto.setTotalMarks(subject.getTotalMarks());
+
+        Teacher teacher = subjectTeacherMap.get(subject.getId());
+        if (teacher != null) {
+            dto.setAllocatedTeacher(teacherMapper.toResponseDto(teacher));
+            dto.setAllocatedTeacherId(teacher.getId());
+            dto.setAllocatedTeacherName(teacher.getFirstName()+" "+teacher.getLastName());
         }
 
-        // 1. Fetch the raw entities
-        List<ClassSubjectTeacher> allocations = pivotRepository.findAllBySchoolClassId(classId);
+        boolean hasAllocatedChildren = false;
 
-        // 2. Safely map the Entities to DTOs so Jackson doesn't trip over Lazy Proxies!
-        return allocations.stream().map(mapping ->
-                academicMapper.toSubjectWithTeachersResponseDto(
-                        mapping.getSubject(),
-                        // Wrap the single assigned teacher in a List to match your DTO structure
-                        List.of(teacherMapper.toResponseDto(mapping.getTeacher()))
-                )
-        ).toList();
+        // 1. Map Child Subjects (For Aggregates)
+        if (subject.getChildSubjects() != null && !subject.getChildSubjects().isEmpty()) {
+            List<SubjectTreeResponseDto> validChildren = subject.getChildSubjects().stream()
+                    .map(child -> mapToTreeDto(child, subjectTeacherMap))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            if (!validChildren.isEmpty()) {
+                dto.setChildSubjects(validChildren);
+                hasAllocatedChildren = true;
+            }
+        }
+
+        // If it's a Leaf Subject, and it has no teacher for this class -> PRUNE IT
+        if (!subject.isAggregateOnly() && teacher == null) {
+            return null;
+        }
+
+        // If it's an Aggregate Folder, and ALL its children were pruned -> PRUNE IT
+        if (subject.isAggregateOnly() && !hasAllocatedChildren) {
+            return null;
+        }
+        // ==========================================
+
+        // 2. Map Marking Schemes (For Leaf Nodes)
+        if (subject.getMarkingSchemes() != null && !subject.getMarkingSchemes().isEmpty()) {
+            List<SubjectTreeResponseDto.SubjectExamResponseDto> examDtos = subject.getMarkingSchemes().stream()
+                    .map(scheme -> {
+                        List<SubjectTreeResponseDto.ComponentMarkResponseDto> componentDtos = scheme.getDetails().stream()
+                                .map(detail -> SubjectTreeResponseDto.ComponentMarkResponseDto.builder()
+                                        .evaluationComponentId(detail.getEvaluationComponent().getId())
+                                        .componentName(detail.getEvaluationComponent().getName())
+                                        .maxMarks(detail.getMaxMarks())
+                                        .passingMarks(detail.getPassingMarks())
+                                        .build())
+                                .collect(Collectors.toList());
+
+                        return SubjectTreeResponseDto.SubjectExamResponseDto.builder()
+                                .markingSchemeId(scheme.getId())
+                                .examTypeId(scheme.getExamType().getId())
+                                .examTypeName(scheme.getExamType().getName())
+                                .components(componentDtos)
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+
+            dto.setExams(examDtos);
+        }
+
+        return dto;
     }
 
     @Transactional
@@ -139,6 +226,12 @@ public class AcademicSetupService {
         for (StandardTemplateRequestDto.SubjectTemplateDto dto : request.getSubjects()) {
 
             Subject subject = academicMapper.toSubjectEntity(dto, request.getStandard());
+            if (subject.isAggregateOnly()) {
+                throw new IllegalArgumentException(
+                        "Cannot allocate '" + subject.getSubjectName() + "' to a class because it is an Aggregate/Folder subject. " +
+                                "You must allocate its child subjects (e.g., History, Geography) instead."
+                );
+            }
             subject = subjectRepository.save(subject);
 
             Teacher defaultTeacher = teacherRepository.findById(dto.getDefaultTeacherId())
@@ -182,8 +275,9 @@ public class AcademicSetupService {
         pivotRepository.delete(mapping);
     }
 
+    // 🚀 We now use the new SubjectNodeDto so it can receive Exams
     @Transactional
-    public void createAndAllocateSubjectToClass(Long classId, StandardTemplateRequestDto.SubjectTemplateDto request) {
+    public void createAndAllocateSubjectToClass(Long classId, BulkSubjectCreateRequestDto.SubjectNodeDto request) {
         verifyAndGetAdminRecord();
 
         SchoolClass schoolClass = classRepository.findById(classId)
@@ -192,16 +286,61 @@ public class AcademicSetupService {
         Teacher teacher = teacherRepository.findById(request.getDefaultTeacherId())
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", request.getDefaultTeacherId()));
 
-        String inheritedStandard = schoolClass.getAcademicStructure().getStandard();
-        Subject subject = academicMapper.toSubjectEntity(request, inheritedStandard);
+        if (request.isAggregateOnly()) {
+            throw new IllegalArgumentException("Cannot create and allocate an aggregate subject directly to a class. Please create a leaf subject.");
+        }
 
+        String inheritedStandard = schoolClass.getAcademicStructure().getStandard();
+
+        // 1.  Build the Subject Entity (Without legacy marks!)
+        Subject subject = Subject.builder()
+                .subjectName(request.getSubjectName())
+                .standard(inheritedStandard)
+                .weeklyHours(request.getWeeklyHours())
+                .subjectType(request.getSubjectType())
+                .isAggregateOnly(false)
+                .childSubjects(new ArrayList<>())
+                .markingSchemes(new ArrayList<>())
+                .build();
+
+        // 2.  Build and attach the Exams / Marking Schemes
+        if (request.getExams() != null && !request.getExams().isEmpty()) {
+            for (BulkSubjectCreateRequestDto.SubjectExamConfigDto examDto : request.getExams()) {
+                ExamType examType = examTypeRepository.findById(examDto.getExamTypeId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Exam Type not found"));
+
+                MarkingScheme scheme = MarkingScheme.builder()
+                        .examType(examType)
+                        .standard(inheritedStandard)
+                        .details(new ArrayList<>())
+                        .build();
+
+                for (BulkSubjectCreateRequestDto.ComponentMarkDto compDto : examDto.getComponents()) {
+                    EvaluationComponent component = componentRepository.findById(compDto.getEvaluationComponentId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Evaluation Component not found"));
+
+                    MarkingSchemeDetail detail = MarkingSchemeDetail.builder()
+                            .evaluationComponent(component)
+                            .maxMarks(compDto.getMaxMarks())
+                            .passingMarks(compDto.getPassingMarks())
+                            .build();
+
+                    scheme.addDetail(detail);
+                }
+                subject.addMarkingScheme(scheme); // Wires up the bi-directional relationship
+            }
+        }
+
+        // Save Subject (Cascades and saves all marking schemes automatically)
         subject = subjectRepository.save(subject);
 
+        // Teacher qualification logic
         if (!teacher.getSubjects().contains(subject)) {
             teacher.getSubjects().add(subject);
             teacherRepository.save(teacher);
         }
 
+        // Allocate to Class
         ClassSubjectTeacher mapping = new ClassSubjectTeacher();
         mapping.setSchoolClass(schoolClass);
         mapping.setSubject(subject);
@@ -219,6 +358,14 @@ public class AcademicSetupService {
 
         Subject subject = subjectRepository.findById(request.getSubjectId())
                 .orElseThrow(() -> new ResourceNotFoundException("Subject", "id", request.getSubjectId()));
+        if (subject.isAggregateOnly()) {
+            throw new IllegalArgumentException("Cannot allocate an aggregate subject to a class.");
+        }
+        // NEW SECURITY CHECK: Cross-Standard Allocation Prevention
+        String classStandard = schoolClass.getAcademicStructure().getStandard();
+        if (!classStandard.equals(subject.getStandard())) {
+            throw new IllegalArgumentException("Subject '" + subject.getSubjectName() + "' belongs to Standard " + subject.getStandard() + ", but the target class is Standard " + classStandard);
+        }
 
         Teacher teacher = teacherRepository.findById(request.getTeacherId())
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", request.getTeacherId()));
