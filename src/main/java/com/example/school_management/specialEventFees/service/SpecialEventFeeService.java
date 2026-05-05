@@ -13,9 +13,7 @@ import com.example.school_management.notify.repository.UserNotificationRepositor
 import com.example.school_management.parent.entity.Parent;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.schoolClass.repo.SchoolClassRepository;
-import com.example.school_management.specialEventFees.dto.CreateSpecialEventFeeRequestDto;
-import com.example.school_management.specialEventFees.dto.SpecialEventFeePaymentResponseDto;
-import com.example.school_management.specialEventFees.dto.SpecialEventFeeResponseDto;
+import com.example.school_management.specialEventFees.dto.*;
 import com.example.school_management.specialEventFees.entity.SpecialEventFee;
 import com.example.school_management.specialEventFees.entity.SpecialEventFeePayment;
 import com.example.school_management.specialEventFees.mapper.SpecialEventFeeMapper;
@@ -29,6 +27,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.xmlbeans.impl.xb.xsdschema.Attribute;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -199,5 +198,84 @@ public class SpecialEventFeeService {
 
         return "Fee marked as paid for: " + payment.getStudent().getFirstName()
                 + " " + payment.getStudent().getLastName();
+    }
+
+    public List<SpecialEventParentResponseDto> getAllEventsForChild(String RegId) {
+
+        Student stud= studentRepository.findByRegId(RegId).get();
+
+        List<SpecialEventFeePayment> eventList= paymentRepository.findByStudent(stud);
+
+        List<SpecialEventParentResponseDto> responseDtos= new ArrayList<>();
+        for(SpecialEventFeePayment fee : eventList)
+        {
+            responseDtos.add(mapper.toParentResponseDto(fee));
+        }
+        return responseDtos;
+    }
+
+    public TeacherTotalSummaryResponse getDetailedInfoGraphics() {
+
+        String currentUser = roleVerifier.getCurrentUsername();
+        Teacher teacher = teacherRepository.findByEmail(currentUser)
+                .orElseThrow(() -> new UnauthorizedAccessException("Teacher session invalid"));
+
+        List<SpecialEventFee> fees = feeRepository.findByCreatedByTeacher(teacher);
+
+        double grandTotalExpected = 0;
+        double grandTotalCollected = 0;
+
+        List<DetailedFeeResponse> feeRequests = new ArrayList<>();
+
+        for (SpecialEventFee fee : fees) {
+
+            List<SpecialEventFeePayment> payments = paymentRepository.findBySpecialEventFee(fee);
+
+            int totalStudents = payments.size();
+            int totalPaid = (int) payments.stream()
+                    .filter(p -> Boolean.TRUE.equals(p.getFeePaid())).count();
+            int totalUnpaid = totalStudents - totalPaid;
+
+            double totalExpected = fee.getFeeAmount() * totalStudents;
+            double totalCollected = fee.getFeeAmount() * totalPaid;
+            double totalPending = fee.getFeeAmount() * totalUnpaid;
+            float collectionPercent = totalStudents > 0
+                    ? (totalPaid * 100.0f) / totalStudents : 0f;
+
+            grandTotalExpected += totalExpected;
+            grandTotalCollected += totalCollected;
+
+            List<SpecialEventFeePaymentResponseDto> summary = payments.stream()
+                    .map(mapper::toPaymentResponseDto)
+                    .collect(Collectors.toList());
+
+            feeRequests.add(DetailedFeeResponse.builder()
+                    .id(fee.getId())
+                    .eventName(fee.getEventName())
+                    .description(fee.getDescription())
+                    .paymentDeadline(fee.getPaymentDeadline())
+                    .eventDateTime(fee.getEventDateTime())
+                    .className(fee.getSchoolClass().getClassName())
+                    .feeAmountPerStudent(fee.getFeeAmount())
+                    .totalExpected(totalExpected)
+                    .totalCollected(totalCollected)
+                    .totalPending(totalPending)
+                    .collectionPercent(collectionPercent)
+                    .totalStudents(totalStudents)
+                    .totalPaid(totalPaid)
+                    .totalUnpaid(totalUnpaid)
+                    .summary(summary)
+                    .build());
+        }
+
+        float overallCollectionRate = grandTotalExpected > 0
+                ? (float) ((grandTotalCollected / grandTotalExpected) * 100) : 0f;
+
+        return TeacherTotalSummaryResponse.builder()
+                .totalExpected(grandTotalExpected)
+                .totalCollected(grandTotalCollected)
+                .collectionRate(overallCollectionRate)
+                .feeRequests(feeRequests)
+                .build();
     }
 }

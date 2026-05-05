@@ -2,8 +2,10 @@ package com.example.school_management.specialEventFees.mapper;
 
 import com.example.school_management.specialEventFees.dto.SpecialEventFeePaymentResponseDto;
 import com.example.school_management.specialEventFees.dto.SpecialEventFeeResponseDto;
+import com.example.school_management.specialEventFees.dto.SpecialEventParentResponseDto;
 import com.example.school_management.specialEventFees.entity.SpecialEventFee;
 import com.example.school_management.specialEventFees.entity.SpecialEventFeePayment;
+import com.example.school_management.specialEventFees.repository.SpecialEventFeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +14,8 @@ import java.time.LocalDateTime;
 @Component
 @RequiredArgsConstructor
 public class SpecialEventFeeMapper {
+
+    public final SpecialEventFeeRepository specialEventFeeRepository;
 
     public SpecialEventFeeResponseDto toResponseDto(
             SpecialEventFee fee,
@@ -51,6 +55,25 @@ public class SpecialEventFeeMapper {
                 .deadlineExpired(payment.getSpecialEventFee().getPaymentDeadline() != null
                         && LocalDateTime.now().isAfter(
                         payment.getSpecialEventFee().getPaymentDeadline()))
+                .build();
+    }
+
+    public SpecialEventParentResponseDto toParentResponseDto(
+            SpecialEventFeePayment paymentRequest)
+    {
+        SpecialEventFee request;
+
+        return SpecialEventParentResponseDto.builder()
+                .id(paymentRequest.getId())
+                .eventName(paymentRequest.getSpecialEventFee().getEventName())
+                .description(paymentRequest.getSpecialEventFee().getDescription())
+                .feeAmount(paymentRequest.getSpecialEventFee().getFeeAmount())
+                .feeType(paymentRequest.getSpecialEventFee().getFeeType())
+                .paymentDeadline(paymentRequest.getSpecialEventFee().getPaymentDeadline())
+                .eventDateTime(paymentRequest.getSpecialEventFee().getEventDateTime())
+                .className(paymentRequest.getSpecialEventFee().getSchoolClass().getClassName())
+                .createdByTeacher((paymentRequest.getSpecialEventFee().getCreatedByTeacher().getFirstName()+" "+paymentRequest.getSpecialEventFee().getCreatedByTeacher().getLastName()))
+                .paymentStatus(paymentRequest.getFeePaid())
                 .build();
     }
 }
