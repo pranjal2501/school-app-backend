@@ -15,6 +15,7 @@ import com.example.school_management.common.enums.Gender;
 import com.example.school_management.common.exception.DuplicateResourceException;
 import com.example.school_management.common.exception.OutOfCapacityException;
 import com.example.school_management.common.exception.ResourceNotFoundException;
+import com.example.school_management.fees.service.FeeAllocationService;
 import com.example.school_management.mail.service.EmailService;
 import com.example.school_management.notify.entity.Notification;
 import com.example.school_management.notify.entity.UserNotification;
@@ -50,6 +51,7 @@ import java.util.stream.Collectors;
 public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
+    private final FeeAllocationService feeAllocationService;
     private final SchoolClassRepository classRepository;
     private final AdminRepository adminRepository;
     private final NotificationRepository notificationRepository;
@@ -113,6 +115,10 @@ public class StudentServiceImpl implements StudentService {
         }
 
         student = studentRepository.save(student);
+
+        if (request.getParentId() == null) {
+            feeAllocationService.allocateFee(student.getId(), feeAllocationService.getCurrentAcademicYear());
+        }
 
         if (request.getParentId() != null) {
             Notification notification = Notification.builder()
@@ -213,6 +219,12 @@ public class StudentServiceImpl implements StudentService {
 
         List<Student> savedStudents = studentRepository.saveAll(studentsToSave);
 
+        for (Student student : savedStudents) {
+            if (student.getAdmissionStatus() == StudentAdmissionStatus.ACTIVE) {
+                feeAllocationService.allocateFee(student.getId(), feeAllocationService.getCurrentAcademicYear());
+            }
+        }
+
         // send admission emails for new parent students
         if (!emailDataList.isEmpty()) {
             emailService.sendBulkAdmissionEmails(emailDataList);
@@ -281,6 +293,8 @@ public class StudentServiceImpl implements StudentService {
         student.setActive(true);
         student.setApprovalExpiresAt(null);
         studentRepository.save(student);
+
+        feeAllocationService.allocateFee(student.getId(), feeAllocationService.getCurrentAcademicYear());
 
         // send confirmation email
         emailService.sendAdmissionEmail(

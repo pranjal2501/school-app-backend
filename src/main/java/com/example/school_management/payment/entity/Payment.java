@@ -1,6 +1,6 @@
 package com.example.school_management.payment.entity;
 
-import com.example.school_management.fees.entity.Fees;
+//import com.example.school_management.fees.entity.Fees;
 import com.example.school_management.common.ValidationMessages;
 import com.example.school_management.common.BaseEntity;
 import com.example.school_management.common.enums.PaymentStatus;
@@ -75,9 +75,9 @@ public class Payment extends BaseEntity {
     @JoinColumn(name = "collected_by_id", nullable = true)
     private FinanceOfficer collectedBy;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fees_id", nullable = true)
-    private Fees fees;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "fees_id", nullable = true)
+//    private Fees fees;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "student_id", nullable = true)

@@ -1,7 +1,7 @@
 package com.example.school_management.util;
 
-import com.example.school_management.fees.entity.FeeItem;
-import com.example.school_management.fees.entity.Fees;
+//import com.example.school_management.fees.entity.FeeItem;
+//import com.example.school_management.fees.entity.Fees;
 import com.example.school_management.payment.entity.Payment;
 import com.example.school_management.student.entity.Student;
 import com.itextpdf.text.*;
@@ -88,30 +88,30 @@ public class ReceiptPdfGenerator {
             document.add(Chunk.NEWLINE);
         }
 
-        if (payment.getFees() != null) {
-            Fees fees = payment.getFees();
-
-            document.add(new Paragraph("FEE DETAILS", sectionFont));
-            document.add(Chunk.NEWLINE);
-            document.add(new Paragraph("Academic Year   : " + fees.getAcademicYear(), valueFont));
-            document.add(new Paragraph("Standard        : " + fees.getStd(), valueFont));
-            document.add(new Paragraph("Payment Cycle   : " + fees.getPaymentCycle(), valueFont));
-
-            document.add(Chunk.NEWLINE);
-            document.add(new Paragraph("Fee Breakdown   :", labelFont));
-            for (FeeItem item : fees.getFeeItems()) {
-                document.add(new Paragraph(
-                        "  " + item.getFeeType() + "  :  Rs. " + item.getAmount(), valueFont));
-            }
-
-            document.add(new Paragraph("Fine Amount     : Rs. " + fees.getFineAmount(), valueFont));
-            document.add(new Paragraph("------------------------", valueFont));
-            document.add(new Paragraph("Total Amount    : Rs. " + payment.getTotalAmount(), labelFont));
-
-            document.add(Chunk.NEWLINE);
-            document.add(new Paragraph(LINE, valueFont));
-            document.add(Chunk.NEWLINE);
-        }
+//        if (payment.getFees() != null) {
+//            Fees fees = payment.getFees();
+//
+//            document.add(new Paragraph("FEE DETAILS", sectionFont));
+//            document.add(Chunk.NEWLINE);
+//            document.add(new Paragraph("Academic Year   : " + fees.getAcademicYear(), valueFont));
+//            document.add(new Paragraph("Standard        : " + fees.getStd(), valueFont));
+//            document.add(new Paragraph("Payment Cycle   : " + fees.getPaymentCycle(), valueFont));
+//
+//            document.add(Chunk.NEWLINE);
+//            document.add(new Paragraph("Fee Breakdown   :", labelFont));
+//            for (FeeItem item : fees.getFeeItems()) {
+//                document.add(new Paragraph(
+//                        "  " + item.getFeeType() + "  :  Rs. " + item.getAmount(), valueFont));
+//            }
+//
+//            document.add(new Paragraph("Fine Amount     : Rs. " + fees.getFineAmount(), valueFont));
+//            document.add(new Paragraph("------------------------", valueFont));
+//            document.add(new Paragraph("Total Amount    : Rs. " + payment.getTotalAmount(), labelFont));
+//
+//            document.add(Chunk.NEWLINE);
+//            document.add(new Paragraph(LINE, valueFont));
+//            document.add(Chunk.NEWLINE);
+//        }
 
         document.add(new Paragraph("PAYMENT DETAILS", sectionFont));
         document.add(Chunk.NEWLINE);
