@@ -52,7 +52,15 @@ public enum PlaceholderKey {
 
     // ── General ────────────────────────────────────────────────────────────────
     CURRENT_DATE("{{date.today}}", "Today's Date"),
-    CURRENT_YEAR("{{date.year}}", "Current Year");
+    CURRENT_YEAR("{{date.year}}", "Current Year"),
+
+
+    // ── Fee Receipt Specific ────────────────────────────────────────────────
+    FEE_INSTALLMENT_NUMBER("{{fee.installmentNumber}}", "Installment Number"),
+    FEE_TOTAL_INSTALLMENTS("{{fee.totalInstallments}}", "Total Installments"),
+    FEE_AMOUNT_PAID("{{fee.amountPaid}}", "Amount Paid"),
+    FEE_PAYMENT_DATE("{{fee.paymentDate}}", "Payment Date"),
+    FEE_TOTAL_FEE("{{fee.totalFee}}", "Total Fee");
 
     private final String token;
     private final String displayName;

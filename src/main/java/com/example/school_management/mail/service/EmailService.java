@@ -33,4 +33,6 @@ public interface EmailService {
     void sendLCApproved(String toEmail, String parentName, String studentName, byte[] imageBytes);
 
     void sendLCRejected(String toEmail, String parentName, String studentName, String remarks);
+
+    void sendFeeReceiptEmail(String toEmail, String parentName, String studentName, byte[] imageBytes);
 }
