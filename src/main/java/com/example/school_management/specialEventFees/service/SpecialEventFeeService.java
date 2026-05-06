@@ -11,6 +11,7 @@ import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.notify.repository.NotificationRepository;
 import com.example.school_management.notify.repository.UserNotificationRepository;
 import com.example.school_management.parent.entity.Parent;
+import com.example.school_management.parent.repository.ParentRepository;
 import com.example.school_management.schoolClass.entity.SchoolClass;
 import com.example.school_management.schoolClass.repo.SchoolClassRepository;
 import com.example.school_management.specialEventFees.dto.*;
@@ -47,6 +48,7 @@ public class SpecialEventFeeService {
     private final TeacherRepository teacherRepository;
     private final NotificationRepository notificationRepository;
     private final UserNotificationRepository userNotificationRepository;
+    private final ParentRepository parentRepository;
     private final RoleVerifier roleVerifier;
     private final SpecialEventFeeMapper mapper;
 
@@ -91,8 +93,7 @@ public class SpecialEventFeeService {
 
             payments.add(payment);
 
-            if(parents.contains(student.getParent()))
-            {
+            if(parents.contains(student.getParent())){
                 continue;
             }
             parents.add(student.getParent());
@@ -198,6 +199,46 @@ public class SpecialEventFeeService {
 
         return "Fee marked as paid for: " + payment.getStudent().getFirstName()
                 + " " + payment.getStudent().getLastName();
+    }
+
+    @Transactional
+    public String paySpecialEventFee(Long paymentId) {
+
+        // 1. Authenticate the Parent
+        String currentUser = roleVerifier.getCurrentUsername();
+        Parent parent = parentRepository.findByEmail(currentUser)
+                .orElseThrow(() -> new UnauthorizedAccessException("Parent session invalid"));
+
+        // 2. Fetch the specific payment record
+        SpecialEventFeePayment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment", "id", paymentId));
+
+        // 3. Security: Ensure the parent actually owns this payment
+        if (!payment.getParent().getId().equals(parent.getId())) {
+            throw new UnauthorizedAccessException("You are not authorized to pay fees for other students");
+        }
+
+        // 4. Validate deadline
+        if (LocalDateTime.now().isAfter(payment.getSpecialEventFee().getPaymentDeadline())) {
+            throw new IllegalStateException("Payment deadline has passed. Please contact the school administration.");
+        }
+
+        // 5. Validate current status
+        if (Boolean.TRUE.equals(payment.getFeePaid())) {
+            throw new IllegalStateException("This fee has already been successfully paid.");
+        }
+
+        // 6. Process the payment (In the future, a Payment Gateway logic will go here)
+        payment.setFeePaid(true);
+        payment.setFeePaidAt(LocalDateTime.now());
+
+        // Future Payment Gateway Setup:
+        // payment.setTransactionId("TXN-" + System.currentTimeMillis());
+
+        paymentRepository.save(payment);
+
+        return "Payment successful for " + payment.getSpecialEventFee().getEventName()
+                + " (" + payment.getStudent().getFirstName() + " " + payment.getStudent().getLastName() + ")";
     }
 
     public List<SpecialEventParentResponseDto> getAllEventsForChild(String RegId) {

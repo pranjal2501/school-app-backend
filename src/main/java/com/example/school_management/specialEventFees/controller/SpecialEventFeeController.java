@@ -51,12 +51,17 @@ public class SpecialEventFeeController {
 
     @GetMapping("/all-special-event")
     @PreAuthorize("hasRole('PARENT')")
-    public ResponseEntity<ApiResponse<List<SpecialEventParentResponseDto>>> getAllEventForClass(
-            @RequestParam String RegId
-    )
-    {
+    public ResponseEntity<ApiResponse<List<SpecialEventParentResponseDto>>> getAllEventForClass(@RequestParam String RegId){
         List<SpecialEventParentResponseDto> response= feeService.getAllEventsForChild(RegId);
         return ResponseEntity.ok(ApiResponse.ok("Special Events fetched", response));
+    }
+
+    @PatchMapping("/payments/{paymentId}/pay")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<ApiResponse<String>> processParentPayment(
+            @PathVariable Long paymentId) {
+        return ResponseEntity.ok(ApiResponse.ok("Payment Processed",
+                feeService.paySpecialEventFee(paymentId)));
     }
 
     @GetMapping("/detailed-info")

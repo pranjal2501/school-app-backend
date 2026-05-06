@@ -65,7 +65,7 @@ public class MarkService {
         Teacher currentTeacher = getCurrentTeacher();
         ClassSubjectTeacher allocation = verifyAndGetAllocation(request.getAllocationId(), currentTeacher);
 
-        // 🚀 Extract the Subject to validate max marks
+        // Extract the Subject to validate max marks
         Subject subject = allocation.getSubject();
 
         List<StudentSubjectMark> savedMarks = new ArrayList<>();
@@ -80,7 +80,7 @@ public class MarkService {
                         "Student ID " + student.getId() + " does not belong to class " + allocation.getSchoolClass().getClassName()); // 400 BAD REQUEST
             }
 
-            // 🚀 NEW BULLETPROOF CHECK: Validate marks against subject maximums
+            // NEW BULLETPROOF CHECK: Validate marks against subject maximums
             validateMarksAgainstSubjectMax(entry, subject);
 
             // Upsert Logic: Does the mark already exist?
@@ -129,7 +129,7 @@ public class MarkService {
                 .toList();
     }
 
-    // 🚀 NEW HELPER METHOD: Validates uploaded marks against the Subject's maximums
+    //  NEW HELPER METHOD: Validates uploaded marks against the Subject's maximums
     private void validateMarksAgainstSubjectMax(StudentMarkEntryDto entry, Subject subject) {
         String subjName = subject.getSubjectName();
 
