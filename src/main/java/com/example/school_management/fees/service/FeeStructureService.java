@@ -16,6 +16,8 @@ import com.example.school_management.fees.entity.InstallmentPlan;
 import com.example.school_management.fees.entity.InstallmentSchedule;
 import com.example.school_management.fees.repository.FeeAllocationRepository;
 import com.example.school_management.fees.repository.FeeStructureRepository;
+import com.example.school_management.finance.entity.FinanceOfficer;
+import com.example.school_management.finance.repository.FinanceOfficerRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
@@ -32,6 +34,7 @@ public class FeeStructureService {
     private final FeeAllocationRepository feeAllocationRepository;
     private final RoleVerifier roleVerifier;
     private final AdminRepository adminRepository;
+    private final FinanceOfficerRepository financeOfficerRepository;
 
     // ─── Create ────────────────────────────────────────────────
 
@@ -44,9 +47,16 @@ public class FeeStructureService {
                             + " and year " + request.getAcademicYear());
         }
 
-        String adminName= roleVerifier.getCurrentUsername();
-        Admin admin= adminRepository.findByUsername(adminName).get();
+        String userName= roleVerifier.getCurrentUsername();
+        Admin admin=null;
+        FinanceOfficer financeOfficer= null;
 
+        if(adminRepository.findByUsername(userName).isPresent()) {
+            admin = adminRepository.findByUsername(userName).get();
+
+        } else if (financeOfficerRepository.findByEmail(userName).isPresent()) {
+            financeOfficer= financeOfficerRepository.findByEmail(userName).get();
+        }
         FeeStructure feeStructure = new FeeStructure();
         feeStructure.setStandard(request.getStandard());
         feeStructure.setAcademicYear(request.getAcademicYear());
@@ -87,6 +97,7 @@ public class FeeStructureService {
         }).toList();
         feeStructure.setInstallmentPlans(plans);
         feeStructure.setCreatedBy(admin);
+        feeStructure.setCreatedByFinanceOfficer(financeOfficer);
         FeeStructure saved = feeStructureRepository.save(feeStructure);
         return mapToFeeStructureResponse(saved);
     }

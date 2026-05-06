@@ -29,10 +29,6 @@ public class FinanceOfficerRequestDto {
     @Size(max = 50)
     private String email;
 
-    @NotBlank(message = ValidationMessages.PASSWORD_REQUIRED)
-    @Size(min = 6, message = ValidationMessages.PASSWORD_MIN)
-    private String password;
-
     @NotBlank(message = ValidationMessages.MOBILE_REQUIRED)
     @Pattern(regexp = "^[0-9]{10}$", message = ValidationMessages.MOBILE_PATTERN)
     private String mobile;
