@@ -1,11 +1,14 @@
 package com.example.school_management.subject.entity;
 
 import com.example.school_management.common.enums.SubjectType;
+import com.example.school_management.exam.entity.MarkingScheme;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -39,33 +42,54 @@ public class Subject {
     @Column(name = "subject_type", nullable = false)
     private SubjectType subjectType;
 
-    @Min(0)
+    @Builder.Default
     @Column(name = "theory_marks")
-    private Integer theoryMarks;
+    private Integer theoryMarks = 0;
 
-    @Min(0)
+    @Builder.Default
     @Column(name = "internal_marks")
-    private Integer internalMarks;
+    private Integer internalMarks = 0;
 
-    @Min(0)
+    @Builder.Default
     @Column(name = "practical_marks")
-    private Integer practicalMarks;
+    private Integer practicalMarks = 0;
 
-    @Min(0)
+    @Builder.Default
     @Column(name = "project_marks")
-    private Integer projectMarks;
+    private Integer projectMarks = 0;
 
-    @Min(0)
+    @Builder.Default
     @Column(name = "oral_marks")
-    private Integer oralMarks;
+    private Integer oralMarks = 0;
 
-    @Min(0)
+    @Builder.Default
     @Column(name = "total_marks", nullable = false)
-    private Integer totalMarks;
+    private Integer totalMarks = 0;
 
-    @Min(0)
+    @Builder.Default
     @Column(name = "passing_marks", nullable = false)
-    private Integer passingMarks;
+    private Integer passingMarks = 0;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_subject_id")
+    private Subject parentSubject;
+
+    @OneToMany(mappedBy = "parentSubject", cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<Subject> childSubjects = new ArrayList<>();
+
+    @Column(name = "is_aggregate_only", nullable = false)
+    @Builder.Default
+    private boolean isAggregateOnly = false;
+
+    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<MarkingScheme> markingSchemes = new ArrayList<>();
+
+    public void addMarkingScheme(MarkingScheme scheme) {
+        markingSchemes.add(scheme);
+        scheme.setSubject(this);
+    }
 
     @PrePersist
     protected void generateSubjectCode() {

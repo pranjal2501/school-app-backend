@@ -67,4 +67,5 @@ public class SpecialEventFeeController {
 
         return ResponseEntity.ok(ApiResponse.ok("Details Fetched", response));
     }
+
 }

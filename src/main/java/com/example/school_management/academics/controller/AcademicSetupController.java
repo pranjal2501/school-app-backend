@@ -9,6 +9,8 @@ import com.example.school_management.academics.dto.response.SubjectWithTeachersR
 import com.example.school_management.academics.service.AcademicSetupService;
 import com.example.school_management.common.ApiResponse;
 import com.example.school_management.schoolClass.dto.ClassResponseDto;
+import com.example.school_management.subject.dto.BulkSubjectCreateRequestDto;
+import com.example.school_management.subject.dto.newImpl.SubjectTreeResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -55,10 +57,9 @@ public class AcademicSetupController {
      */
     @GetMapping("/classes/{classId}/subjects")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<SubjectWithTeachersResponseDto>>> getSubjectsForClass(
+    public ResponseEntity<ApiResponse<List<SubjectTreeResponseDto>>> getSubjectsForClass(
             @PathVariable Long classId) {
-
-        List<SubjectWithTeachersResponseDto> response = academicSetupService.getAllocationsByClass(classId);
+        List<SubjectTreeResponseDto> response = academicSetupService.getAllocationsByClass(classId);
 
         return ResponseEntity.ok(ApiResponse.ok("Allocations fetched for class.", response));
     }
@@ -102,7 +103,7 @@ public class AcademicSetupController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> createAndAllocateSubject(
             @PathVariable Long classId,
-            @Valid @RequestBody StandardTemplateRequestDto.SubjectTemplateDto request) {
+            @Valid @RequestBody BulkSubjectCreateRequestDto.SubjectNodeDto request) {
 
         academicSetupService.createAndAllocateSubjectToClass(classId, request);
 
@@ -115,7 +116,6 @@ public class AcademicSetupController {
     public ResponseEntity<ApiResponse<Void>> allocateExistingSubject(
             @PathVariable Long classId,
             @Valid @RequestBody ClassSubjectAllocationRequestDto request) {
-
         academicSetupService.allocateExistingSubjectToClass(classId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED)

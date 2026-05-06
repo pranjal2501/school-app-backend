@@ -1,6 +1,7 @@
 package com.example.school_management.specialEventFees.service;
 
 import com.example.school_management.common.RoleVerifier;
+import com.example.school_management.common.enums.FeeType;
 import com.example.school_management.common.enums.notify.AudienceType;
 import com.example.school_management.common.enums.notify.NotificationType;
 import com.example.school_management.common.exception.ResourceNotFoundException;
@@ -63,7 +64,7 @@ public class SpecialEventFeeService {
                 .eventName(request.getEventName())
                 .description(request.getDescription())
                 .feeAmount(request.getFeeAmount())
-                .feeType(request.getFeeType())
+                .feeType(FeeType.ACTIVITY_FEES)
                 .paymentDeadline(request.getPaymentDeadline())
                 .eventDateTime(request.getEventDateTime())
                 .schoolClass(schoolClass)

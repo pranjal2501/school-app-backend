@@ -39,4 +39,6 @@ public interface ClassSubjectTeacherRepository extends JpaRepository<ClassSubjec
             @Param("className") String className,
             @Param("subjectId") Long subjectId
     );
+
+    List<ClassSubjectTeacher> findAllBySchoolClassIdIn(List<Long> schoolClassIds);
 }
