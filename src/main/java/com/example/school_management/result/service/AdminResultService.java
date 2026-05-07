@@ -2,11 +2,12 @@ package com.example.school_management.result.service;
 
 import com.example.school_management.academics.entity.ClassSubjectTeacher;
 import com.example.school_management.academics.repository.ClassSubjectTeacherRepository;
-import com.example.school_management.common.enums.ExamTerm;
 import com.example.school_management.common.enums.MarkFillingStatus;
 import com.example.school_management.common.enums.notify.AudienceType;
 import com.example.school_management.common.enums.notify.NotificationType;
 import com.example.school_management.common.exception.ResourceNotFoundException;
+import com.example.school_management.exam.entity.ExamType;
+import com.example.school_management.exam.repository.ExamTypeRepository;
 import com.example.school_management.notify.entity.Notification;
 import com.example.school_management.notify.entity.UserNotification;
 import com.example.school_management.notify.repository.NotificationRepository;
@@ -19,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,70 +33,74 @@ public class AdminResultService {
     private final StudentSubjectMarkRepository studentSubjectMarkRepository;
     private final NotificationRepository notificationRepository;
     private final UserNotificationRepository userNotificationRepository;
+    private final ExamTypeRepository examTypeRepository;
 
-    public List<MarkFillingStatusResponseDto> getMarkFillingStatus(Long classId, ExamTerm examTerm) {
+    public List<MarkFillingStatusResponseDto> getMarkFillingStatus(Long classId, Long examTypeId) {
         List<ClassSubjectTeacher> allocations = classSubjectTeacherRepository.findBySchoolClassId(classId);
 
         if (allocations.isEmpty()) {
             throw new ResourceNotFoundException("Class", "id", classId);
         }
 
+        ExamType examType = examTypeRepository.findById(examTypeId)
+                .orElseThrow(() -> new ResourceNotFoundException("ExamType", "id", examTypeId));
+
         return allocations.stream()
+                .filter(allocation -> !allocation.getSubject().isAggregateOnly())
                 .map(allocation -> {
-                    int totalStudents = studentRepository.countByAssignedClassId(
-                            allocation.getSchoolClass().getId());
-                    int filledCount = studentSubjectMarkRepository.countByAllocationIdAndExamTerm(
-                            allocation.getId(), examTerm);
+                    int totalStudents = studentRepository.countByAssignedClassId(allocation.getSchoolClass().getId());
+
+                    int filledCount = studentSubjectMarkRepository.countDistinctStudentsByAllocationIdAndExamTypeId(
+                            allocation.getId(), examTypeId);
+
+                    MarkFillingStatus status = (filledCount == 0) ? MarkFillingStatus.NOT_FILLED
+                            : (filledCount < totalStudents) ? MarkFillingStatus.PARTIAL
+                            : MarkFillingStatus.COMPLETE;
 
                     return MarkFillingStatusResponseDto.builder()
                             .allocationId(allocation.getId())
                             .className(allocation.getSchoolClass().getClassName())
                             .subjectName(allocation.getSubject().getSubjectName())
-                            .teacherName(allocation.getTeacher().getFirstName()
-                                    + " " + allocation.getTeacher().getLastName())
-                            .examTerm(examTerm)
-                            .status(allocation.getMarkFillingStatus())
+                            .teacherName(allocation.getTeacher().getFirstName() + " " + allocation.getTeacher().getLastName())
+                            .examTypeId(examType.getId())
+                            .examTypeName(examType.getName())
+                            .status(status)
                             .totalStudents(totalStudents)
-                            .marksFilledCount(filledCount)
+                            .studentsGradedCount(filledCount)
                             .build();
                 })
                 .collect(Collectors.toList());
     }
 
-    public void notifyPendingTeachers(Long classId, ExamTerm examTerm) {
+    public void notifyPendingTeachers(Long classId, Long examTypeId) {
+        ExamType examType = examTypeRepository.findById(examTypeId)
+                .orElseThrow(() -> new ResourceNotFoundException("ExamType", "id", examTypeId));
 
-        List<ClassSubjectTeacher> allocations = classSubjectTeacherRepository
-                .findBySchoolClassId(classId);
+        List<MarkFillingStatusResponseDto> statuses = getMarkFillingStatus(classId, examTypeId);
 
-        if (allocations.isEmpty()) {
-            throw new ResourceNotFoundException("Class", "id", classId);
-        }
-
-        List<ClassSubjectTeacher> pendingAllocations = allocations.stream()
-                .filter(a -> a.getMarkFillingStatus() != MarkFillingStatus.COMPLETE)
+        List<MarkFillingStatusResponseDto> pendingAllocations = statuses.stream()
+                .filter(s -> s.getStatus() != MarkFillingStatus.COMPLETE)
                 .collect(Collectors.toList());
 
         if (pendingAllocations.isEmpty()) {
-            throw new IllegalStateException("All teachers have filled marks for this class.");
+            throw new IllegalStateException("All teachers have completely filled marks for this class and exam.");
         }
 
-        for (ClassSubjectTeacher allocation : pendingAllocations) {
+        for (MarkFillingStatusResponseDto dto : pendingAllocations) {
+            ClassSubjectTeacher allocation = classSubjectTeacherRepository.findById(dto.getAllocationId()).orElseThrow();
             Teacher teacher = allocation.getTeacher();
 
             Notification notification = Notification.builder()
                     .title("Marks Filling Reminder")
-                    .description("You have not filled marks for "
-                            + allocation.getSubject().getSubjectName()
-                            + " - " + allocation.getSchoolClass().getClassName()
-                            + " for " + examTerm.name() + " exam term.")
-                    .shortInfo("Please fill marks for "
-                            + allocation.getSubject().getSubjectName())
+                    .description("You have pending marks to fill for "
+                            + dto.getSubjectName() + " - " + dto.getClassName()
+                            + " for " + examType.getName() + ".")
+                    .shortInfo("Please complete marks for " + dto.getSubjectName())
                     .audienceType(AudienceType.TEACHER)
                     .notificationType(NotificationType.REMINDER)
                     .eventDateTime(LocalDateTime.now())
                     .scheduledDispatchTime(LocalDateTime.now())
                     .dispatched(true)
-                    .teacherIds(Set.of(teacher.getId()))
                     .build();
 
             notificationRepository.saveAndFlush(notification);

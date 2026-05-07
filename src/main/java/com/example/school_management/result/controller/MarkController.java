@@ -1,7 +1,6 @@
 package com.example.school_management.result.controller;
 
 import com.example.school_management.common.ApiResponse;
-import com.example.school_management.common.enums.ExamTerm;
 import com.example.school_management.result.dto.MarkResponseDto;
 import com.example.school_management.result.dto.MarkUploadRequestDto;
 import com.example.school_management.result.service.MarkService;
@@ -36,13 +35,14 @@ public class MarkController {
                 .body(ApiResponse.ok("Marks successfully saved/updated.", response));
     }
 
-    // 2. Fetch the marks grid for a specific allocation and term (so teacher can see what they previously uploaded)
-    @GetMapping("/allocations/{allocationId}/terms/{examTerm}")
+    // 2. Fetch the marks grid for a specific allocation and Exam Type
+    @GetMapping("/allocations/{allocationId}/exam-types/{examTypeId}")
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<ApiResponse<List<MarkResponseDto>>> getMarks(
             @PathVariable Long allocationId,
-            @PathVariable ExamTerm examTerm) {
-        List<MarkResponseDto> response = markService.getMarksForAllocation(allocationId, examTerm);
+            @PathVariable Long examTypeId) {
+
+        List<MarkResponseDto> response = markService.getMarksForAllocation(allocationId, examTypeId);
         return ResponseEntity.ok(ApiResponse.ok("Marks fetched successfully.", response));
     }
 }

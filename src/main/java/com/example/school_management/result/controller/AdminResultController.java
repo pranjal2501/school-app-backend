@@ -1,8 +1,6 @@
 package com.example.school_management.result.controller;
 
-
 import com.example.school_management.common.ApiResponse;
-import com.example.school_management.common.enums.ExamTerm;
 import com.example.school_management.result.dto.adminView.MarkFillingStatusResponseDto;
 import com.example.school_management.result.service.AdminResultService;
 import lombok.RequiredArgsConstructor;
@@ -19,24 +17,21 @@ public class AdminResultController {
 
     private final AdminResultService adminResultService;
 
-
     @GetMapping("/{classId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<MarkFillingStatusResponseDto>>> getMarkFillingStatus(
             @PathVariable Long classId,
-            @RequestParam ExamTerm examTerm) {
+            @RequestParam Long examTypeId) {
         return ResponseEntity.ok(ApiResponse.ok("Marks filling status fetched",
-                adminResultService.getMarkFillingStatus(classId, examTerm)));
+                adminResultService.getMarkFillingStatus(classId, examTypeId)));
     }
 
     @PostMapping("/notify-pending/{classId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> notifyPendingTeachers(
             @PathVariable Long classId,
-            @RequestParam ExamTerm examTerm) {
-        adminResultService.notifyPendingTeachers(classId, examTerm);
+            @RequestParam Long examTypeId) {
+        adminResultService.notifyPendingTeachers(classId, examTypeId);
         return ResponseEntity.ok(ApiResponse.ok("Pending teachers notified successfully", null));
     }
-
-
 }

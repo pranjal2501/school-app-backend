@@ -32,4 +32,6 @@ public class ResultLetterhead extends BaseEntity {
 
     @Column
     private LocalDateTime publishedAt;
+    @Column(name = "exam_type_id", nullable = false)
+    private Long examTypeId;
 }

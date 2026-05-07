@@ -3,15 +3,18 @@ package com.example.school_management.result.service;
 import com.example.school_management.academics.entity.ClassSubjectTeacher;
 import com.example.school_management.academics.repository.ClassSubjectTeacherRepository;
 import com.example.school_management.common.RoleVerifier;
-import com.example.school_management.common.enums.ExamTerm;
 import com.example.school_management.common.enums.MarkFillingStatus;
 import com.example.school_management.common.enums.Role;
 import com.example.school_management.common.exception.ResourceNotFoundException;
+import com.example.school_management.exam.entity.MarkingScheme;
+import com.example.school_management.exam.entity.MarkingSchemeDetail;
+import com.example.school_management.exam.repository.EvaluationComponentRepository;
+import com.example.school_management.exam.repository.ExamTypeRepository;
+import com.example.school_management.result.dto.ComponentMarkInputDto;
 import com.example.school_management.result.dto.MarkResponseDto;
 import com.example.school_management.result.dto.MarkUploadRequestDto;
 import com.example.school_management.result.dto.StudentMarkEntryDto;
 import com.example.school_management.result.entity.StudentSubjectMark;
-import com.example.school_management.result.mapper.MarkMapper;
 import com.example.school_management.result.repository.StudentSubjectMarkRepository;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.repository.StudentRepository;
@@ -25,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,30 +37,28 @@ public class MarkService {
 
     private final StudentSubjectMarkRepository markRepository;
     private final ClassSubjectTeacherRepository pivotRepository;
-    private final ClassSubjectTeacherRepository classSubjectTeacherRepository;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
-    private final MarkMapper markMapper;
+    private final ExamTypeRepository examTypeRepository;
+    private final EvaluationComponentRepository evaluationComponentRepository;
     private final RoleVerifier roleVerifier;
 
     private Teacher getCurrentTeacher() {
         if (!roleVerifier.hasRole(Role.TEACHER)) {
-            throw new AccessDeniedException("Only logged-in teachers can perform this action."); // 403 FORBIDDEN
+            throw new AccessDeniedException("Only logged-in teachers can perform this action.");
         }
         String identifier = roleVerifier.getCurrentUsername();
         return teacherRepository.findByEmail(identifier)
                 .or(() -> teacherRepository.findByMobile(identifier))
-                .orElseThrow(() -> new AccessDeniedException("Teacher profile could not be verified.")); // 403 FORBIDDEN
+                .orElseThrow(() -> new AccessDeniedException("Teacher profile could not be verified."));
     }
 
     private ClassSubjectTeacher verifyAndGetAllocation(Long allocationId, Teacher currentTeacher) {
         ClassSubjectTeacher allocation = pivotRepository.findById(allocationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Class/Subject Allocation", "id", allocationId)); // 404 NOT FOUND
+                .orElseThrow(() -> new ResourceNotFoundException("Class/Subject Allocation", "id", allocationId));
 
-        // THE VAULT CHECK: Strictly prevent Teacher A from modifying Teacher B's subject marks.
         if (!allocation.getTeacher().getId().equals(currentTeacher.getId())) {
-            throw new AccessDeniedException(
-                    "UNAUTHORIZED: You are not the assigned subject teacher for this class and subject."); // 403 FORBIDDEN
+            throw new AccessDeniedException("UNAUTHORIZED: You are not the assigned subject teacher for this class and subject.");
         }
         return allocation;
     }
@@ -64,108 +67,160 @@ public class MarkService {
     public List<MarkResponseDto> uploadOrUpdateMarks(MarkUploadRequestDto request) {
         Teacher currentTeacher = getCurrentTeacher();
         ClassSubjectTeacher allocation = verifyAndGetAllocation(request.getAllocationId(), currentTeacher);
-
-        // Extract the Subject to validate max marks
         Subject subject = allocation.getSubject();
+
+        if (subject.isAggregateOnly()) {
+            throw new IllegalArgumentException("Cannot upload marks directly to an aggregate parent subject.");
+        }
+
+        MarkingScheme currentScheme = subject.getMarkingSchemes().stream()
+                .filter(scheme -> scheme.getExamType().getId().equals(request.getExamTypeId()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Marking Scheme", "ExamType ID", request.getExamTypeId()));
+
+        Map<Long, MarkingSchemeDetail> componentDetailMap = currentScheme.getDetails().stream()
+                .collect(Collectors.toMap(d -> d.getEvaluationComponent().getId(), d -> d));
 
         List<StudentSubjectMark> savedMarks = new ArrayList<>();
 
         for (StudentMarkEntryDto entry : request.getMarks()) {
             Student student = studentRepository.findById(entry.getStudentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Student", "id", entry.getStudentId())); // 404 NOT FOUND
+                    .orElseThrow(() -> new ResourceNotFoundException("Student", "id", entry.getStudentId()));
 
-            // Check if student actually belongs to this class!
             if (!student.getAssignedClass().getId().equals(allocation.getSchoolClass().getId())) {
-                throw new IllegalArgumentException(
-                        "Student ID " + student.getId() + " does not belong to class " + allocation.getSchoolClass().getClassName()); // 400 BAD REQUEST
+                throw new IllegalArgumentException("Student ID " + student.getId() + " does not belong to class " + allocation.getSchoolClass().getClassName());
             }
 
-            // NEW BULLETPROOF CHECK: Validate marks against subject maximums
-            validateMarksAgainstSubjectMax(entry, subject);
+            validateComponentMarksAgainstScheme(entry, componentDetailMap, subject.getSubjectName());
 
-            // Upsert Logic: Does the mark already exist?
-            StudentSubjectMark mark = markRepository.findByStudentIdAndAllocationIdAndExamTerm(
-                    student.getId(), allocation.getId(), request.getExamTerm()
-            ).orElse(null);
+            for (ComponentMarkInputDto compInput : entry.getComponentMarks()) {
 
-            if (mark != null) {
-                // Update existing record
-                markMapper.updateEntity(entry, mark);
-            } else {
-                // Create new record
-                mark = markMapper.toEntity(entry, student, allocation, request.getExamTerm());
+                StudentSubjectMark mark = markRepository.findByStudentIdAndAllocationIdAndExamTypeIdAndEvaluationComponentId(
+                        student.getId(),
+                        allocation.getId(),
+                        request.getExamTypeId(),
+                        compInput.getEvaluationComponentId()
+                ).orElse(null);
+
+                if (mark != null) {
+                    mark.setObtainedMarks(compInput.getObtainedMarks());
+                } else {
+                    mark = StudentSubjectMark.builder()
+                            .student(student)
+                            .allocation(allocation)
+                            .examType(examTypeRepository.getReferenceById(request.getExamTypeId()))
+                            .evaluationComponent(evaluationComponentRepository.getReferenceById(compInput.getEvaluationComponentId()))
+                            .obtainedMarks(compInput.getObtainedMarks())
+                            .build();
+                }
+                savedMarks.add(markRepository.save(mark));
             }
-
-            savedMarks.add(markRepository.save(mark));
         }
-        //int totalStudents = allocation.getSchoolClass().getTotalStudents();
-        int totalStudents = studentRepository.countByAssignedClassId(
-                allocation.getSchoolClass().getId());
-        int marksFilledCount = markRepository.countByAllocationIdAndExamTerm(
-                allocation.getId(), request.getExamTerm());
 
-        if (marksFilledCount == 0) {
+        updateMarkFillingStatus(allocation, request.getExamTypeId());
+
+        return mapToAggregatedResponse(savedMarks, currentScheme);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MarkResponseDto> getMarksForAllocation(Long allocationId, Long examTypeId) {
+        Teacher currentTeacher = getCurrentTeacher();
+        ClassSubjectTeacher allocation = verifyAndGetAllocation(allocationId, currentTeacher);
+
+        MarkingScheme currentScheme = allocation.getSubject().getMarkingSchemes().stream()
+                .filter(scheme -> scheme.getExamType().getId().equals(examTypeId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Marking Scheme", "ExamType ID", examTypeId));
+
+        List<StudentSubjectMark> marks = markRepository.findAllByAllocationIdAndExamTypeId(allocationId, examTypeId);
+
+        return mapToAggregatedResponse(marks, currentScheme);
+    }
+
+    private void validateComponentMarksAgainstScheme(StudentMarkEntryDto entry, Map<Long, MarkingSchemeDetail> validComponents, String subjectName) {
+        for (ComponentMarkInputDto compInput : entry.getComponentMarks()) {
+            MarkingSchemeDetail detail = validComponents.get(compInput.getEvaluationComponentId());
+
+            if (detail == null) {
+                throw new IllegalArgumentException("Evaluation Component ID " + compInput.getEvaluationComponentId() + " is not mapped to this exam type for subject " + subjectName);
+            }
+
+            if (compInput.getObtainedMarks() > detail.getMaxMarks()) {
+                throw new IllegalArgumentException(String.format(
+                        "Marks obtained (%d) exceed maximum allowed (%d) for component %s in subject %s.",
+                        compInput.getObtainedMarks(), detail.getMaxMarks(), detail.getEvaluationComponent().getName(), subjectName));
+            }
+        }
+    }
+
+    private void updateMarkFillingStatus(ClassSubjectTeacher allocation, Long examTypeId) {
+        int totalStudents = studentRepository.countByAssignedClassId(allocation.getSchoolClass().getId());
+
+        int uniqueStudentsWithMarks = markRepository.countDistinctStudentsByAllocationIdAndExamTypeId(
+                allocation.getId(), examTypeId);
+
+        if (uniqueStudentsWithMarks == 0) {
             allocation.setMarkFillingStatus(MarkFillingStatus.NOT_FILLED);
-        } else if (marksFilledCount < totalStudents) {
+        } else if (uniqueStudentsWithMarks < totalStudents) {
             allocation.setMarkFillingStatus(MarkFillingStatus.PARTIAL);
         } else {
             allocation.setMarkFillingStatus(MarkFillingStatus.COMPLETE);
         }
 
-        classSubjectTeacherRepository.save(allocation);
-
-        return savedMarks.stream().map(markMapper::toResponseDto).toList();
-
+        pivotRepository.save(allocation);
     }
 
-    @Transactional(readOnly = true)
-    public List<MarkResponseDto> getMarksForAllocation(Long allocationId, ExamTerm examTerm) {
-        Teacher currentTeacher = getCurrentTeacher();
-        verifyAndGetAllocation(allocationId, currentTeacher); // Ensures only the rightful teacher can view this specific grid
+    private List<MarkResponseDto> mapToAggregatedResponse(List<StudentSubjectMark> marks, MarkingScheme scheme) {
+        Map<Long, List<StudentSubjectMark>> marksByStudent = marks.stream()
+                .collect(Collectors.groupingBy(m -> m.getStudent().getId()));
 
-        return markRepository.findAllByAllocationIdAndExamTerm(allocationId, examTerm)
-                .stream()
-                .map(markMapper::toResponseDto)
-                .toList();
-    }
+        List<MarkResponseDto> responseList = new ArrayList<>();
 
-    //  NEW HELPER METHOD: Validates uploaded marks against the Subject's maximums
-    private void validateMarksAgainstSubjectMax(StudentMarkEntryDto entry, Subject subject) {
-        String subjName = subject.getSubjectName();
+        for (Map.Entry<Long, List<StudentSubjectMark>> studentEntry : marksByStudent.entrySet()) {
+            Student student = studentEntry.getValue().get(0).getStudent();
+            int totalObtained = 0;
+            int totalMax = 0;
+            boolean isPassed = true;
 
-        if (entry.getTheoryObtained() != null) {
-            int max = subject.getTheoryMarks() != null ? subject.getTheoryMarks() : 0;
-            if (entry.getTheoryObtained() > max) {
-                throw new IllegalArgumentException(String.format("Theory marks (%d) exceed maximum allowed (%d) for subject %s.", entry.getTheoryObtained(), max, subjName));
+            List<com.example.school_management.result.dto.ComponentMarkResponseDto> compResponses = new ArrayList<>();
+
+            for (StudentSubjectMark sm : studentEntry.getValue()) {
+                MarkingSchemeDetail detail = scheme.getDetails().stream()
+                        .filter(d -> d.getEvaluationComponent().getId().equals(sm.getEvaluationComponent().getId()))
+                        .findFirst().orElse(null);
+
+                if (detail == null) continue;
+
+                boolean compPassed = sm.getObtainedMarks() >= detail.getPassingMarks();
+                if (!compPassed) isPassed = false;
+
+                totalObtained += sm.getObtainedMarks();
+                totalMax += detail.getMaxMarks();
+
+                compResponses.add(com.example.school_management.result.dto.ComponentMarkResponseDto.builder()
+                        .markRecordId(sm.getId())
+                        .evaluationComponentId(sm.getEvaluationComponent().getId())
+                        .componentName(detail.getEvaluationComponent().getName())
+                        .maxMarks(detail.getMaxMarks())
+                        .passingMarks(detail.getPassingMarks())
+                        .obtainedMarks(sm.getObtainedMarks())
+                        .isComponentPassed(compPassed)
+                        .build());
             }
+
+            responseList.add(MarkResponseDto.builder()
+                    .studentId(student.getId())
+                    .studentName(student.getFirstName() + " " + student.getLastName())
+                    .rollNumber(student.getRollNumber())
+                    .examTypeId(scheme.getExamType().getId())
+                    .examTypeName(scheme.getExamType().getName())
+                    .componentMarks(compResponses)
+                    .totalObtained(totalObtained)
+                    .totalMaxMarks(totalMax)
+                    .isPassed(isPassed)
+                    .build());
         }
 
-        if (entry.getInternalObtained() != null) {
-            int max = subject.getInternalMarks() != null ? subject.getInternalMarks() : 0;
-            if (entry.getInternalObtained() > max) {
-                throw new IllegalArgumentException(String.format("Internal marks (%d) exceed maximum allowed (%d) for subject %s.", entry.getInternalObtained(), max, subjName));
-            }
-        }
-
-        if (entry.getPracticalObtained() != null) {
-            int max = subject.getPracticalMarks() != null ? subject.getPracticalMarks() : 0;
-            if (entry.getPracticalObtained() > max) {
-                throw new IllegalArgumentException(String.format("Practical marks (%d) exceed maximum allowed (%d) for subject %s.", entry.getPracticalObtained(), max, subjName));
-            }
-        }
-
-        if (entry.getProjectObtained() != null) {
-            int max = subject.getProjectMarks() != null ? subject.getProjectMarks() : 0;
-            if (entry.getProjectObtained() > max) {
-                throw new IllegalArgumentException(String.format("Project marks (%d) exceed maximum allowed (%d) for subject %s.", entry.getProjectObtained(), max, subjName));
-            }
-        }
-
-        if (entry.getOralObtained() != null) {
-            int max = subject.getOralMarks() != null ? subject.getOralMarks() : 0;
-            if (entry.getOralObtained() > max) {
-                throw new IllegalArgumentException(String.format("Oral marks (%d) exceed maximum allowed (%d) for subject %s.", entry.getOralObtained(), max, subjName));
-            }
-        }
+        return responseList;
     }
 }

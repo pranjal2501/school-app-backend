@@ -1,6 +1,8 @@
 package com.example.school_management.result.mapper;
 
-import com.example.school_management.common.enums.ExamTerm;
+import com.example.school_management.exam.entity.MarkingScheme;
+import com.example.school_management.exam.entity.MarkingSchemeDetail;
+import com.example.school_management.result.dto.resultDisplay.ComponentResultDto;
 import com.example.school_management.result.dto.resultDisplay.LetterHeadResponseDto;
 import com.example.school_management.result.dto.resultDisplay.StudentResultResponseDto;
 import com.example.school_management.result.dto.resultDisplay.SubjectMarkDto;
@@ -10,85 +12,111 @@ import com.example.school_management.student.entity.Student;
 import com.example.school_management.subject.entity.Subject;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class ResultMapper {
 
-    //===================== LETTER HEAD CONCERN =====================
+    public SubjectMarkDto toSubjectMarkDto(Subject subject, MarkingScheme scheme, List<StudentSubjectMark> componentMarks) {
 
-    public LetterHeadResponseDto toLetterheadResponse(ResultLetterhead resultLetterhead)
-    {
-        LetterHeadResponseDto dto= new LetterHeadResponseDto();
-        dto.setUrl(resultLetterhead.getUrl());
-        dto.setExamTerm(resultLetterhead.getExamTerm());
-        dto.setAcademicYear(resultLetterhead.getAcademicYear());
+        int totalMax = 0;
+        int totalPassing = 0;
+        int totalObtained = 0;
+        boolean isOverallPassed = true;
 
-        return dto;
-    }
+        List<ComponentResultDto> componentDtos = new ArrayList<>();
 
-    //===================== RESULT CONCERN ===========================
+        for (MarkingSchemeDetail detail : scheme.getDetails()) {
+            Long compId = detail.getEvaluationComponent().getId();
 
-    public SubjectMarkDto toSubjectMarkDto(StudentSubjectMark mark) {
-        Subject subject = mark.getAllocation().getSubject();
+            StudentSubjectMark mark = componentMarks.stream()
+                    .filter(m -> m.getEvaluationComponent().getId().equals(compId))
+                    .findFirst()
+                    .orElse(null);
+
+            int obtained = (mark != null && mark.getObtainedMarks() != null) ? mark.getObtainedMarks() : 0;
+            boolean isComponentPassed = obtained >= detail.getPassingMarks();
+
+            if (!isComponentPassed) {
+                isOverallPassed = false;
+            }
+
+            totalMax += detail.getMaxMarks();
+            totalPassing += detail.getPassingMarks();
+            totalObtained += obtained;
+
+            componentDtos.add(ComponentResultDto.builder()
+                    .componentName(detail.getEvaluationComponent().getName())
+                    .maxMarks(detail.getMaxMarks())
+                    .passingMarks(detail.getPassingMarks())
+                    .obtainedMarks(obtained)
+                    .isPassed(isComponentPassed)
+                    .build());
+        }
 
         return SubjectMarkDto.builder()
                 .subjectName(subject.getSubjectName())
                 .subjectCode(subject.getSubjectCode())
-                .theoryMax(subject.getTheoryMarks())
-                .internalMax(subject.getInternalMarks())
-                .practicalMax(subject.getPracticalMarks())
-                .projectMax(subject.getProjectMarks())
-                .oralMax(subject.getOralMarks())
-                .totalMax(subject.getTotalMarks())
-                .passingMarks(subject.getPassingMarks())
-                .theoryObtained(mark.getTheoryObtained())
-                .internalObtained(mark.getInternalObtained())
-                .practicalObtained(mark.getPracticalObtained())
-                .projectObtained(mark.getProjectObtained())
-                .oralObtained(mark.getOralObtained())
-                .totalObtained(mark.getTotalObtained())
-                .isPassed(mark.isPassed())
+                .examTypeName(scheme.getExamType().getName())
+                .components(componentDtos)
+                .totalMax(totalMax)
+                .totalPassingMarks(totalPassing)
+                .totalObtained(totalObtained)
+                .isPassed(isOverallPassed)
                 .build();
     }
 
     public StudentResultResponseDto toResultResponseDto(
             Student student,
-            List<StudentSubjectMark> marks,
-            List<SubjectMarkDto> subjectMarkDtos,
-            ExamTerm examTerm,
+            List<SubjectMarkDto> subjectMarks,
+            String examTypeName,
             String academicYear,
             ResultLetterhead letterhead) {
 
-        int grandTotalObtained = marks.stream()
-                .mapToInt(m -> m.getTotalObtained() != null ? m.getTotalObtained() : 0)
-                .sum();
+        int grandTotalObtained = 0;
+        int grandTotalMax = 0;
+        boolean isOverallPassed = true;
 
-        int grandTotalMax = marks.stream()
-                .mapToInt(m -> m.getAllocation().getSubject().getTotalMarks() != null
-                        ? m.getAllocation().getSubject().getTotalMarks() : 0)
-                .sum();
+        for (SubjectMarkDto subject : subjectMarks) {
+            grandTotalObtained += (subject.getTotalObtained() != null) ? subject.getTotalObtained() : 0;
+            grandTotalMax += (subject.getTotalMax() != null) ? subject.getTotalMax() : 0;
 
-        float percentage = grandTotalMax > 0
-                ? (grandTotalObtained * 100.0f) / grandTotalMax
-                : 0f;
+            if (Boolean.FALSE.equals(subject.getIsPassed())) {
+                isOverallPassed = false;
+            }
+        }
 
-        boolean isOverallPassed = marks.stream().allMatch(StudentSubjectMark::isPassed);
+        float percentage = 0.0f;
+        if (grandTotalMax > 0) {
+            percentage = ((float) grandTotalObtained / grandTotalMax) * 100;
+        }
 
         return StudentResultResponseDto.builder()
-                .letterheadUrl(letterhead != null ? letterhead.getUrl() : null)
                 .studentName(student.getFirstName() + " " + student.getLastName())
                 .registrationId(student.getRegId())
-                .className(student.getAssignedClass() != null
-                        ? student.getAssignedClass().getClassName() : "N/A")
-                .rollNo(student.getRollNumber())
-                .examTerm(examTerm)
+                .rollNumber(student.getRollNumber())
+                .className(student.getAssignedClass().getClassName())
+                .examTypeName(examTypeName)
                 .academicYear(academicYear)
-                .subjectMarks(subjectMarkDtos)
+                .subjects(subjectMarks)
+                .letterheadUrl(letterhead != null ? letterhead.getUrl() : null)
                 .grandTotalObtained(grandTotalObtained)
                 .grandTotalMax(grandTotalMax)
                 .percentage(percentage)
                 .isOverallPassed(isOverallPassed)
+                .build();
+    }
+
+    public LetterHeadResponseDto toLetterheadResponse(ResultLetterhead entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        return LetterHeadResponseDto.builder()
+                .url(entity.getUrl())
+                .examTypeId(entity.getExamTypeId())
+                .academicYear(entity.getAcademicYear())
                 .build();
     }
 }

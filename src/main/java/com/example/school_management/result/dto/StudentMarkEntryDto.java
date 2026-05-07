@@ -1,27 +1,17 @@
 package com.example.school_management.result.dto;
 
-import jakarta.validation.constraints.Min;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class StudentMarkEntryDto {
-
     @NotNull(message = "Student ID is required.")
     private Long studentId;
 
-    @Min(value = 0, message = "Marks cannot be negative")
-    private Integer theoryObtained;
-
-    @Min(value = 0, message = "Marks cannot be negative")
-    private Integer internalObtained;
-
-    @Min(value = 0, message = "Marks cannot be negative")
-    private Integer practicalObtained;
-
-    @Min(value = 0, message = "Marks cannot be negative")
-    private Integer projectObtained;
-
-    @Min(value = 0, message = "Marks cannot be negative")
-    private Integer oralObtained;
+    @NotEmpty(message = "Component marks cannot be empty.")
+    @Valid
+    private List<ComponentMarkInputDto> componentMarks;
 }

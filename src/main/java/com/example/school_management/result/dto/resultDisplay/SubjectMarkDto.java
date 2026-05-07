@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -12,22 +14,13 @@ import lombok.NoArgsConstructor;
 public class SubjectMarkDto {
     private String subjectName;
     private String subjectCode;
+    private String examTypeName;
 
-    // max marks from Subject
-    private Integer theoryMax;
-    private Integer internalMax;
-    private Integer practicalMax;
-    private Integer projectMax;
-    private Integer oralMax;
+    // Dynamic list replacing hardcoded theory/practical fields
+    private List<ComponentResultDto> components;
+
     private Integer totalMax;
-    private Integer passingMarks;
-
-    // obtained marks from StudentSubjectMark
-    private Integer theoryObtained;
-    private Integer internalObtained;
-    private Integer practicalObtained;
-    private Integer projectObtained;
-    private Integer oralObtained;
+    private Integer totalPassingMarks;
     private Integer totalObtained;
 
     private Boolean isPassed;

@@ -1,5 +1,6 @@
 package com.example.school_management.result.service;
 
+import com.example.school_management.result.dto.resultDisplay.ComponentResultDto;
 import com.example.school_management.result.dto.resultDisplay.StudentResultResponseDto;
 import com.example.school_management.result.dto.resultDisplay.SubjectMarkDto;
 import lombok.extern.slf4j.Slf4j;
@@ -32,14 +33,15 @@ public class ResultPdfService {
                 .append("header { display: block; position: running(header); text-align: center; }")
                 .append("@page { @top-center { content: element(header); } }")
                 .append("table { width: 100%; border-collapse: collapse; margin-top: 20px; }")
-                .append("th, td { border: 1px solid #000; padding: 8px; text-align: center; }")
+                .append("th, td { border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle; }")
                 .append("th { background-color: #f2f2f2; }")
                 .append(".pass { color: green; font-weight: bold; }")
                 .append(".fail { color: red; font-weight: bold; }")
+                .append(".component-list { text-align: left; margin: 0; padding: 0; list-style-type: none; font-size: 14px; }")
                 .append("</style>")
                 .append("</head><body>");
 
-        // letterhead as running header - repeats on every page
+        // Letterhead as running header
         if (result.getLetterheadUrl() != null) {
             html.append("<header>")
                     .append("<img src='").append(result.getLetterheadUrl())
@@ -48,45 +50,47 @@ public class ResultPdfService {
                     .append("</header>");
         }
 
-        // rest of content stays same
-        html.append("<h2 style='text-align:center;'>Result Card - ").append(result.getExamTerm()).append("</h2>")
+        html.append("<h2 style='text-align:center;'>Result Card - ").append(result.getExamTypeName()).append("</h2>")
                 .append("<p><b>Name:</b> ").append(result.getStudentName()).append("</p>")
                 .append("<p><b>Class:</b> ").append(result.getClassName()).append("</p>")
-                .append("<p><b>Roll No:</b> ").append(result.getRollNo()).append("</p>")
+                .append("<p><b>Roll No:</b> ").append(result.getRollNumber()).append("</p>")
                 .append("<p><b>Academic Year:</b> ").append(result.getAcademicYear()).append("</p>");
 
+        // Dynamic Table Headers
         html.append("<table>")
                 .append("<tr>")
                 .append("<th>Subject</th>")
-                .append("<th>Theory (Max/Obt)</th>")
-                .append("<th>Internal (Max/Obt)</th>")
-                .append("<th>Practical (Max/Obt)</th>")
-                .append("<th>Project (Max/Obt)</th>")
-                .append("<th>Oral (Max/Obt)</th>")
+                .append("<th>Component Breakdown (Max/Obt)</th>")
                 .append("<th>Total (Max/Obt)</th>")
                 .append("<th>Status</th>")
                 .append("</tr>");
 
-        for (SubjectMarkDto subject : result.getSubjectMarks()) {
+        // Dynamic Subject Rows
+        for (SubjectMarkDto subject : result.getSubjects()) {
             html.append("<tr>")
-                    .append("<td>").append(subject.getSubjectName()).append("</td>")
-                    .append("<td>").append(subject.getTheoryMax()).append("/").append(nullSafe(subject.getTheoryObtained())).append("</td>")
-                    .append("<td>").append(subject.getInternalMax()).append("/").append(nullSafe(subject.getInternalObtained())).append("</td>")
-                    .append("<td>").append(subject.getPracticalMax()).append("/").append(nullSafe(subject.getPracticalObtained())).append("</td>")
-                    .append("<td>").append(subject.getProjectMax()).append("/").append(nullSafe(subject.getProjectObtained())).append("</td>")
-                    .append("<td>").append(subject.getOralMax()).append("/").append(nullSafe(subject.getOralObtained())).append("</td>")
-                    .append("<td>").append(subject.getTotalMax()).append("/").append(subject.getTotalObtained()).append("</td>")
-                    .append("<td class='").append(subject.getIsPassed() ? "pass" : "fail").append("'>")
-                    .append(subject.getIsPassed() ? "PASS" : "FAIL").append("</td>")
+                    .append("<td><b>").append(subject.getSubjectName()).append("</b></td>")
+                    .append("<td><ul class='component-list'>");
+
+            // Loop through dynamic components
+            for (ComponentResultDto comp : subject.getComponents()) {
+                html.append("<li>").append(comp.getComponentName()).append(": ")
+                        .append(comp.getMaxMarks()).append(" / <b>")
+                        .append(comp.getObtainedMarks()).append("</b></li>");
+            }
+
+            html.append("</ul></td>")
+                    .append("<td>").append(subject.getTotalMax()).append(" / <b>").append(subject.getTotalObtained()).append("</b></td>")
+                    .append("<td class='").append(Boolean.TRUE.equals(subject.getIsPassed()) ? "pass" : "fail").append("'>")
+                    .append(Boolean.TRUE.equals(subject.getIsPassed()) ? "PASS" : "FAIL").append("</td>")
                     .append("</tr>");
         }
 
+        // Grand Total Footer
         html.append("<tr>")
-                .append("<td><b>Grand Total</b></td>")
-                .append("<td colspan='5'></td>")
-                .append("<td><b>").append(result.getGrandTotalMax()).append("/").append(result.getGrandTotalObtained()).append("</b></td>")
-                .append("<td class='").append(result.getIsOverallPassed() ? "pass" : "fail").append("'>")
-                .append("<b>").append(result.getIsOverallPassed() ? "PASS" : "FAIL").append("</b></td>")
+                .append("<td colspan='2' style='text-align:right;'><b>Grand Total</b></td>")
+                .append("<td><b>").append(result.getGrandTotalMax()).append(" / ").append(result.getGrandTotalObtained()).append("</b></td>")
+                .append("<td class='").append(Boolean.TRUE.equals(result.getIsOverallPassed()) ? "pass" : "fail").append("'>")
+                .append("<b>").append(Boolean.TRUE.equals(result.getIsOverallPassed()) ? "PASS" : "FAIL").append("</b></td>")
                 .append("</tr>")
                 .append("</table>");
 
@@ -95,9 +99,5 @@ public class ResultPdfService {
 
         html.append("</body></html>");
         return html.toString();
-    }
-
-    private String nullSafe(Integer value) {
-        return value != null ? String.valueOf(value) : "0";
     }
 }

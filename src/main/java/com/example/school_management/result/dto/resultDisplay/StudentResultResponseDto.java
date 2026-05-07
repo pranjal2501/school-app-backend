@@ -1,6 +1,5 @@
 package com.example.school_management.result.dto.resultDisplay;
 
-import com.example.school_management.common.enums.ExamTerm;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,21 +14,22 @@ import java.util.List;
 public class StudentResultResponseDto {
     private String letterheadUrl;
 
-    // student info
+    // Student info
     private String studentName;
     private String registrationId;
     private String className;
-    private Integer rollNo;
-    private ExamTerm examTerm;
+    private Integer rollNumber;
+
+    // Exam Info
+    private String examTypeName;
     private String academicYear;
 
-    // per subject breakdown
-    private List<SubjectMarkDto> subjectMarks;
+    // Per subject breakdown
+    private List<SubjectMarkDto> subjects;
 
-    // totals
+    // Totals
     private Integer grandTotalObtained;
     private Integer grandTotalMax;
     private Float percentage;
     private Boolean isOverallPassed;
 }
-

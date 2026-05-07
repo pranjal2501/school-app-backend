@@ -1,11 +1,15 @@
 package com.example.school_management.result.service;
 
+import com.example.school_management.academics.entity.ClassSubjectTeacher;
 import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.admin.repository.AdminRepository;
 import com.example.school_management.common.ApiResponse;
 import com.example.school_management.common.enums.notify.AudienceType;
 import com.example.school_management.common.enums.notify.NotificationType;
 import com.example.school_management.common.exception.ResourceNotFoundException;
+import com.example.school_management.exam.entity.ExamType;
+import com.example.school_management.exam.entity.MarkingScheme;
+import com.example.school_management.exam.repository.ExamTypeRepository;
 import com.example.school_management.mail.service.EmailService;
 import com.example.school_management.notify.entity.Notification;
 import com.example.school_management.notify.entity.UserNotification;
@@ -30,9 +34,10 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-
 
 @Service
 @RequiredArgsConstructor
@@ -48,51 +53,52 @@ public class ResultDisplayService {
     private final UserNotificationRepository userNotificationRepository;
     private final AdminRepository adminRepository;
     private final ParentRepository parentRepository;
+    private final ExamTypeRepository examTypeRepository;
     private final ResultMapper resultMapper;
 
     public ResponseEntity<ApiResponse<LetterHeadResponseDto>> saveLetterhead(LetterheadRequestDto requestDto) {
 
-        ResultLetterhead isPresent= resultLetterHeadRepository.findByExamTermAndAcademicYear(requestDto.getExamTerm(), requestDto.getAcademicYear()).orElse(null);
+        ResultLetterhead isPresent = resultLetterHeadRepository
+                .findByExamTypeIdAndAcademicYear(requestDto.getExamTypeId(), requestDto.getAcademicYear())
+                .orElse(null);
 
         if(isPresent != null) {
             isPresent.setUrl(requestDto.getUrl());
             resultLetterHeadRepository.save(isPresent);
-            return ResponseEntity.ok(ApiResponse.ok("Existing updated successfully",resultMapper.toLetterheadResponse(isPresent)));
+            return ResponseEntity.ok(ApiResponse.ok("Existing updated successfully", resultMapper.toLetterheadResponse(isPresent)));
         }
 
         ResultLetterhead letterhead = ResultLetterhead.builder()
                 .url(requestDto.getUrl())
-                .examTerm(requestDto.getExamTerm())
+                .examTypeId(requestDto.getExamTypeId())
                 .academicYear(requestDto.getAcademicYear())
                 .build();
         resultLetterHeadRepository.save(letterhead);
 
-        return ResponseEntity.ok(ApiResponse.ok("New Letter Head added successfully",resultMapper.toLetterheadResponse(isPresent)));
+        return ResponseEntity.ok(ApiResponse.ok("New Letter Head added successfully", resultMapper.toLetterheadResponse(letterhead)));
     }
 
     public void toggleResultPublish(ToggleResultStatus resultStatus) {
 
-
         ResultLetterhead letterhead = resultLetterHeadRepository
-                .findByExamTermAndAcademicYear(resultStatus.getExamTerm(), resultStatus.getAcademicYear())
+                .findByExamTypeIdAndAcademicYear(resultStatus.getExamTypeId(), resultStatus.getAcademicYear())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                     "No result config found for examTerm: " + resultStatus.getExamTerm() + " and year: " + resultStatus.getAcademicYear()));
+                        "No result config found for examTypeId: " + resultStatus.getExamTypeId() + " and year: " + resultStatus.getAcademicYear()));
 
         letterhead.setIsResultPublished(resultStatus.getPublish());
         letterhead.setPublishedAt(resultStatus.getPublish() ? LocalDateTime.now() : null);
         resultLetterHeadRepository.save(letterhead);
 
-        //================ fire notifications to parents and admin ===============
-        if(resultStatus.getPublish().equals(Boolean.TRUE)) {
+        if(Boolean.TRUE.equals(resultStatus.getPublish())) {
             List<Parent> parents = parentRepository.findAll();
 
             Notification notification = Notification.builder()
-                    .title("Result")
-                    .description("Attention parent, result is published on " + LocalDate.now() + " at " + LocalTime.now())
+                    .title("Result Published")
+                    .description("Attention parent, results have been published on " + LocalDate.now() + " at " + LocalTime.now())
                     .shortInfo("Result Published")
                     .audienceType(AudienceType.PARENT)
                     .notificationType(NotificationType.RESULT)
-                    .eventDateTime(LocalDateTime.now()) // immediate event
+                    .eventDateTime(LocalDateTime.now())
                     .scheduledDispatchTime(LocalDateTime.now())
                     .dispatched(true)
                     .build();
@@ -110,23 +116,23 @@ public class ResultDisplayService {
             }
         }
 
-        String message= "Result Status : "+ (((resultStatus.getPublish()==true)?"Published":"Closed"))+" on " + LocalDate.now() + " at " + LocalTime.now();
-        List<Admin> admin= adminRepository.findAll();
+        String message = "Result Status: " + (Boolean.TRUE.equals(resultStatus.getPublish()) ? "Published" : "Closed") + " on " + LocalDate.now() + " at " + LocalTime.now();
+        List<Admin> admins = adminRepository.findAll();
 
         Notification notification = Notification.builder()
-                .title("Result")
+                .title("Result Status Update")
                 .description(message)
                 .shortInfo("Result Status Changed")
                 .audienceType(AudienceType.ADMIN)
                 .notificationType(NotificationType.RESULT)
-                .eventDateTime(LocalDateTime.now()) // immediate event
+                .eventDateTime(LocalDateTime.now())
                 .scheduledDispatchTime(LocalDateTime.now())
                 .dispatched(true)
                 .build();
 
         notificationRepository.save(notification);
 
-        for(Admin ad : admin) {
+        for(Admin ad : admins) {
             UserNotification userNotification = UserNotification.builder()
                     .notification(notification)
                     .admin(ad)
@@ -140,41 +146,51 @@ public class ResultDisplayService {
     public StudentResultResponseDto getStudentResult(StudentResultRequestDto requestDto) {
 
         ResultLetterhead letterhead = resultLetterHeadRepository
-                .findByExamTermAndAcademicYear(requestDto.getExamTerm(), requestDto.getAcademicYear())
-                .orElseThrow(() -> new ResourceNotFoundException("Result not configured for this exam term"));
+                .findByExamTypeIdAndAcademicYear(requestDto.getExamTypeId(), requestDto.getAcademicYear())
+                .orElseThrow(() -> new ResourceNotFoundException("Result not configured for this exam type"));
 
         if (!Boolean.TRUE.equals(letterhead.getIsResultPublished())) {
             throw new IllegalStateException("Result has not been published yet by the administration");
         }
 
+        Student student = studentRepository.findByRegId(requestDto.getRegistrationId())
+                .orElseThrow(()-> new ResourceNotFoundException("Student","Registration Id", requestDto.getRegistrationId()));
 
-        // 1. fetch student
-        Student student = studentRepository.findByRegId(requestDto.getRegistrationId()).orElseThrow(()-> new ResourceNotFoundException("Student","Registration Id ", requestDto.getRegistrationId()));
+        ExamType examType = examTypeRepository.findById(requestDto.getExamTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException("ExamType", "id", requestDto.getExamTypeId()));
 
-        // 2. fetch marks
-        List<StudentSubjectMark> marks = markRepository
-                .findByStudentAndExamTerm(student, requestDto.getExamTerm());
+        // Fetch all marks for this student for this specific exam
+        List<StudentSubjectMark> allComponentMarks = markRepository
+                .findAllByStudentIdAndExamTypeId(student.getId(), requestDto.getExamTypeId());
 
-        if (marks.isEmpty()) {
-            throw new ResourceNotFoundException("No marks found for student: "
-                    + requestDto.getRegistrationId());
+        if (allComponentMarks.isEmpty()) {
+            throw new ResourceNotFoundException("No marks found for student: " + requestDto.getRegistrationId());
         }
 
-        // 3. map to dtos
-        List<SubjectMarkDto> subjectMarkDtos = marks.stream()
-                .map(resultMapper::toSubjectMarkDto)
-                .collect(Collectors.toList());
+        // Group component marks by their Subject Allocation
+        Map<ClassSubjectTeacher, List<StudentSubjectMark>> marksByAllocation = allComponentMarks.stream()
+                .collect(Collectors.groupingBy(StudentSubjectMark::getAllocation));
 
-        // 4. build response
+        List<SubjectMarkDto> subjectMarkDtos = new ArrayList<>();
+
+        for (Map.Entry<ClassSubjectTeacher, List<StudentSubjectMark>> entry : marksByAllocation.entrySet()) {
+            Subject subject = entry.getKey().getSubject();
+
+            MarkingScheme scheme = subject.getMarkingSchemes().stream()
+                    .filter(s -> s.getExamType().getId().equals(requestDto.getExamTypeId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Marking scheme missing for subject " + subject.getSubjectName()));
+
+            subjectMarkDtos.add(resultMapper.toSubjectMarkDto(subject, scheme, entry.getValue()));
+        }
+
         StudentResultResponseDto response = resultMapper.toResultResponseDto(
                 student,
-                marks,
                 subjectMarkDtos,
-                requestDto.getExamTerm(),
+                examType.getName(),
                 requestDto.getAcademicYear(),
                 letterhead);
 
-        // 5. generate PDF and email to parent
         try {
             byte[] pdf = resultPdfService.generateResultPdf(response);
             if (student.getParent() != null && student.getParent().getEmail() != null) {
