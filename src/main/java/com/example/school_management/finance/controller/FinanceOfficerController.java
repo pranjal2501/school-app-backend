@@ -29,7 +29,7 @@ public class FinanceOfficerController {
         );
     }
 
-    @PostMapping
+    @PostMapping("")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<FinanceOfficerResponseDto>> createFinanceOfficer(
             @Valid @RequestBody FinanceOfficerRequestDto request) {
@@ -65,18 +65,18 @@ public class FinanceOfficerController {
     }
 
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<FinanceOfficerResponseDto>> updateFinanceOfficer(
-            @PathVariable Long id,
-            @Valid @RequestBody FinanceOfficerRequestDto request) {
-
-        FinanceOfficerResponseDto updated = financeOfficerService.updateFinanceOfficer(id, request);
-
-        return ResponseEntity.ok(
-                ApiResponse.ok("Finance Officer updated successfully", updated)
-        );
-    }
+//    @PutMapping("/{id}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<ApiResponse<FinanceOfficerResponseDto>> updateFinanceOfficer(
+//            @PathVariable Long id,
+//            @Valid @RequestBody FinanceOfficerRequestDto request) {
+//
+//        FinanceOfficerResponseDto updated = financeOfficerService.updateFinanceOfficer(id, request);
+//
+//        return ResponseEntity.ok(
+//                ApiResponse.ok("Finance Officer updated successfully", updated)
+//        );
+//    }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")

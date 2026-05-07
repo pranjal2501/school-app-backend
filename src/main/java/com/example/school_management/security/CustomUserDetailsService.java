@@ -2,6 +2,8 @@ package com.example.school_management.security;
 
 import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.common.ApiResponse;
+import com.example.school_management.finance.entity.FinanceOfficer;
+import com.example.school_management.finance.repository.FinanceOfficerRepository;
 import com.example.school_management.forgotPassword.dto.ForgotPasswordRequestDto;
 import com.example.school_management.forgotPassword.dto.VerifyOtpAndPasswordRequestDto;
 import com.example.school_management.forgotPassword.service.ForgotPasswordService;
@@ -27,6 +29,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
     private AdminRepository adminRepository;
+
+    @Autowired
+    private FinanceOfficerRepository financeOfficerRepository;
 
     @Autowired
     private ForgotPasswordService forgotPasswordService;
@@ -55,6 +60,13 @@ public class CustomUserDetailsService implements UserDetailsService {
             Parent parent = parentOpt.get();
             // Pass the ID here
             return buildUser(parent.getId(), identifier, parent.getPassword(), "PARENT");
+        }
+
+        var financeOpt = financeOfficerRepository.findByEmail(identifier)
+                .or(() -> financeOfficerRepository.findByMobile(identifier));
+        if (financeOpt.isPresent()) {
+            FinanceOfficer officer = financeOpt.get();
+            return buildUser(officer.getId(), identifier, officer.getPassword(), "FINANCE");
         }
 
         throw new UsernameNotFoundException("No user found: " + identifier);

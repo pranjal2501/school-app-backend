@@ -13,7 +13,7 @@ public interface FinanceOfficerService {
 
     FinanceOfficerResponseDto getFinanceOfficerById(Long id);
 
-    FinanceOfficerResponseDto updateFinanceOfficer(Long id, FinanceOfficerRequestDto dto);
+   // FinanceOfficerResponseDto updateFinanceOfficer(Long id, FinanceOfficerRequestDto dto);
 
     void toggleStatus(Long id);
 

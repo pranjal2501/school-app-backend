@@ -2,6 +2,7 @@ package com.example.school_management.fees.entity;
 
 import com.example.school_management.admin.entity.Admin;
 import com.example.school_management.common.BaseEntity;
+import com.example.school_management.finance.entity.FinanceOfficer;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -35,8 +36,13 @@ public class FeeStructure extends BaseEntity {
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by_admin_id", nullable = false)
+    @JoinColumn(name = "created_by_admin_id", nullable = true)
     private Admin createdBy;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_finance_officer_id", nullable = true)
+    private FinanceOfficer createdByFinanceOfficer;
 
     @OneToMany(
             mappedBy = "feeStructure",

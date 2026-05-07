@@ -56,7 +56,15 @@ public class PlaceholderResolver {
 
                 // ── General ────────────────────────────────────────────────────
                 .replace(PlaceholderKey.CURRENT_DATE.getToken(),            safe(ctx.getCurrentDate()))
-                .replace(PlaceholderKey.CURRENT_YEAR.getToken(),            safe(ctx.getCurrentYear()));
+                .replace(PlaceholderKey.CURRENT_YEAR.getToken(),            safe(ctx.getCurrentYear()))
+
+                // ── Fees Receipt Specific ────────────────────────────────────────────────
+                .replace(PlaceholderKey.FEE_INSTALLMENT_NUMBER.getToken(), safe(ctx.getFeeInstallmentNumber()))
+                .replace(PlaceholderKey.FEE_TOTAL_INSTALLMENTS.getToken(), safe(ctx.getFeeTotalInstallments()))
+                .replace(PlaceholderKey.FEE_AMOUNT_PAID.getToken(), safe(ctx.getFeeAmountPaid()))
+                .replace(PlaceholderKey.FEE_PAYMENT_DATE.getToken(), safe(ctx.getFeePaymentDate()))
+                .replace(PlaceholderKey.FEE_TOTAL_FEE.getToken(), safe(ctx.getFeeTotalFee()));
+
     }
 
     private String safe(String value) {

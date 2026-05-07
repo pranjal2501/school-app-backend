@@ -14,6 +14,7 @@ import com.example.school_management.fees.repository.FeeAllocationRepository;
 import com.example.school_management.fees.repository.FeeInstallmentRepository;
 import com.example.school_management.fees.repository.FeeStructureRepository;
 import com.example.school_management.fees.repository.InstallmentPlanRepository;
+import com.example.school_management.grievance.feeReciept.service.FeeReceiptService;
 import com.example.school_management.student.entity.Student;
 import com.example.school_management.student.repository.StudentRepository;
 import jakarta.transaction.Transactional;
@@ -34,7 +35,8 @@ public class FeeAllocationService {
     private final FeeInstallmentRepository feeInstallmentRepository;
     private final FeeStructureRepository feeStructureRepository;
     private final InstallmentPlanRepository installmentPlanRepository;
-    private final StudentRepository studentRepository; // your existing repo
+    private final StudentRepository studentRepository;
+    private final FeeReceiptService feeReceiptService;
 
     // ─── Called during admission ────────────────────────────────
 
@@ -111,6 +113,8 @@ public class FeeAllocationService {
         installment.setPaidAt(LocalDateTime.now());
         installment.setRemarks(request.getRemarks());
         feeInstallmentRepository.save(installment);
+
+        feeReceiptService.sendFeeReceiptEmail(installment);
 
         // Check if all installments are paid → mark allocation COMPLETED
         FeeAllocation allocation = installment.getFeeAllocation();

@@ -10,4 +10,9 @@ import java.util.Optional;
 public interface FinanceOfficerRepository extends JpaRepository<FinanceOfficer, Long> {
 
     Optional<FinanceOfficer> findByEmail(String email);
+    boolean existsByEmail(String email);
+    boolean existsByMobile(String mobile);
+    boolean existsByAadharNo(String aadharNo);
+
+    Optional<FinanceOfficer> findByMobile(String identifier);
 }

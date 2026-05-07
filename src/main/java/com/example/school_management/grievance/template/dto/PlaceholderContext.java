@@ -57,4 +57,11 @@ public class PlaceholderContext {
     // ── General ────────────────────────────────────────────────────────────────
     private String currentDate;
     private String currentYear;
+
+    // ── Fee Receipt Specific ────────────────────────────────────────────────
+    private String feeInstallmentNumber;
+    private String feeTotalInstallments;
+    private String feeAmountPaid;
+    private String feePaymentDate;
+    private String feeTotalFee;
 }
