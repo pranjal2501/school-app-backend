@@ -259,6 +259,8 @@ public class TeacherServiceImpl implements TeacherService {
                     rawPassword
             );
 
+            notifyToCompleteProfile(savedTeacher);
+
             responses.add(teacherMapper.toResponseDto(savedTeacher));
         }
 

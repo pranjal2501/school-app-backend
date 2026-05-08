@@ -58,11 +58,10 @@ public class UserNotificationMapper {
         else if (n.getNotificationType().equals(NotificationType.STUDENT_APPROVAL)) {
 
             Parent parent = un.getParent();
-            Student finStud =
-                    studentRepository.findFirstByParentAndAdmissionStatus(
-                            parent, StudentAdmissionStatus.PENDING_PARENT_APPROVAL);
+            Student finStud = studentRepository.findFirstByParentAndAdmissionStatus(
+                    parent, StudentAdmissionStatus.PENDING_PARENT_APPROVAL);
 
-            ApproveStudentResponseDto responseDto=  ApproveStudentResponseDto.builder()
+            ApproveStudentResponseDto responseDto = ApproveStudentResponseDto.builder()
                     .id(un.getId())
                     .title(n.getTitle())
                     .shortInfo(n.getShortInfo())
@@ -72,12 +71,17 @@ public class UserNotificationMapper {
                     .readAt(un.getReadAt())
                     .build();
 
-            responseDto.setApproveLink(responseDto.getApproveLink()+finStud.getRegId());
-            responseDto.setRejectLink(responseDto.getRejectLink()+finStud.getRegId());
-            responseDto.setExpiresAt(finStud.getApprovalExpiresAt());
+            if (finStud != null) {
+                responseDto.setApproveLink(responseDto.getApproveLink() + finStud.getRegId());
+                responseDto.setRejectLink(responseDto.getRejectLink() + finStud.getRegId());
+                responseDto.setExpiresAt(finStud.getApprovalExpiresAt());
+            } else {
+                responseDto.setApproveLink(null);
+                responseDto.setRejectLink(null);
+                responseDto.setExpiresAt(null);
+            }
 
             return responseDto;
-
         }
 
         else if (n.getNotificationType() == NotificationType.SPECIAL_EVENT) {

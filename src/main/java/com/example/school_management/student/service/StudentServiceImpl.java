@@ -220,8 +220,12 @@ public class StudentServiceImpl implements StudentService {
         List<Student> savedStudents = studentRepository.saveAll(studentsToSave);
 
         for (Student student : savedStudents) {
-            if (student.getAdmissionStatus() == StudentAdmissionStatus.ACTIVE) {
-                feeAllocationService.allocateFee(student.getId(), feeAllocationService.getCurrentAcademicYear());
+            notifyToCompleteProfile(student);
+            try {
+                feeAllocationService.allocateFee(student.getId(),
+                        feeAllocationService.getCurrentAcademicYear());
+            } catch (ResourceNotFoundException e) {
+                log.warn("No fee structure found for student {}", student.getRegId());
             }
         }
 

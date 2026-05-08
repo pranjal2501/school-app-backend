@@ -19,19 +19,17 @@ public class UserNotificationController {
 
     private final UserNotificationService userNotificationService;
 
-    @GetMapping("/parent/{parentId}")
+    @GetMapping("/parent")
     @PreAuthorize("hasAnyRole('ADMIN', 'PARENT')")
-    public ResponseEntity<ApiResponse<List<ParentNotificationResponseDto>>> getParentNotifications(
-            @PathVariable Long parentId) {
-        List<ParentNotificationResponseDto> response = userNotificationService.getParentNotifications(parentId);
+    public ResponseEntity<ApiResponse<List<ParentNotificationResponseDto>>> getParentNotifications() {
+        List<ParentNotificationResponseDto> response = userNotificationService.getParentNotifications();
         return ResponseEntity.ok(ApiResponse.ok("Notifications fetched successfully", response));
     }
 
-    @GetMapping("/teacher/{teacherId}")
+    @GetMapping("/teacher")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    public ResponseEntity<ApiResponse<List<TeacherNotificationResponseDto>>> getTeacherNotifications(
-            @PathVariable Long teacherId) {
-        List<TeacherNotificationResponseDto> response = userNotificationService.getTeacherNotifications(teacherId);
+    public ResponseEntity<ApiResponse<List<TeacherNotificationResponseDto>>> getTeacherNotifications() {
+        List<TeacherNotificationResponseDto> response = userNotificationService.getTeacherNotifications();
         return ResponseEntity.ok(ApiResponse.ok("Notifications fetched successfully", response));
     }
 

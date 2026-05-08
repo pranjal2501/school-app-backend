@@ -11,10 +11,10 @@ public interface UserNotificationService {
     void dispatchNotifications();  // called by scheduler
 
     // parent fetches their notifications
-    List<ParentNotificationResponseDto> getParentNotifications(Long parentId);
+    List<ParentNotificationResponseDto> getParentNotifications();
 
     // teacher fetches their notifications
-    List<TeacherNotificationResponseDto> getTeacherNotifications(Long teacherId);
+    List<TeacherNotificationResponseDto> getTeacherNotifications();
 
     // mark as read
     void markAsRead(Long userNotificationId);
